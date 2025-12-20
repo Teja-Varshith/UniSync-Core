@@ -1,29 +1,20 @@
-const express = require("express");
-const app = express();
-const cookieParser = require("cookie-parser");
+import express from "express";
+import cookieParser from "cookie-parser";
+import connectDb from "./configs/database";
+import authRouter from "./routes/auth";
+import dotenv from "dotenv";
+dotenv.config();
 
-const { connectDb } = require("./configs/database");
+const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/" , (req,res) => {
-  console.log("yaay hot me");
-  res.send("Hello form the server");
+app.use("/api/auth", authRouter);
+
+await connectDb();
+
+const port = process.env.PORT;
+app.listen(port, () => {
+  console.log(`server is running on the port ${port} `);
 });
-
-const authRouter = require("./routes/auth");
-app.use("/",authRouter);
-
-
-
-connectDb()
-  .then(() => {
-    console.log("DB connected successfully");
-    app.listen(3000,"0.0.0.0", () => {
-      console.log("Server listening on port 3000");
-    });
-  })
-  .catch((err) => {
-    console.error("DB connection failed:", err);
-  });
