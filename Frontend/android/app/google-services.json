@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "580979400430",
+    "project_id": "unisync-3b48b",
+    "storage_bucket": "unisync-3b48b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:580979400430:android:5f7ecd85854c824541ddff",
+        "android_client_info": {
+          "package_name": "com.unisync.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "580979400430-0h6ti3cep4uq0ci01mg4rtjv5dt4jf06.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDK8CMxIl-WVckftUFmFZyij5fPaKNaJtg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "580979400430-0h6ti3cep4uq0ci01mg4rtjv5dt4jf06.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "580979400430-02nhv4egmo7d05lh3vvcgurtvnlvj8k3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.unisync.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

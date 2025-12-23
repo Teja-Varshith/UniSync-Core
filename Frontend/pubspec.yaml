@@ -30,6 +30,26 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  #core
+  flutter_riverpod:
+  routemaster:
+
+  firebase_auth: ^5.5.2
+  firebase_core: ^3.13.0
+  cloud_firestore: ^5.6.6
+
+  #network
+  dio: ^5.9.0
+  cached_network_image:
+
+  #features
+  google_sign_in: ^6.2.1
+
+  #design
+  lottie:
+  awesome_snackbar_content: ^0.1.6
+
+  change_app_package_name: ^1.5.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -58,9 +78,15 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/animations/login_lottie.json
+    - assets/animations/onboard.json
+    - assets/animations/a_lottie.json
+    - assets/animations/b_lottie.json
+    - assets/animations/d_lottie.json
+    - assets/animations/loading.json
+    - assets/icons/profile_bg.png
+    - assets/icons/Uni7.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -73,6 +99,15 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+
+
+
   # fonts:
   #   - family: Schyler
   #     fonts:

@@ -1,4 +1,4 @@
-package com.example.unisync
+package com.unisync.app
 
 import io.flutter.embedding.android.FlutterActivity
 
