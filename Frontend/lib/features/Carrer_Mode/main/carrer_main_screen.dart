@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_flutter/icons_flutter.dart';
+import 'package:routemaster/routemaster.dart';
 import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/Carrer_Mode/sub_views/career_home_screen.dart';
+import 'package:unisync/features/Carrer_Mode/home/career_home_screen.dart';
 import 'package:unisync/features/Carrer_Mode/sub_views/carrer_card_screen.dart';
-import 'package:unisync/features/Carrer_Mode/sub_views/carrer_interview_screen.dart';
+import 'package:unisync/features/Carrer_Mode/interview/carrer_interview_screen.dart';
 import 'package:unisync/features/Carrer_Mode/sub_views/carrer_resume_screen.dart';
 
 class CareerScreen extends ConsumerStatefulWidget {
@@ -110,6 +111,7 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
             icon: Icons.graphic_eq_rounded,
             label: "Interviews",
             index: 1,
+            push: true,
           ),
           _buildNavItem(
             icon: Icons.layers_outlined,
@@ -146,12 +148,20 @@ Widget _buildNavItem({
   required IconData icon,
   required String label,
   required int index,
+  bool push = false,
 }) {
   final bool isActive = _page == index;
 
   return GestureDetector(
     behavior: HitTestBehavior.opaque,
-    onTap: () => setState(() => _page = index),
+    onTap: () {
+      if(push == false){
+      setState(() => _page = index);
+      }else{
+        Routemaster.of(context).push('/carrer-interview-screen');
+      }
+    }
+    ,
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
