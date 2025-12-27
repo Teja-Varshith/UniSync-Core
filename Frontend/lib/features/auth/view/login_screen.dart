@@ -146,8 +146,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       final user = await ref.read(authControllerProvider).signInWithGoogle();
                                      if(user != null){ setState(() {
                                         isLoading = false;
+                                        ref.read(userProvider.notifier).state = user;
                                       });}
                                       // final user = AuthRepository().signInWithGoogle();
+                                      
                                       print(user);
                                     },
                                     style: ElevatedButton.styleFrom(

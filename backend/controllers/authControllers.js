@@ -4,6 +4,7 @@ export const loginUserController = async (req, res) => {
   try {
     console.log("login request started");
     const { emailId, name, photoUrl } = req.body;
+    console.log(photoUrl);
     if (!emailId || !name) {
       return res.status(404).json({
         success: false,
@@ -18,6 +19,7 @@ export const loginUserController = async (req, res) => {
     });
 
     if (isUserExised) {
+      isUserExised.photoUrl = photoUrl;
       if (isUserExised.profileComplete == false) {
         res.status(200).json({
           success: true,

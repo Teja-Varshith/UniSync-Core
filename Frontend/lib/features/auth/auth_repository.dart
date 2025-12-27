@@ -48,7 +48,7 @@ class AuthRepository {
       final dio = Dio();
       print('req started////////////////////////////////');
        final res = await dio.post(
-        ' ${BASE_URI}/auth/login',   //// ${BASE_URI}/login
+        '${BASE_URI}/auth/login',   //// ${BASE_URI}/login
         data: {
           'emailId' : userEmail,
           "name" : userName,

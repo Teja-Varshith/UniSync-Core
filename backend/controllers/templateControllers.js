@@ -1,7 +1,7 @@
 import { Template } from "../models/template.js";
 
 export const createTemplatesController = async (req, res) => {
-  // const {title,topics,evalutionMetrics,domain,icon} = req.body
+  // const {title,topics,evaluationMetrics,domain,icon} = req.body
   
   const newTemPlate = await Template.create({
     title: "Flutter BLoC Interview Template",
@@ -11,7 +11,7 @@ export const createTemplatesController = async (req, res) => {
       "streams",
       "clean architecture",
     ],
-    evalutionMetrics: [ 
+    evaluationMetrics: [ 
       {
         topic: "bloc proficiency",
         description:

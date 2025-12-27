@@ -14,8 +14,7 @@ const interviewSessionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["started", "completed", "abandoned"],
-      default: "started",
+      enum: ["completed", "aborted", "inProgress"],
     },
 
     startedAt: {
@@ -26,8 +25,52 @@ const interviewSessionSchema = new mongoose.Schema(
     endedAt: {
       type: Date,
     },
+
+     questions: [
+    {
+      text: String,
+    }
+  ],
+
+  answers: [
+    {
+      transcript: String,
+    }
+  ],
+
+    finalReport: {
+      overallScore: {
+        type: Number,
+      },
+
+      verdict: {
+        type: String,
+        enum: ["Strong Hire", "Hire", "Borderline", "Reject"],
+      },
+
+      skillBreakdown: {
+        technical: Number,
+        problemSolving: Number,
+        communication: Number,
+        confidence: Number,
+      },
+
+      strengths: [String],
+      weaknesses: [String],
+
+      improvementPlan: [
+        {
+          area: String,
+          suggestion: String,
+        },
+      ],
+
+      summary: {
+        type: String,
+      },
+    },
   },
   { timestamps: true }
 );
 
-export const Session = mongoose.model("Session", interviewSessionSchema);
+export const InterviewSession = mongoose.model("InterviewSession", interviewSessionSchema);

@@ -5,7 +5,7 @@ class TemplateModel {
   final String id;
   final String title;
   final List<String> topics;
-  final List<EvaluationMetric> evalutionMetrics;
+  final List<EvaluationMetric> evaluationMetrics;
   final String domain;
   final String icon;
 
@@ -13,14 +13,14 @@ class TemplateModel {
     required this.id,
     required this.title,
     required this.topics,
-    required this.evalutionMetrics,
+    required this.evaluationMetrics,
     required this.domain,
     required this.icon,
   });
 
   factory TemplateModel.fromMap(Map<String, dynamic> map) {
     final metricsJson =
-        map['evalutionMetrics'] ??
+        map['evaluationMetrics'] ??
         map['evaluationMetrics'] ??
         [];
 
@@ -28,7 +28,7 @@ class TemplateModel {
       id: map['_id']?.toString() ?? '',
       title: map['title']?.toString() ?? '',
       topics: List<String>.from(map['topics'] ?? []),
-      evalutionMetrics: (metricsJson as List)
+      evaluationMetrics: (metricsJson as List)
           .map(
             (e) => EvaluationMetric.fromMap(
               e as Map<String, dynamic>,
@@ -42,7 +42,7 @@ class TemplateModel {
 
   @override
   String toString() {
-    return 'TemplateModel(id: $id, title: $title, topics: $topics, evalutionMetrics: $evalutionMetrics, domain: $domain, icon: $icon)';
+    return 'TemplateModel(id: $id, title: $title, topics: $topics, evaluationMetrics: $evaluationMetrics, domain: $domain, icon: $icon)';
   }
 
 
@@ -51,7 +51,7 @@ class TemplateModel {
     return id.hashCode ^
         title.hashCode ^
         topics.hashCode ^
-        evalutionMetrics.hashCode ^
+        evaluationMetrics.hashCode ^
         domain.hashCode ^
         icon.hashCode;
   }

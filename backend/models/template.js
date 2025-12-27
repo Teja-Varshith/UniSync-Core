@@ -11,7 +11,7 @@ const templateSchema = new mongoose.Schema(
         type: String,
       },
     ],
-    evalutionMetrics: [
+    evaluationMetrics: [
       {
         topic: {
           type: String,
