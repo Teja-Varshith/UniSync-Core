@@ -61,9 +61,11 @@ and if its the user first qsn then go through then greet the user and ask the fu
     const prompt = `
 Based on the following interview data, generate a final interview report.
 
-Questions and answers:
- questions: ${exchange.questions.map(((q) => q.text).join(" | "))}
- answers: ${exchange.answers.map((a) => a.transcript).join(" | ")}
+Questions asked so far: ${exchange.meta.questionsAsked} , ${exchange.questions
+      .map((q) => q.text)
+      .join(" | ")} and their answers given by user: ${exchange.answers
+      .map((a) => a.transcript)
+      .join(" | ")}
 
 Return JSON with:
 - overallScore (0-100)

@@ -25,6 +25,7 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
   Widget build(BuildContext context) {
     final templates = ref.watch(carrerControllerProvider);
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
