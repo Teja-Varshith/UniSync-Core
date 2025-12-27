@@ -9,6 +9,13 @@ import dotenv from "dotenv";
 import { templateRouter } from "./routes/interviewRoutes.js";
 import { Template } from "./models/template.js";
 import { InterviewSession } from "./models/interviewsession.js";
+import { InterviewAIService } from "./services/interviewAiService.js";
+import { GeminiResponder } from "./services/geminiResponder.js";
+
+const exchangeStore = new Map();
+
+
+
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
@@ -18,6 +25,13 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
+
+
+    app.get("/", (req, res) => {
+      return res.send();
+    });
+
+
 app.use("/api/carrer", templateRouter);
 
 io.on("connection", (socket) => {
@@ -56,14 +70,20 @@ io.on("connection", (socket) => {
           targetCompany: "Not Specified",
         },
 
-        currentQuestion: 1,
-
         meta: {
           questionsAsked: 0,
-          maxQuestions: 8,
+          startedAt: new Date(),
+          lastActivityAt: new Date(),
         },
 
-        phase: "ASKING",
+        interviewState: "ASKING",
+
+        questions: [],
+        answers: [],
+
+        limits: 10,
+
+        systemPrompt: "",
       };
 
       console.log("Exchange object created:", exchange);
@@ -74,19 +94,39 @@ io.on("connection", (socket) => {
       // if followup needed ask the foloowup qsn
       // and other things also
 
+      const gemini = new GeminiResponder();
+      exchange.systemPrompt = await new InterviewAIService(gemini).buildSystemPrompt(exchange.templateSnapshot);
+      console.log("System Prompt generated:", exchange.systemPrompt);
+      exchange.questions.push({
+        text: await new InterviewAIService(gemini).generateQuestion(exchange),
+      });
+      exchange.meta.questionsAsked += 1;
+      exchangeStore.set(session._id.toString(), exchange);
+
+
       socket.join(session._id.toString());
+
+      console.log(exchange.questions);
 
       io.to(session._id.toString()).emit("questionAsked", {
         sessionId: session._id,
         exchange: exchange,
+        question: exchange.questions.at(-1).text,
       });
     } catch (err) {
        console.error("START INTERVIEW ERROR:", err);
-       socket.emit("error", err.message);
+       socket.emit("error", { message: "Failed to start interview session." + err});
     }
   });
 
-  socket;
+
+  socket.on("submitAnswer", async (answerTranscript) => {
+
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected:", socket.id);
+  });
 });
 
 await connectDb();

@@ -1,3 +1,4 @@
+
 export class InterviewAIService {
   constructor(llmClient) {
     this.llm = llmClient;
@@ -9,10 +10,13 @@ You are a professional technical interviewer.
 
 Domain: ${templateSnapshot.domain}
 Target Company: ${templateSnapshot.targetCompany}
-Evaluation Metrics: ${templateSnapshot.evaluationMetrics.join(", ")}
+Evaluation Metrics: ${templateSnapshot.evaluationMetrics}
+
+}
 
 Ask clear, concise interview questions.
 Ask follow-up questions if answers are shallow.
+also start the interview by greeting the candidate and asking for the introduction.
 `;
   }
 
@@ -32,7 +36,7 @@ Return ONLY the question text.
 
     const response = await this.llm.generate(prompt);
 
-    return response.text;
+    return response;
   }
 
   async evaluateAnswer(exchange, answerTranscript) {
@@ -71,6 +75,6 @@ Return JSON with:
 `;
 
     const response = await this.llm.generate(prompt);
-    return JSON.parse(response.text);
+    return JSON.parse(response);
   }
 }

@@ -1,3 +1,5 @@
+import { type } from "os";
+
 InterviewExchange = {
   sessionId: ObjectId,
 
@@ -7,37 +9,30 @@ InterviewExchange = {
     evaluationMetrics: [String],
     targetCompany: {
         type: String,
-        deafult: "Not Specified"
+        default: "Not Specified"
     }
   },
 
   systemPrompt: String,
 
-  phase: "ASKING" | "WAITING_FOR_ANSWER" | "EVALUATING" | "COMPLETED",
+  interviewState: {
+    type: String,
+    enum: ["asking", "waitingForAnswer", "evaluating", "completed"],
+  },
 
   questions: [
     {
-      index: Number,
       text: String,
-      askedAt: Date,
-      followUp: Boolean,
     }
   ],
 
   answers: [
     {
-      questionIndex: Number,
       transcript: String,
-      durationSec: Number,
-      receivedAt: Date,
     }
   ],
 
-  currentQuestionIndex: Number,
-
-  limits: {
-    maxQuestions: Number,
-  },
+  limits: Number,
 
   meta: {
     questionsAsked: Number,

@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:routemaster/routemaster.dart';
 import 'package:unisync/app/providers.dart';
 import 'package:unisync/features/Carrer_Mode/interview/carrer_interview_screen.dart';
+import 'package:unisync/features/Carrer_Mode/interview/interview_controller.dart';
 import 'package:unisync/models/template_model.dart';
 import 'package:unisync/sockets/socket_methods.dart';
 
@@ -18,13 +20,22 @@ class _StartInterviewScreenState extends ConsumerState<StartInterviewScreen> {
   @override
   void initState() {
     ref.read(socketMethodProvider).interviewQuestionListener(context);
+    ref.read(socketMethodProvider).errorListener(context);
     super.initState();
   }
+
+  bool loading = false;
 
 
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(interviewControllerProvider, (prev, next) {
+  if (next.questionRecived != null) {
+    Routemaster.of(context).push('/coreInterviewScreen'); 
+  }
+});
+
     final user = ref.read(userProvider);
     final tmplte = ref.read(selectedTemplateProvider);
     final chips = tmplte!.topics;
@@ -103,8 +114,10 @@ class _StartInterviewScreenState extends ConsumerState<StartInterviewScreen> {
                       minimumSize: Size(double.infinity, 50),
                     ),
                     onPressed: () {
+                      loading = true;
                             ref.read(socketMethodProvider).startInterview(tmplte.id, user!.id!);
-                  }, child: Text("Start Interview")),
+                            loading = false;
+                  }, child: loading ? CircularProgressIndicator() : Text("Start Interview")),
                 ),
           
             ],
