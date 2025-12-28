@@ -7,7 +7,7 @@ import 'package:routemaster/routemaster.dart';
 import 'package:unisync/app/providers.dart';
 import 'package:unisync/features/Carrer_Mode/home/career_home_screen.dart';
 import 'package:unisync/features/Carrer_Mode/sub_views/carrer_card_screen.dart';
-import 'package:unisync/features/Carrer_Mode/interview/carrer_interview_screen.dart';
+import 'package:unisync/features/Carrer_Mode/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/features/Carrer_Mode/sub_views/carrer_resume_screen.dart';
 
 class CareerScreen extends ConsumerStatefulWidget {

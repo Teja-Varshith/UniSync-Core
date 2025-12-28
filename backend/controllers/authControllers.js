@@ -17,7 +17,7 @@ export const loginUserController = async (req, res) => {
     const isUserExised = await User.findOne({
       emailId: emailId,
     });
-
+            //TODO: Photourl bug
     if (isUserExised) {
       isUserExised.photoUrl = photoUrl;
       if (isUserExised.profileComplete == false) {

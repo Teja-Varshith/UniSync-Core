@@ -56,19 +56,13 @@ class InterviewController extends StateNotifier<InterviewStateModel> {
     final voice = ref.read(voiceServiceProvider);
 
     await voice.speak(outro, () {
-      // state = state.copyWith(
-      //   interviewState: InterviewState.evaluating,
-      // );
+      state = state.copyWith(
+        questionreceived: outro,
+        interviewState: InterviewState.completed,
+      );
     });
-
-
-
-    state = state.copyWith(
-      interviewState: InterviewState.completed,
-      questionreceived: outro,
-      sessionId: sessionId,
-    );
   }
+
 
   Future<void> startRecording() async {
   final granted = await ensureMicPermission();
@@ -82,6 +76,8 @@ class InterviewController extends StateNotifier<InterviewStateModel> {
     _currentTranscript = text;
   });
 }
+
+
 
 
   Future<void> stopRecordingAndSend() async {
@@ -98,47 +94,12 @@ class InterviewController extends StateNotifier<InterviewStateModel> {
   }
 
   print(_currentTranscript);
-  ref.read(socketMethodProvider).onAnswerSubmitted(answerTranscript: _currentTranscript, sessionId: state.sessionId!);
+  ref.read(socketMethodProvider).submitAnswer(answerTranscript: _currentTranscript, sessionId: state.sessionId!);
 }
 
-
+   // TODO: NAVIGATE TO TH E RESULTS PAGE
    void onInterviewCompleted() {
     state = state.copyWith(interviewState: InterviewState.completed);
   }
 
-  // void micOn() {
-  //   state = state.copyWith(
-  //     micOn: true,
-  //     interviewState: InterviewState.waitingForAnswer,
-  //   );
-  // }
-
-  // Future<void> micOffAndSubmit(String transcript) async {
-  //   state = state.copyWith(
-  //     micOn: false,
-  //     interviewState: InterviewState.evaluating,
-  //   );
-
-    // ref.read(socketMethodProvider).sendAnswer(transcript);
-  }
-
-  // void onNewQuestion(String question) {
-  //   state = state.copyWith(
-  //     phase: InterviewPhase.asking,
-  //     currentQuestion: question,
-  //   );
-  // }
-
-  // void onCompleted(InterviewReport report) {
-  //   state = state.copyWith(
-  //     phase: InterviewPhase.completed,
-  //     report: report,
-  //   );
-  // }
-
-  // void onError(String message) {
-  //   state = state.copyWith(
-  //     phase: InterviewPhase.error,
-  //     error: message,
-  //   );
-  // }
+ }

@@ -39,36 +39,77 @@ const interviewSessionSchema = new mongoose.Schema(
   ],
 
     finalReport: {
-      overallScore: {
-        type: Number,
-      },
+  overallScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: null,
+  },
 
-      verdict: {
-        type: String,
-        enum: ["Strong Hire", "Hire", "Borderline", "Reject"],
-      },
+  verdict: {
+    type: String,
+    enum: ["Strong Hire", "Hire", "Borderline", "Reject"],
+    default: null,
+  },
 
-      skillBreakdown: {
-        technical: Number,
-        problemSolving: Number,
-        communication: Number,
-        confidence: Number,
-      },
-
-      strengths: [String],
-      weaknesses: [String],
-
-      improvementPlan: [
-        {
-          area: String,
-          suggestion: String,
-        },
-      ],
-
-      summary: {
-        type: String,
-      },
+  skillBreakdown: {
+    technical: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: null,
     },
+    problemSolving: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: null,
+    },
+    communication: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: null,
+    },
+    confidence: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: null,
+    },
+  },
+
+  strengths: {
+    type: [String],
+    default: [],
+  },
+
+  weaknesses: {
+    type: [String],
+    default: [],
+  },
+
+  improvementPlan: {
+    type: [
+      {
+        area: { type: String },
+        suggestion: { type: String },
+      },
+    ],
+    default: [],
+  },
+
+  summary: {
+    type: String,
+    default: "",
+  },
+
+  generatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+}
+
   },
   { timestamps: true }
 );

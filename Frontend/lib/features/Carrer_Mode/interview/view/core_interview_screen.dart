@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/features/Carrer_Mode/interview/interview_controller.dart';
+import 'package:unisync/features/Carrer_Mode/interview/controllers/interview_controller.dart';
 import 'package:unisync/models/interview_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/features/Carrer_Mode/interview/interview_controller.dart';
+import 'package:unisync/features/Carrer_Mode/interview/controllers/interview_controller.dart';
 import 'package:unisync/models/interview_state.dart';
 import 'package:unisync/sockets/socket_methods.dart';
 
