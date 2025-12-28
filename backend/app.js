@@ -7,6 +7,7 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import { templateRouter } from "./routes/interviewRoutes.js";
 import { initSockets } from "./sockets/index.js";
+import { reportRouter } from "./routes/reportRoutes.js";
 
 
 
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
+app.use("/api/carrer",reportRouter);
 app.use("/api/carrer", templateRouter);
 
 initSockets(io);

@@ -46,11 +46,6 @@ const interviewSessionSchema = new mongoose.Schema(
     default: null,
   },
 
-  verdict: {
-    type: String,
-    enum: ["Strong Hire", "Hire", "Borderline", "Reject"],
-    default: null,
-  },
 
   skillBreakdown: {
     technical: {
@@ -104,10 +99,7 @@ const interviewSessionSchema = new mongoose.Schema(
     default: "",
   },
 
-  generatedAt: {
-    type: Date,
-    default: Date.now,
-  },
+
 }
 
   },

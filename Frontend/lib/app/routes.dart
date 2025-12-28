@@ -29,5 +29,7 @@ final loggedInRoutes = RouteMap(
     "/startInterviewScreen": (_) => MaterialPage(child: StartInterviewScreen()),
     "/coreInterviewScreen" : (_) => MaterialPage(child: CoreInterviewScreen()),
     "/interviewResultsScreen": (_) => MaterialPage(child: InterviewResultsScreen()),
+
+    "/reportsScreen": (_) => MaterialPage(child: InterviewResultsScreen()),
   }
 );

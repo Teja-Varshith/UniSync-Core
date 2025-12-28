@@ -191,6 +191,10 @@ Widget _appBar(BuildContext context) {
               fontWeight: FontWeight.bold,
             ),
           ),
+
+          ElevatedButton(onPressed: () {
+            Routemaster.of(context).push('/reportsScreen');
+          }, child: Text('Reports'))
         ],
       ),
     ),
