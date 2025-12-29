@@ -38,8 +38,11 @@ dependencies:
   firebase_core: ^3.13.0
   cloud_firestore: ^5.6.6
 
+  intl:
+
   #network
   dio: ^5.9.0
+  
 
   socket_io_client: 
   cached_network_image:
@@ -47,6 +50,9 @@ dependencies:
 
   #features
   google_sign_in: ^6.2.1
+
+
+  url_launcher: ^6.3.1
 
   #design
   lottie:

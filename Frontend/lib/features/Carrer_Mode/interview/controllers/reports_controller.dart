@@ -15,7 +15,7 @@ class ReportsController extends AsyncNotifier<List<InterviewSession>> {
     final userId = ref.read(userProvider)!.id!;
     final templateId = ref.read(selectedTemplateProvider)!.id;
 
-    return repo.getInterviewReports(
+    return repo.getInterviewReports( 
       userId: userId,
       templateId: templateId,
     );

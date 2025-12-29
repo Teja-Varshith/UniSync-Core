@@ -19,7 +19,6 @@ export const loginUserController = async (req, res) => {
     });
             //TODO: Photourl bug
     if (isUserExised) {
-      isUserExised.photoUrl = photoUrl;
       if (isUserExised.profileComplete == false) {
         res.status(200).json({
           success: true,

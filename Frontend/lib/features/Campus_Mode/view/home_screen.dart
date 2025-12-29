@@ -2,12 +2,15 @@
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:unisync/app/providers.dart';
 import 'package:unisync/models/user_model.dart';
 import 'package:unisync/utils/badge.dart';
 import 'package:unisync/utils/tile.dart';
+
+
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -165,8 +168,8 @@ class ScribbleLine extends CustomPainter {
 }
 
 Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
-  final String firstName = user.name.trim().split(' ').last;
-  final String formattedName = firstName[0].toUpperCase() + firstName.substring(1).toLowerCase();
+  final String firstName = ""; //user.name.trim().split(' ').last;
+  final String formattedName = "varshith"; //firstName[0].toUpperCase() + firstName.substring(1).toLowerCase();
 
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -208,33 +211,15 @@ Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
       Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color:Colors.blueAccent, width: 2),
-            ),
-            child: CircleAvatar(
-              radius: 25,
-              backgroundColor: Colors.grey[200],
-              child: GestureDetector(
-              onTap: () {
-                Routemaster.of(context).push('/profile');
-              },
-                child: ClipOval(
-              child: CachedNetworkImage(
-                imageUrl: user.photoUrl!,
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => CircularProgressIndicator(strokeWidth: 2,color: Colors.blue,),
-                errorWidget: (context, url, error) {
-                   return Icon(Icons.person,);
-                }
-            ),
-                ),
-              ),
-            ),
-          ),
+         AvatarSlideToggle(
+          user: user,
+  onModeChanged: (mode) {
+    // YOU control this
+    // trigger AnimatedSwitcher / PageTransition
+    debugPrint("Switched to $mode");
+  },
+),
+
           LiveAttendanceBadge(onTap: () {
             Routemaster.of(context).push('/liveAttendence');
           }),
@@ -242,4 +227,111 @@ Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
       ),
     ],
   );
+}
+
+enum AppMode { campus, career }
+
+class AvatarSlideToggle extends StatelessWidget {
+  final ValueChanged<AppMode>? onModeChanged;
+  final VoidCallback? onAvatarTap;
+  final AppMode currentMode;
+  final UserModel user;
+
+  const AvatarSlideToggle({
+    super.key,
+    this.onModeChanged,
+    this.onAvatarTap,
+    this.currentMode = AppMode.campus,
+    required this.user,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Avatar
+        Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color:Colors.blueAccent, width: 2),
+            ),
+          child: CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.grey[200],
+                child: GestureDetector(
+                onTap: () {
+                  Routemaster.of(context).push('/profile');
+                },
+                  child: ClipOval(
+                child: CachedNetworkImage(
+            imageUrl: user.photoUrl ?? '',
+            fit: BoxFit.cover,
+            placeholder: (context, url) => const CircularProgressIndicator(
+              strokeWidth: 2,
+            ),
+            errorWidget: (context, url, error) {
+              return const Icon(Icons.person);
+            },
+          )
+          
+                  ),
+                ),
+              ),
+        ),
+        const SizedBox(width: 8),
+        
+        // Mode Dropdown
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<AppMode>(
+              value: currentMode,
+              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 18),
+              dropdownColor: Colors.black,
+              borderRadius: BorderRadius.circular(16),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+              items: AppMode.values.map((mode) {
+                return DropdownMenuItem<AppMode>(
+                  value: mode,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        mode == AppMode.campus ? Icons.school : Icons.work,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        mode == AppMode.campus ? 'Campus' : 'Career',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (AppMode? newMode) {
+                if (newMode != null) {
+                  onModeChanged?.call(newMode);
+                }
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
