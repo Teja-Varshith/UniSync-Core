@@ -1,21 +1,59 @@
-## UniSync - A College Companion App
-- It consists of not 2 but more than 2 modes yup!! same as your mood UniSync too has many modesss.
+# UniSync – A College Companion App
 
-- YeP! so currently in the v1 revamp launch the below modes with the following features are to be released
+UniSync is a **multi-mode college companion app** designed to help students manage campus life, career growth, and skill development — all in one place.
 
-- if you want to contribute please try to solve any exsisting issues or create a new branch( naming convenntions will be uploaded soon) and raise a PR.
+Unlike typical apps that focus on a single use case, **UniSync supports multiple modes**, adapting to what students need at different stages of their college journey.
 
-## 1.Campus Mode
-- Events
-- Hackathons/Internships
-- Peer Connect
-- Live Attendance
+---
 
+## 🚀 v1 Revamp – Modes & Features
 
-## 2.Carrer Mode
-- AI Mock Interview
-- Resume Builder & ATS Score
-- Roadmaps
-- Quick Cards
+The v1 revamp introduces the following modes and features:
 
-- Download the current version of UniSync from PlayStore to try out Campus Mode: https://play.google.com/store/apps/details?id=com.tejavarshith.UniSyncv1
+---
+
+## 🏫 Campus Mode
+Built for everyday college life.
+
+- 📅 **Events** – Stay updated with campus events  
+- 💼 **Hackathons & Internships** – Discover opportunities  
+- 🤝 **Peer Connect** – Connect with fellow students  
+- 🧾 **Live Attendance** – Track attendance in real time  
+
+---
+
+## 🎯 Career Mode
+Focused on employability and skill growth.
+
+- 🤖 **AI Mock Interviews** – Practice interviews with AI-driven feedback  
+- 📄 **Resume Builder & ATS Score** – Build resumes that pass ATS filters  
+- 🗺️ **Roadmaps** – Structured learning paths  
+- 🃏 **Quick Cards** – Bite-sized learning content  
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome and appreciated.
+
+- Pick an existing issue **or** propose a new feature  
+- Create a new branch  
+  > Branch naming conventions will be shared soon  
+- Raise a **Pull Request** with a clear description of your changes  
+
+Whether it’s frontend, backend, UI/UX, or ideas — all meaningful contributions are encouraged.
+
+---
+
+## 📲 Try UniSync
+
+Download the current version of **UniSync (Campus Mode)** from the Play Store:
+
+👉 https://play.google.com/store/apps/details?id=com.tejavarshith.UniSyncv1
+
+---
+
+## 📌 Note
+Career Mode features are under active development as part of the v1 revamp.
+
+Stay tuned.
