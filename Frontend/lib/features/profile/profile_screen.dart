@@ -528,7 +528,7 @@ Widget _buildNoticeBoardTile() {
             TextButton(
               onPressed: () async {
                 ref.read(authControllerProvider).signOut();
-                Routemaster.of(context).replace('/carrer');
+                Routemaster.of(context).replace('/');
               },
               child: const Text(
                 'Log Out',

@@ -6,19 +6,17 @@ import 'package:routemaster/routemaster.dart';
 import 'package:unisync/features/Carrer_Mode/interview/controllers/carrer_controller.dart';
 import 'package:unisync/models/template_model.dart';
 
- final selectedTemplateProvider =
-    StateProvider<TemplateModel?>((ref) => null);
+final selectedTemplateProvider = StateProvider<TemplateModel?>((ref) => null);
 
 class CarrerInterviewScreen extends ConsumerStatefulWidget {
   const CarrerInterviewScreen({super.key});
 
   @override
-  ConsumerState<CarrerInterviewScreen> createState() => _CarrerInterviewScreenState();
+  ConsumerState<CarrerInterviewScreen> createState() =>
+      _CarrerInterviewScreenState();
 }
 
 class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
-
-
   int selectedIndex = 0;
 
   @override
@@ -30,92 +28,122 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _appBar(),
-            _searchBar(),
-
+            _appBar(context),
+            Divider(),
+            _searchBar(context),
             templates.when(
-               loading: () => const Center(
-      child: CircularProgressIndicator(),
-    ),
-
-    error: (error, _) => Center(
-      child: Text(
-        error.toString(),
-        style: const TextStyle(color: Colors.red),
-      ),
-    ),
-    data: (data) {
-      final chips = ["All",...ref.read(carrerControllerProvider.notifier).AvailableDomains];
-       return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.start,
-                children: List.generate(
-                  chips.length,
-                  (index) => SelectableChip(
-                    label: chips[index],
-                    isSelected: selectedIndex == index,
-                    onTap: () {
-                      setState(() {
-                        ref.read(carrerControllerProvider.notifier).filterByDomain(chips[index]);
-                        selectedIndex = index;
-                      });
-                    },
-                  ),
+              loading: () => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              error: (error, _) => Center(
+                child: Text(
+                  error.toString(),
+                  style: const TextStyle(color: Colors.red),
                 ),
               ),
-            );
-    },
-            ),
-
-           Expanded(
-  child: templates.when(
-    loading: () => const Center(
-      child: CircularProgressIndicator(),
-    ),
-
-    error: (error, _) => Center(
-      child: Text(
-        error.toString(),
-        style: const TextStyle(color: Colors.red),
-      ),
-    ),
-
-    data: (data) {
-      if (data.isEmpty) {
-        return const Center(
-          child: Text("No templates found"),
-        );
-      }
-
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: data.length,
-        itemBuilder: (context, index) {
-          final template = data[index];
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: GestureDetector(
-              onTap: () {
-                ref.read(selectedTemplateProvider.notifier).state = template;
-                Routemaster.of(context).push('/startInterviewScreen');
+              data: (data) {
+                final chips = [
+                  "All",
+                  ...ref
+                      .read(carrerControllerProvider.notifier)
+                      .AvailableDomains
+                ];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.start,
+                    children: List.generate(
+                      chips.length,
+                      (index) => GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedIndex = index;
+                          });
+                          ref
+                              .read(carrerControllerProvider.notifier)
+                              .filterByDomain(chips[index]);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: selectedIndex == index
+                                ? Theme.of(context).primaryColor
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: selectedIndex == index
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey.shade300,
+                            ),
+                          ),
+                          child: Text(
+                            chips[index],
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: selectedIndex == index
+                                  ? Colors.white
+                                  : Colors.grey.shade800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
               },
-              child: TemplateCard(
-                logo: template.icon,
-                heading: template.title,
-                topics: template.topics,
+            ),
+            Expanded(
+              child: templates.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                error: (error, _) => Center(
+                  child: Text(
+                    error.toString(),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+                data: (data) {
+                  if (data.isEmpty) {
+                    return const Center(
+                      child: Text("No templates found"),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: data.length,
+                    itemBuilder: (context, index) {
+                      final template = data[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(selectedTemplateProvider.notifier).state =
+                                template;
+                            Routemaster.of(context)
+                                .push('/startInterviewScreen');
+                          },
+                          child: TemplateCard(
+                            logo: template.icon,
+                            heading: template.title,
+                            topics: template.topics,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
-          );
-        },
-      );
-    },
-  ),
-),
-
           ],
         ),
       ),
@@ -127,77 +155,78 @@ class TemplateCard extends StatelessWidget {
   final String logo;
   final String heading;
   final List<String> topics;
+
   const TemplateCard({
-    Key? key,
+    super.key,
     required this.logo,
     required this.heading,
     required this.topics,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC), // subtle tint
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          width: 2,
-          color: Colors.grey
+          color: Colors.grey.shade200,
+          width: 1,
         ),
-        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: SizedBox(
-                  height: 50,
-                  width: 50,
-                  child: CachedNetworkImage(imageUrl: logo),
-                ),
-              ),
-            ],
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                     heading,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-              
-                   RichText(
-  text: TextSpan(
-    text: topics.join(','),
-    style: const TextStyle(
-      fontWeight: FontWeight.w900,
-      fontSize: 14,
-      color: Colors.black54,
-      height: 1.4,
-    ),
-  ),
-)
-
-                ],
-              ),
+          Container(
+            height: 52,
+            width: 52,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
             ),
-          )
+            child: CachedNetworkImage(
+              imageUrl: logo,
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  heading,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  topics.join(" • "),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey.shade700,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
-
-
 
 class SelectableChip extends StatelessWidget {
   final String label;
@@ -238,63 +267,66 @@ class SelectableChip extends StatelessWidget {
   }
 }
 
+Widget _searchBar(BuildContext context) {
+  final accent = Theme.of(context).colorScheme.primary;
 
-Widget _searchBar() {
   return Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: Container(
-      child: TextField(
-        decoration: InputDecoration(
-          hint: Text("Search for templates"),
-          filled: false,
-         
-          focusedBorder: OutlineInputBorder(
-             borderSide: BorderSide(
-              color: Colors.black,
-            ),
-            borderRadius: BorderRadius.circular(20)
-          ),
-          disabledBorder: OutlineInputBorder(
-             borderSide: BorderSide(
-              color: Colors.black,
-            ),
-            borderRadius: BorderRadius.circular(20)
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: Colors.black,
-            ),
-            borderRadius: BorderRadius.circular(20)
-          ),
-          border: OutlineInputBorder(
-             borderSide: BorderSide(
-              color: Colors.black,
-            ),
-            borderRadius: BorderRadius.circular(20)
-          ),
-          suffixIcon: Icon(Icons.search)
+    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16),
+    child: TextField(
+      decoration: InputDecoration(
+        hintText: "Search for templates",
+        hintStyle: TextStyle(
+          color: Colors.grey.shade500,
         ),
-      )
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: Colors.grey.shade300,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: accent,
+            width: 1.4,
+          ),
+        ),
+        suffixIcon: Icon(
+          Icons.search,
+          color: Colors.grey.shade600,
+        ),
+      ),
     ),
   );
 }
 
-Widget _appBar() {
+
+
+
+Widget _appBar(BuildContext context) {
   return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Container(
-      child: Row(
-        children: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.arrow_back_ios_new_outlined)),
-          Text(
-            "Select Interview Template",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+    padding: const EdgeInsets.fromLTRB(8, 12, 16, 0),
+    child: Row(
+      children: [
+        IconButton(
+          onPressed: () => Routemaster.of(context).replace('/carrer'),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 20),
+          splashRadius: 20,
+        ),
+        const SizedBox(width: 4),
+        const Text(
+          "Detailed Info",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
+        ),
+      ],
     ),
   );
 }

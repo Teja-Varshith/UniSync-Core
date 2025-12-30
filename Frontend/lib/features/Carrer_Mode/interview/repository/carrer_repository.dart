@@ -35,7 +35,7 @@ class CarrerRepository {
       final dio = Dio();
 
       final res = await dio.get(
-        '$BASE_URI/carrer/getUserTemplate',
+        '$BASE_URI/carrer/getAllUserTemplate/user/$userId',
       );
 
       if (res.statusCode != 200) {
@@ -51,7 +51,7 @@ class CarrerRepository {
           .toList();
     } on DioException catch (e) {
       final message =
-          e.response?.data?['message'] ?? 'Network error';
+          e.response?.data?['message'] ?? 'Network error $e';
       throw Exception(message);
     } catch (e) {
       throw Exception('Parsing error: $e');

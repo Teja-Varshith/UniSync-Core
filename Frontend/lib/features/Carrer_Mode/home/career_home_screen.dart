@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:routemaster/routemaster.dart';
+import 'package:unisync/app/providers.dart';
+import 'package:unisync/features/services/appMode.dart';
 import 'package:unisync/sockets/socket_methods.dart';
 
 class CareerHomeScreen extends ConsumerStatefulWidget {
@@ -61,7 +65,61 @@ final topics = [
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _interviewCard(),
+             Padding(
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 20),
+              child: Row(
+                children: [
+                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       Text(
+                          '# Hustle',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+
+                        Text(
+                              'Get Placement Ready',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                // fontStyle: FontStyle.italic,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                     ],
+                   ),
+
+                  Spacer(),
+
+                  AvatarSlideToggle(
+                    currentMode: ref.read(AppModeProvider),
+                     user: ref.read(userProvider)!,
+                      menu: [AppMode.career, AppMode.campus,AppMode.builder],
+
+                      onModeChanged: (mode) {
+    if(mode == AppMode.campus) {Routemaster.of(context).replace("/");
+      // mode = ref.watch(AppModeProvider);
+      ref.read(AppModeProvider.notifier).state = AppMode.campus; 
+    }
+
+    
+
+
+    // YOU control this
+    // trigger AnimatedSwitcher / PageTransition
+    debugPrint("Switched to $mode");
+  },
+                    )
+                                    
+                  
+                ],
+              ),
+            ),
+            _interviewCard(context),
             SizedBox(height: 10,),
             softActionCard(
   title: 'Resume review with Arya',
@@ -299,7 +357,7 @@ Widget softActionCard({
   );
 }
 
-Widget _interviewCard() {
+Widget _interviewCard(BuildContext context) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 5),
     child: Container(
@@ -354,7 +412,9 @@ Widget _interviewCard() {
             width: double.infinity,
             height: 44,
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Routemaster.of(context).push('/carrer-interview-screen');
+              },
               icon: const Icon(
                 Icons.rocket_launch,
                 size: 18,

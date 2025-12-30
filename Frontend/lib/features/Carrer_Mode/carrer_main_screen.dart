@@ -8,6 +8,7 @@ import 'package:unisync/app/providers.dart';
 import 'package:unisync/features/Campus_Mode/view/home_screen.dart';
 import 'package:unisync/features/Carrer_Mode/home/career_home_screen.dart';
 import 'package:unisync/features/Carrer_Mode/interview/view/interview_results_screen.dart';
+import 'package:unisync/features/Carrer_Mode/interview/view/user_interview_details.dart';
 import 'package:unisync/features/Carrer_Mode/sub_views/carrer_card_screen.dart';
 import 'package:unisync/features/Carrer_Mode/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/features/Carrer_Mode/sub_views/carrer_resume_screen.dart';
@@ -32,47 +33,6 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header Section
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-              child: Row(
-                children: [
-                  Text(
-                    "Career Mode",// 'Hey! ${user?.name.split(' ').first ?? 'Guest'}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-
-                  Spacer(),
-
-                  AvatarSlideToggle(
-                    currentMode: ref.read(AppModeProvider),
-                     user: user!,
-                      menu: [AppMode.career, AppMode.campus,AppMode.builder],
-
-                      onModeChanged: (mode) {
-    if(mode == AppMode.campus) {Routemaster.of(context).replace("/");
-      // mode = ref.watch(AppModeProvider);
-      ref.read(AppModeProvider.notifier).state = AppMode.campus; 
-    }
-
-    
-
-
-    // YOU control this
-    // trigger AnimatedSwitcher / PageTransition
-    debugPrint("Switched to $mode");
-  },
-                    )
-                                    
-                  
-                ],
-              ),
-            ),
-
             // Scrollable Content
            Expanded(child: screens[_page]),
           ],
@@ -97,7 +57,6 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
             icon: Icons.graphic_eq_rounded,
             label: "Interviews",
             index: 1,
-            push: true,
           ),
           _buildNavItem(
             icon: Icons.layers_outlined,
@@ -120,7 +79,8 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
 
   List<Widget> screens = [
      CareerHomeScreen(),
-     CarrerInterviewScreen(),
+    //  CarrerInterviewScreen(),
+    UserInterviewDetails(),
      CarrerResumeScreen(),
 
      CarrerCardScreen()

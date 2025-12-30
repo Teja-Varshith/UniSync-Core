@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:unisync/app/providers.dart';
 import 'package:unisync/features/Carrer_Mode/interview/controllers/reports_controller.dart';
-import 'package:unisync/features/Carrer_Mode/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/features/Carrer_Mode/interview/controllers/interview_controller.dart';
+import 'package:unisync/features/Carrer_Mode/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/models/template_model.dart';
 import 'package:unisync/sockets/socket_methods.dart';
 
@@ -17,112 +17,139 @@ class StartInterviewScreen extends ConsumerStatefulWidget {
       _StartInterviewScreenState();
 }
 
-class _StartInterviewScreenState extends ConsumerState<StartInterviewScreen> {
-  @override
-void initState() {
-  super.initState();
-}
-
-
+class _StartInterviewScreenState
+    extends ConsumerState<StartInterviewScreen> {
   bool loading = false;
 
   @override
   Widget build(BuildContext context) {
     ref.listen(interviewControllerProvider, (prev, next) {
-    if (next.questionreceived != null) {
+      if (next.questionreceived != null) {
         Routemaster.of(context).replace('/coreInterviewScreen');
-    }
-  });
+      }
+    });
 
     final user = ref.read(userProvider);
-    final tmplte = ref.read(selectedTemplateProvider);
-    final chips = tmplte!.topics;
+    final tmplte = ref.read(selectedTemplateProvider)!;
+    final chips = tmplte.topics;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-          child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _appBar(context,ref),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  SizedBox(
-                      height: 70,
-                      width: 70,
-                      child: CachedNetworkImage(imageUrl: tmplte.icon)),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Flexible(
-                    child: Text(
-                      tmplte.title,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _appBar(context, ref),
+              Divider(),
+
+              // TEMPLATE HEADER
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      height: 64,
+                      width: 64,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border:
+                            Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: CachedNetworkImage(
+                        imageUrl: tmplte.icon,
+                        fit: BoxFit.contain,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        tmplte.title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.start,
-                children: List.generate(
-                  chips.length,
-                  (index) => SelectableChip(
-                    label: chips[index],
-                    isSelected: false,
-                    onTap: () {},
+
+              // TOPICS
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: List.generate(
+                    chips.length,
+                    (index) => SelectableChip(
+                      label: chips[index],
+                      isSelected: false,
+                      onTap: () {},
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Evaluation Metrics',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+
+              const SizedBox(height: 20),
+
+              // EVALUATION METRICS TITLE
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Evaluation Metrics',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade900,
+                  ),
                 ),
               ),
-            ),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: tmplte.evaluationMetrics.length,
-              itemBuilder: (context, index) {
-                final t = tmplte.evaluationMetrics[index];
-                return _evaluationMetrics(t.description, t.topic);
-              },
-            ),
-            Padding(
-                padding: const EdgeInsets.all(16.0),
+
+              const SizedBox(height: 8),
+
+              // METRICS LIST
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: tmplte.evaluationMetrics.length,
+                itemBuilder: (context, index) {
+                  final t = tmplte.evaluationMetrics[index];
+                  return _evaluationMetricCard(
+                    t.topic,
+                    t.description,
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // START BUTTON
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
                     backgroundColor: Colors.black,
-                    shape: StadiumBorder(),
-                    minimumSize: Size(double.infinity, 50),
+                    foregroundColor: Colors.white,
+                    minimumSize:
+                        const Size(double.infinity, 52),
+                    shape: const StadiumBorder(),
                   ),
-                  onPressed: loading? null : () {
-                    setState(() {
-                      loading = true;
-                    });
-                    ref
-                        .read(socketMethodProvider)
-                        .startInterview(tmplte.id, user!.id!);
-                  },
+                  onPressed: loading
+                      ? null
+                      : () {
+                          setState(() => loading = true);
+                          ref
+                              .read(socketMethodProvider)
+                              .startInterview(
+                                  tmplte.id, user!.id!);
+                        },
                   child: loading
                       ? const SizedBox(
                           height: 20,
@@ -132,73 +159,103 @@ void initState() {
                             color: Colors.white,
                           ),
                         )
-                      : const Text("Start Interview"),
-                )),
-          ],
+                      : const Text(
+                          "Start Interview",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }
 
-Widget _evaluationMetrics(String subheading, String heading) {
+// EVALUATION METRIC CARD (CLEAN)
+Widget _evaluationMetricCard(String title, String desc) {
   return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: _evalWidget(subheading, heading));
-}
-
-Widget _evalWidget(String subheading, String heading) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+    padding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
     child: Container(
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        border: Border.all(width: 1, color: Colors.black),
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              heading,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            Text(
-              subheading,
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-Widget _appBar(BuildContext context, WidgetRef ref) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Container(
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              }, icon: Icon(Icons.arrow_back_ios_new_outlined)),
           Text(
-            "Detailed Info",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
           ),
-
-          ElevatedButton(onPressed: () {
-            ref.invalidate(ReportsControllerProvider);
-            Routemaster.of(context).push('/reportsScreen');
-          }, child: Text('Reports'))
+          const SizedBox(height: 6),
+          Text(
+            desc,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade700,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     ),
   );
 }
+
+// APP BAR (FLAT, CLEAN)
+Widget _appBar(BuildContext context, WidgetRef ref) {
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(8, 12, 16, 0),
+    child: Row(
+      children: [
+        IconButton(
+          onPressed: () => Routemaster.of(context).replace('/carrer-interview-screen'),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 20),
+          splashRadius: 20,
+        ),
+        const SizedBox(width: 4),
+        const Text(
+          "Detailed Info",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const Spacer(),
+        TextButton(
+          onPressed: () {
+            ref.invalidate(ReportsControllerProvider);
+            Routemaster.of(context).push('/reportsScreen');
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black, foregroundColor: Colors.white
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal:  8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                const Text(
+                  'Reports   ',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                ),
+                 Icon(Icons.launch)
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+

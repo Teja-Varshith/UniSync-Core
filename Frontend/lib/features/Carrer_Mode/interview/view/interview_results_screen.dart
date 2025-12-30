@@ -18,32 +18,41 @@ class _InterviewResultsScreenState
   @override
   Widget build(BuildContext context) {
     final rprts = ref.watch(ReportsControllerProvider);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
             _appBar(context),
+
+
+            Divider(),
+
             Expanded(
               child: rprts.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(),
+                ),
                 error: (error, _) => Center(
                   child: Text(
                     error.toString(),
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
-                ),
                 data: (data) {
                   if (data.isEmpty) {
                     return const Center(
-                      child: Text('No interview reports found'),
+                      child: Text(
+                        'No interview reports found',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     );
                   }
+
                   return ListView.builder(
-                    itemCount: data.length,
                     padding: const EdgeInsets.all(16),
+                    itemCount: data.length,
                     itemBuilder: (context, index) {
                       return ReportCard(
                         session: data[index],
@@ -91,31 +100,20 @@ class _ReportCardState extends State<ReportCard> {
   Color _getStatusColor() {
     switch (widget.session.status.toLowerCase()) {
       case 'completed':
-        return const Color(0xFF4CAF50);
+        return const Color(0xFF16A34A);
       case 'in_progress':
-        return const Color(0xFF2196F3);
+        return const Color(0xFF2563EB);
       case 'failed':
-        return const Color(0xFFF44336);
+        return const Color(0xFFDC2626);
       default:
-        return const Color(0xFF9E9E9E);
+        return Colors.grey;
     }
   }
 
-  Color _getCardColor() {
-    final colors = [
-      const Color(0xFFFFF9E6),
-      const Color(0xFFE8F5E9),
-      const Color(0xFFE3F2FD),
-      const Color(0xFFFCE4EC),
-      const Color(0xFFF3E5F5),
-    ];
-    return colors[widget.sessionNumber % colors.length];
-  }
-
   Color _getScoreColor(int score) {
-    if (score >= 70) return const Color(0xFF4CAF50);
-    if (score >= 50) return const Color(0xFFFF9800);
-    return const Color(0xFFF44336);
+    if (score >= 70) return const Color(0xFF16A34A);
+    if (score >= 50) return const Color(0xFFF59E0B);
+    return const Color(0xFFDC2626);
   }
 
   @override
@@ -125,14 +123,15 @@ class _ReportCardState extends State<ReportCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: _getCardColor(),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         children: [
           InkWell(
             onTap: () => setState(() => expanded = !expanded),
+            borderRadius: BorderRadius.circular(14),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -144,65 +143,56 @@ class _ReportCardState extends State<ReportCard> {
                       Text(
                         'Session #${widget.sessionNumber}',
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
                       ),
-                      Icon(expanded ? Icons.expand_less : Icons.expand_more),
+                      Icon(
+                        expanded ? Icons.expand_less : Icons.expand_more,
+                        color: Colors.grey.shade600,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today, size: 14, color: Color(0xFF757575)),
+                      Icon(Icons.calendar_today,
+                          size: 14, color: Colors.grey.shade500),
                       const SizedBox(width: 6),
                       Text(
                         _formatDate(widget.session.startedAt),
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF757575)),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                       const SizedBox(width: 16),
-                      const Icon(Icons.access_time, size: 14, color: Color(0xFF757575)),
+                      Icon(Icons.access_time,
+                          size: 14, color: Colors.grey.shade500),
                       const SizedBox(width: 6),
                       Text(
                         _formatTime(widget.session.startedAt),
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF757575)),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor().withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          widget.session.status.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: _getStatusColor(),
-                          ),
-                        ),
+                      _pill(
+                        widget.session.status.toUpperCase(),
+                        _getStatusColor(),
                       ),
                       if (report != null) ...[
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _getScoreColor(report.overallScore ?? 0).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'Score: ${report.overallScore ?? 0}/100',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: _getScoreColor(report.overallScore ?? 0),
-                            ),
-                          ),
+                        const SizedBox(width: 10),
+                        _pill(
+                          'Score ${report.overallScore ?? 0}/100',
+                          _getScoreColor(
+                              report.overallScore ?? 0),
                         ),
                       ],
                     ],
@@ -214,28 +204,38 @@ class _ReportCardState extends State<ReportCard> {
           if (expanded && report != null)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Color(0xFFE0E0E0))),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade200),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSection('Summary', report.summary),
+                  _section('Summary', report.summary),
                   if (report.skillBreakdown != null) ...[
                     const SizedBox(height: 16),
-                    _buildSkills(report.skillBreakdown!),
+                    _skills(report.skillBreakdown!),
+                  ],
+                  if (widget.session.questions.isNotEmpty &&
+                      widget.session.answers.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _qaSection(
+                      widget.session.questions,
+                      widget.session.answers,
+                    ),
                   ],
                   if (report.strengths.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    _buildList('Strengths', report.strengths),
+                    _list('Strengths', report.strengths),
                   ],
                   if (report.weaknesses.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    _buildList('Weaknesses', report.weaknesses),
+                    _list('Weaknesses', report.weaknesses),
                   ],
                   if (report.improvementPlan.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    _buildPlan(report.improvementPlan),
+                    _plan(report.improvementPlan),
                   ],
                 ],
               ),
@@ -245,124 +245,234 @@ class _ReportCardState extends State<ReportCard> {
     );
   }
 
-  Widget _buildSection(String title, String content) {
+  Widget _pill(String text, Color color) {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  Widget _section(String title, String content) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
         const SizedBox(height: 8),
-        Text(content, style: const TextStyle(fontSize: 13, height: 1.5)),
+        Text(
+          content,
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.5,
+            color: Colors.grey.shade800,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildSkills(SkillBreakdown skills) {
+  Widget _qaSection(List<Question> questions, List<Answer> answers) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Skills', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        const Text(
+          'Questions & Answers',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 8),
-        _buildSkillRow('Technical', skills.technical ?? 0),
-        _buildSkillRow('Problem Solving', skills.problemSolving ?? 0),
-        _buildSkillRow('Communication', skills.communication ?? 0),
-        _buildSkillRow('Confidence', skills.confidence ?? 0),
+        ...List.generate(
+          questions.length,
+          (i) => Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  questions[i].text,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  i < answers.length
+                      ? answers[i].transcript
+                      : 'No response recorded',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildSkillRow(String label, int value) {
+  Widget _skills(SkillBreakdown skills) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Skills',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _skill('Technical', skills.technical ?? 0),
+        _skill('Problem Solving', skills.problemSolving ?? 0),
+        _skill('Communication', skills.communication ?? 0),
+        _skill('Confidence', skills.confidence ?? 0),
+      ],
+    );
+  }
+
+  Widget _skill(String label, int value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          const Text('#', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 8),
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 13))),
-          Text('$value/100', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+          Text(
+            '$value/100',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildList(String title, List<String> items) {
+  Widget _list(String title, List<String> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 8),
-        ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('#', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(item, style: const TextStyle(fontSize: 13, height: 1.5))),
-                ],
-              ),
-            )),
+        ...items.map(
+          (e) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              '• $e',
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildPlan(List<ImprovementItem> items) {
+  Widget _plan(List<ImprovementItem> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Improvement Plan', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        const Text(
+          'Improvement Plan',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 8),
-        ...items.map((item) => Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('#', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(item.area, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                        const SizedBox(height: 4),
-                        Text(item.suggestion, style: const TextStyle(fontSize: 13)),
-                      ],
-                    ),
+        ...items.map(
+          (item) => Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.area,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
                   ),
-                ],
-              ),
-            )),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.suggestion,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 }
 
+
 Widget _appBar(BuildContext context) {
-  return Container(
-    padding: const EdgeInsets.all(16),
-    decoration: const BoxDecoration(
-      color: Colors.white,
-      border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0))),
-    ),
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(8, 12, 16, 0),
     child: Row(
       children: [
         IconButton(
           onPressed: () => Routemaster.of(context).replace("/startInterviewScreen"),
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 20),
+          splashRadius: 20,
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 4),
         const Text(
-          "Interview Reports",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          "Interview Rports",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     ),

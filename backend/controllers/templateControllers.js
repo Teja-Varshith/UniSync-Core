@@ -1,4 +1,5 @@
 import { Template } from "../models/template.js";
+import {InterviewSession} from "../models/interviewsession.js"
 
 export const createTemplatesController = async (req, res) => {
   // const {title,topics,evaluationMetrics,domain,icon} = req.body
@@ -39,22 +40,26 @@ export const createTemplatesController = async (req, res) => {
 
 export const getAllUserTemplate = async (req,res) => {
 try{
-  const {userId} = req.body;
-  
-   
+  const { userId } = req.params;
+  const sessions = await InterviewSession.find({ userId })
+  .select("templateId")
+  .lean();
 
+const templateIds = [...new Set(sessions.map(s => s.templateId))];
 
+const templates = await Template.find({ _id: { $in: templateIds } });
 
-  const templatesUser = await Template.find({
-    userId
-  })
 
   res.status(200).json({
     success:true,
-    data:templatesUser
+    data:templates
   });
 }catch(e){
-  res.send(e);
+  console.log(e);
+  res.status(500).json({
+    success:false,
+    data: []
+  });
 }
 
 
