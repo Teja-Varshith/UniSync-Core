@@ -29,4 +29,32 @@ class CarrerRepository {
       throw Exception('Parsing error: $e');
     }
   }
+
+   Future<List<TemplateModel>> getTemplatesByUserId(String userId) async {
+    try {
+      final dio = Dio();
+
+      final res = await dio.get(
+        '$BASE_URI/carrer/getUserTemplate',
+      );
+
+      if (res.statusCode != 200) {
+        throw Exception('Failed to fetch templates');
+      }
+
+      final responseMap = res.data as Map<String, dynamic>;
+
+      final List templatesJson = responseMap['data'];
+
+      return templatesJson
+          .map((json) => TemplateModel.fromMap(json))
+          .toList();
+    } on DioException catch (e) {
+      final message =
+          e.response?.data?['message'] ?? 'Network error';
+      throw Exception(message);
+    } catch (e) {
+      throw Exception('Parsing error: $e');
+    }
+  }
 }

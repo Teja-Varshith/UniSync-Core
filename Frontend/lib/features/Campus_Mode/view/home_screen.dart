@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:unisync/app/providers.dart';
+import 'package:unisync/features/services/appMode.dart';
 import 'package:unisync/models/user_model.dart';
 import 'package:unisync/utils/badge.dart';
 import 'package:unisync/utils/tile.dart';
@@ -168,8 +169,8 @@ class ScribbleLine extends CustomPainter {
 }
 
 Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
-  final String firstName = ""; //user.name.trim().split(' ').last;
-  final String formattedName = "varshith"; //firstName[0].toUpperCase() + firstName.substring(1).toLowerCase();
+  final String firstName = user.name.trim().split(' ').last;
+  final String formattedName = firstName[0].toUpperCase() + firstName.substring(1).toLowerCase();
 
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -211,47 +212,9 @@ Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
       Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-         AvatarSlideToggle(
-          user: user,
-  onModeChanged: (mode) {
-    // YOU control this
-    // trigger AnimatedSwitcher / PageTransition
-    debugPrint("Switched to $mode");
-  },
-),
-
-          LiveAttendanceBadge(onTap: () {
-            Routemaster.of(context).push('/liveAttendence');
-          }),
-        ],
-      ),
-    ],
-  );
-}
-
-enum AppMode { campus, career }
-
-class AvatarSlideToggle extends StatelessWidget {
-  final ValueChanged<AppMode>? onModeChanged;
-  final VoidCallback? onAvatarTap;
-  final AppMode currentMode;
-  final UserModel user;
-
-  const AvatarSlideToggle({
-    super.key,
-    this.onModeChanged,
-    this.onAvatarTap,
-    this.currentMode = AppMode.campus,
-    required this.user,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Avatar
-        Container(
+          Row(
+            children: [
+              Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color:Colors.blueAccent, width: 2),
@@ -280,58 +243,37 @@ class AvatarSlideToggle extends StatelessWidget {
               ),
         ),
         const SizedBox(width: 8),
-        
-        // Mode Dropdown
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(30),
+
+        AvatarSlideToggle(
+          currentMode: ref.read(AppModeProvider), 
+          menu: [AppMode.campus,AppMode.career,AppMode.builder],
+          user: user,
+  onModeChanged: (mode) {
+    if(mode == AppMode.career) {Routemaster.of(context).replace("/carrer");
+      // mode = ref.watch(AppModeProvider);
+      ref.read(AppModeProvider.notifier).state = AppMode.career; 
+    }
+
+    
+
+
+    // ref.read(AppModeProvider.notifier).state = AppMode.career;
+    // Routemaster.of(context).replace("/carrer") ;
+    // YOU control this
+    // trigger AnimatedSwitcher / PageTransition
+    debugPrint("Switched to $mode");
+  },
+),
+
+            ],
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<AppMode>(
-              value: currentMode,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 18),
-              dropdownColor: Colors.black,
-              borderRadius: BorderRadius.circular(16),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-              items: AppMode.values.map((mode) {
-                return DropdownMenuItem<AppMode>(
-                  value: mode,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        mode == AppMode.campus ? Icons.school : Icons.work,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        mode == AppMode.campus ? 'Campus' : 'Career',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (AppMode? newMode) {
-                if (newMode != null) {
-                  onModeChanged?.call(newMode);
-                }
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+         
+
+          LiveAttendanceBadge(onTap: () {
+            Routemaster.of(context).push('/liveAttendence');
+          }),
+        ],
+      ),
+    ],
+  );
 }

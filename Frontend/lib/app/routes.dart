@@ -26,7 +26,7 @@ final completeProfileRoutes = RouteMap(
 final loggedInRoutes = RouteMap(
   routes: {
     '/': (_) => MaterialPage(child: HomeScreen()),
-    // "/": (_) => MaterialPage(child: CareerScreen()),
+    "/carrer": (_) => MaterialPage(child: CareerScreen()),
     "/carrer-interview-screen": (_) => MaterialPage(child: CarrerInterviewScreen()),
     "/startInterviewScreen": (_) => MaterialPage(child: StartInterviewScreen()),
     "/coreInterviewScreen" : (_) => MaterialPage(child: CoreInterviewScreen()),

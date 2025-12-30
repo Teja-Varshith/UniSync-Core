@@ -5,11 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_flutter/icons_flutter.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:unisync/app/providers.dart';
+import 'package:unisync/features/Campus_Mode/view/home_screen.dart';
 import 'package:unisync/features/Carrer_Mode/home/career_home_screen.dart';
 import 'package:unisync/features/Carrer_Mode/interview/view/interview_results_screen.dart';
 import 'package:unisync/features/Carrer_Mode/sub_views/carrer_card_screen.dart';
 import 'package:unisync/features/Carrer_Mode/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/features/Carrer_Mode/sub_views/carrer_resume_screen.dart';
+import 'package:unisync/features/services/appMode.dart';
 
 class CareerScreen extends ConsumerStatefulWidget {
   const CareerScreen({super.key});
@@ -35,55 +37,38 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
               child: Row(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: Colors.grey[300],
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: Colors.blueAccent, width: 2),
-                              ),
-                              child: ClipOval(
-                                child: CachedNetworkImage(
-                                    imageUrl: user?.photoUrl ?? "",
-                                    width: 60,
-                                    height: 60,
-                                    fit: BoxFit.fill,
-                                    placeholder: (context, url) =>
-                                        CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.blue,
-                                        ),
-                                    errorWidget: (context, url, error) {
-                                      return Icon(
-                                        Icons.person,
-                                      );
-                                    }),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Text(
-                            'Hey! ${user?.name.split(' ').first ?? 'Guest'}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const Text(' 👋', style: TextStyle(fontSize: 20)),
-                        ],
-                      ),
-                    ],
+                  Text(
+                    "Career Mode",// 'Hey! ${user?.name.split(' ').first ?? 'Guest'}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
+
+                  Spacer(),
+
+                  AvatarSlideToggle(
+                    currentMode: ref.read(AppModeProvider),
+                     user: user!,
+                      menu: [AppMode.career, AppMode.campus,AppMode.builder],
+
+                      onModeChanged: (mode) {
+    if(mode == AppMode.campus) {Routemaster.of(context).replace("/");
+      // mode = ref.watch(AppModeProvider);
+      ref.read(AppModeProvider.notifier).state = AppMode.campus; 
+    }
+
+    
+
+
+    // YOU control this
+    // trigger AnimatedSwitcher / PageTransition
+    debugPrint("Switched to $mode");
+  },
+                    )
+                                    
+                  
                 ],
               ),
             ),

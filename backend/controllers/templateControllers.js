@@ -37,6 +37,29 @@ export const createTemplatesController = async (req, res) => {
   });
 };
 
+export const getAllUserTemplate = async (req,res) => {
+try{
+  const {userId} = req.body;
+  
+   
+
+
+
+  const templatesUser = await Template.find({
+    userId
+  })
+
+  res.status(200).json({
+    success:true,
+    data:templatesUser
+  });
+}catch(e){
+  res.send(e);
+}
+
+
+};
+
 export const getAllTemplates = async (req, res) => {
   const allTemplates = await Template.find();
 

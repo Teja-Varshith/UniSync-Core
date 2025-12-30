@@ -9,11 +9,18 @@ class VoiceService {
 
   bool _isListening = false;
 
-  Future<void> init() async {
-    await _tts.setLanguage("en-US");
-    await _tts.setSpeechRate(0.45);
-    await _tts.setPitch(1.0);
-  }
+ Future<void> init() async {
+  await _tts.setLanguage("en-US");
+  await _tts.setSpeechRate(0.4);  // slower = more natural
+  await _tts.setPitch(1.0);
+  await _tts.setVolume(1.0);
+
+  await _tts.setVoice({
+    "name": "en-us-x-sfg#female_1",
+    "locale": "en-US",
+  });
+}
+
 
   String _lastTranscript = "";
 

@@ -329,7 +329,7 @@ Widget _interviewCard() {
               ),
               SizedBox(width: 10),
               Text(
-                'Hey, I am Aavi\nyour ai interview taker',
+                'Hey, I am Uni\nyour AI interviewer',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,

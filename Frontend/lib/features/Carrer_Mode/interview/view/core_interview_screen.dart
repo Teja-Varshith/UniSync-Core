@@ -27,7 +27,7 @@ class _CoreInterviewScreenState extends ConsumerState<CoreInterviewScreen> {
   Widget build(BuildContext context) {
     ref.listen(interviewControllerProvider, (prev, next) {
   if (next.interviewState == InterviewState.completed) {
-    Routemaster.of(context).push('/');
+    Routemaster.of(context).push('/carrer');
     return;
   }
 });
