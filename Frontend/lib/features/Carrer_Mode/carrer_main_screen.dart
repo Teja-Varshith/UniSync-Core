@@ -9,7 +9,7 @@ import 'package:unisync/features/Campus_Mode/view/home_screen.dart';
 import 'package:unisync/features/Carrer_Mode/home/career_home_screen.dart';
 import 'package:unisync/features/Carrer_Mode/interview/view/interview_results_screen.dart';
 import 'package:unisync/features/Carrer_Mode/interview/view/user_interview_details.dart';
-import 'package:unisync/features/Carrer_Mode/sub_views/carrer_card_screen.dart';
+import 'package:unisync/features/Carrer_Mode/cards/view/carrer_card_screen.dart';
 import 'package:unisync/features/Carrer_Mode/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/features/Carrer_Mode/sub_views/carrer_resume_screen.dart';
 import 'package:unisync/features/services/appMode.dart';
@@ -81,9 +81,9 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
      CareerHomeScreen(),
     //  CarrerInterviewScreen(),
     UserInterviewDetails(),
-     CarrerResumeScreen(),
+         CarrerCardScreen(),
 
-     CarrerCardScreen()
+     CarrerResumeScreen()
   ];
 
 

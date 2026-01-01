@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 import { templateRouter } from "./routes/interviewRoutes.js";
 import { initSockets } from "./sockets/index.js";
 import { reportRouter } from "./routes/reportRoutes.js";
+import { domainRouter } from "./routes/domain.js";
 
 
 
@@ -22,6 +23,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/carrer",reportRouter);
 app.use("/api/carrer", templateRouter);
+app.use("/api/cards/", domainRouter);
 
 initSockets(io);
 
