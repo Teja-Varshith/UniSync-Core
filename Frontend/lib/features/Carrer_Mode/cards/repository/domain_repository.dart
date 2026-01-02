@@ -6,7 +6,7 @@ class DomainRepository {
   Future<List<DomainModel>> getAllDomains() async{
     try{
       final _dio = Dio();
-    final res = await _dio.get("$BASE_URI/cards/getAllDomains",);
+    final res = await _dio.get("$BASE_URI/domain/getAllDomains",);
     
 
     final List domainJson =  res.data["data"] ;
@@ -20,4 +20,25 @@ class DomainRepository {
     throw Exception(e);
   }
   }
+
+  Future<Map<String,String>> getNextQuestion(String userId, String domain, String subDomainId) async{
+    try{
+      final _dio = Dio();
+      final res = await _dio.get(
+        "$BASE_URI/progress/getNextQuestion",
+        data: {
+          "userId": userId,
+          "domain": domain,
+          "subDomainId": subDomainId,
+        }
+      );
+      final json = res.data;
+      return json;
+    }catch(e){
+      throw e;
+    }
+  }
+
+
+
 }

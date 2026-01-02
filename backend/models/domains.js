@@ -3,14 +3,16 @@ import mongoose from "mongoose";
 const subDomainSchema = new mongoose.Schema(
   {
     label: {
-      type: String,
-      // required: true,
+       type: String,
+      required: true,
+      trim: true,
     },
     logo: {
       type: String,
+      default: "",
     }
   },
-  { _id: false }
+  { _id: true }
 );
 
 const domainSchema = new mongoose.Schema({
@@ -18,6 +20,8 @@ const domainSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true,
+    lowercase: true,
   },
 
   subDomains: {

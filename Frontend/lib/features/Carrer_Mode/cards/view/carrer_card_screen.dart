@@ -71,7 +71,7 @@ Widget domainArea(WidgetRef ref, BuildContext context, DomainModel domain) {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      domain.domain,
+                      domain.domain.toUpperCase(),
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                     ),
                     SizedBox(
@@ -84,7 +84,7 @@ Widget domainArea(WidgetRef ref, BuildContext context, DomainModel domain) {
                         domain.subDomain.length,
                         (indx) => GestureDetector(
                           onTap: () {
-                            ref.read(SelectedDomainProvider.notifier).state = domain.subDomain[indx].label;
+                            ref.read(SelectedDomainProvider.notifier).state = domain.subDomain[indx].id;
                             Routemaster.of(context).push("/cardsQuiz");
                           },
                           child: SelectableChip2(label: domain.subDomain[indx].label, logo: domain.subDomain[indx].logo),

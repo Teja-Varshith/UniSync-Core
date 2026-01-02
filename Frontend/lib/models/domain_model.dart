@@ -47,18 +47,22 @@ class DomainModel {
 }
 
 class SubDomains {
+  final String id;
   final String label;
   final String logo;
   SubDomains({
+    required this.id,
     required this.label,
     required this.logo,
   });
 
   SubDomains copyWith({
+    String? id,
     String? label,
     String? logo,
   }) {
     return SubDomains(
+      id: id ?? this.id,
       label: label ?? this.label,
       logo: logo ?? this.logo,
     );
@@ -67,6 +71,7 @@ class SubDomains {
 
   factory SubDomains.fromMap(Map<String, dynamic> map) {
     return SubDomains(
+      id: map["_id"] as String,
       label: map['label'] as String,
       logo: map['logo'] as String,
     );

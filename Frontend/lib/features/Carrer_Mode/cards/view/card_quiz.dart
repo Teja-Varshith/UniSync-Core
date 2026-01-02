@@ -16,7 +16,7 @@ class _CardQuizState extends ConsumerState<CardQuiz> {
     return Scaffold(
       body: Column(
         children: [
-          Text(_selctedDomain.toString())
+          Center(child: Text(_selctedDomain.toString()))
         ],
       ),
     );
