@@ -275,7 +275,13 @@ Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
          
 
           LiveAttendanceBadge(onTap: () {
+            print(ref.read(userProvider)!.cookie);
+            if(user.cookie != null){
+              print("went in");
             Routemaster.of(context).push('/liveAttendence');
+            }else{
+              Routemaster.of(context).push('/campXLogin');
+            } 
           }),
         ],
       ),

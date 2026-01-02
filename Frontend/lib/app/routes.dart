@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:unisync/features/Campus_Mode/attendance/view/campx_login.dart';
+import 'package:unisync/features/Campus_Mode/attendance/view/live_attendance_screen.dart';
 import 'package:unisync/features/Campus_Mode/view/home_screen.dart';
 import 'package:unisync/features/Carrer_Mode/cards/view/card_quiz.dart';
 import 'package:unisync/features/Carrer_Mode/interview/view/carrer_interview_screen.dart';
@@ -37,5 +39,7 @@ final loggedInRoutes = RouteMap(
     "/builderHomeScreen": (_) => MaterialPage(child: BuilderHomeScreen()),
     "/cardsQuiz": (_) => MaterialPage(child: CardQuiz()),
     "/reportsScreen": (_) => MaterialPage(child: InterviewResultsScreen()),
+    "/liveAttendence": (_) => MaterialPage(child: LiveAttendence()),
+    "/campXLogin": (_) => MaterialPage(child: CampxLoginScreen()),
   }
 );
