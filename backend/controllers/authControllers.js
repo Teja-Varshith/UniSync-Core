@@ -97,6 +97,39 @@ export const updateUserController = async (req, res) => {
   }
 };
 
+export const updateTenantDetails = async (req, res) => {
+  try{
+    const { emailId,accessToken, password, tenantId, institutionCode} = req.body;
+
+  const updatedUser = await User.findOneAndUpdate(
+      { emailId },
+      {
+        accessToken,
+        tenantId,
+        password,
+        institutionCode
+      },
+      { new: true }
+    );
+    console.log(updatedUser);
+
+     return res.json({
+      success: true,
+      message: "user is upadated successfully",
+      user: updatedUser,
+    });
+  }catch (e) {
+    console.log("error while updating the user :", e);
+    res.status(400).json({
+      success: false,
+      message: "error while updating the user",
+      error: e,
+    });
+  }
+
+
+}
+
 export const getUserDetailsController = async (req, res) => {
   try {
     const { emailId } = req.body;

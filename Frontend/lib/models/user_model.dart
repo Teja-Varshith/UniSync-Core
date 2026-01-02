@@ -9,6 +9,8 @@ class UserModel {
   final String emailId;
   final String? collegeName;
   final String? tenantId;
+  final String? cookie;
+  final String? institutionCode;
   final String? campXPassword;
   final String? campXUsername;
   final int? year;
@@ -16,6 +18,8 @@ class UserModel {
   final String? about;
 
   UserModel({
+    this.institutionCode,
+    this.cookie,
     this.id,
     required this.name,
     required this.profileComplete,
@@ -31,6 +35,8 @@ class UserModel {
   });
 
   UserModel copyWith({
+    String? institutionCode,
+    String? cookie,
     String? id,
     String? name,
     bool? profileComplete,
@@ -45,6 +51,8 @@ class UserModel {
     String? about,
   }) {
     return UserModel(
+      institutionCode: institutionCode ?? this.institutionCode,
+      cookie: cookie ?? this.cookie,
       id: id ?? this.id,
       name: name ?? this.name,
       profileComplete: profileComplete ?? this.profileComplete,
@@ -62,6 +70,8 @@ class UserModel {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
+      'institutionCode': institutionCode,
+      'cookie' : cookie,
       'id': id,
       'name': name,
       'profileComplete': profileComplete,
@@ -78,21 +88,24 @@ class UserModel {
   }
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
-    return UserModel(
-      id: map['_id'] != null ? map['_id'] as String : null,
-      name: map['name'] as String,
-      profileComplete: map['profileComplete'] as bool,
-      photoUrl: map['photoUrl'] != null ? map['photoUrl'] as String : null,
-      emailId: map['emailId'] as String,
-      collegeName: map['collegeName'] != null ? map['collegeName'] as String : null,
-      tenantId: map['tenantId'] != null ? map['tenantId'] as String : null,
-      campXPassword: map['campXPassword'] != null ? map['campXPassword'] as String : null,
-      campXUsername: map['campXUsername'] != null ? map['campXUsername'] as String : null,
-      year: map['year'] != null ? map['year'] as int : null,
-      semester: map['semester'] != null ? map['semester'] as int : null,
-      about: map['about'] != null ? map['about'] as String : null,
-    );
-  }
+  return UserModel(
+    id: map['_id'] as String?,
+    name: map['name'] ?? '',
+    profileComplete: map['profileComplete'] ?? false,
+    photoUrl: map['photoUrl'] as String?,
+    emailId: map['emailId'] ?? '',
+    collegeName: map['collegeName'] as String?,
+    tenantId: map['tenantId'] as String?,
+    institutionCode: map['institutionCode'] as String?,
+    cookie: map['accessToken'] as String?,
+    campXPassword: map['password'] as String?,
+    campXUsername: map['campXUsername'] as String?,
+    year: map['year'] as int?,
+    semester: map['semester'] as int?,
+    about: map['about'] as String?,
+  );
+}
+
 
   String toJson() => json.encode(toMap());
 
@@ -100,41 +113,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, name: $name, profileComplete: $profileComplete, photoUrl: $photoUrl, emailId: $emailId, collegeName: $collegeName, tenantId: $tenantId, campXPassword: $campXPassword, campXUsername: $campXUsername, year: $year, semester: $semester, about: $about)';
+    return 'UserModel(id: $id, name: $name,  cookie: $cookie profileComplete: $profileComplete, photoUrl: $photoUrl, emailId: $emailId, collegeName: $collegeName, tenantId: $tenantId, campXPassword: $campXPassword, campXUsername: $campXUsername, year: $year, semester: $semester, about: $about, institutionCode: $institutionCode)';
   }
 
-  @override
-  bool operator ==(covariant UserModel other) {
-    if (identical(this, other)) return true;
-  
-    return 
-      other.id == id &&
-      other.name == name &&
-      other.profileComplete == profileComplete &&
-      other.photoUrl == photoUrl &&
-      other.emailId == emailId &&
-      other.collegeName == collegeName &&
-      other.tenantId == tenantId &&
-      other.campXPassword == campXPassword &&
-      other.campXUsername == campXUsername &&
-      other.year == year &&
-      other.semester == semester &&
-      other.about == about;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-      name.hashCode ^
-      profileComplete.hashCode ^
-      photoUrl.hashCode ^
-      emailId.hashCode ^
-      collegeName.hashCode ^
-      tenantId.hashCode ^
-      campXPassword.hashCode ^
-      campXUsername.hashCode ^
-      year.hashCode ^
-      semester.hashCode ^
-      about.hashCode;
-  }
 }

@@ -254,6 +254,11 @@ Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
       ref.read(AppModeProvider.notifier).state = AppMode.career; 
     }
 
+    if(mode == AppMode.builder) {Routemaster.of(context).replace("/builderHomeScreen");
+      // mode = ref.watch(AppModeProvider);
+      ref.read(AppModeProvider.notifier).state = AppMode.builder; 
+    }
+
     
 
 
@@ -270,7 +275,13 @@ Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
          
 
           LiveAttendanceBadge(onTap: () {
+            print(ref.read(userProvider)!.cookie);
+            if(user.cookie != null){
+              print("went in");
             Routemaster.of(context).push('/liveAttendence');
+            }else{
+              Routemaster.of(context).push('/campXLogin');
+            } 
           }),
         ],
       ),

@@ -106,6 +106,11 @@ final topics = [
       ref.read(AppModeProvider.notifier).state = AppMode.campus; 
     }
 
+     if(mode == AppMode.builder) {Routemaster.of(context).replace("/builderHomeScreen");
+      // mode = ref.watch(AppModeProvider);
+      ref.read(AppModeProvider.notifier).state = AppMode.builder; 
+    }
+
     
 
 
