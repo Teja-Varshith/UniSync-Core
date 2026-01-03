@@ -3,11 +3,10 @@
 
 // const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY});
 
-
 // export class GeminiResponder {
 //   GeminiResponder() {};
 
-//   async generate(qsn) { 
+//   async generate(qsn) {
 //   const response = await ai.models.generateContent({
 //     model: 'gemini-2.5-flash',
 //     contents: qsn,
@@ -25,6 +24,7 @@ export class OllamaResponder {
   }
 
   async generate(prompt) {
+    console.log("prompt start");
     const response = await fetch(this.baseUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -34,6 +34,9 @@ export class OllamaResponder {
         stream: false,
       }),
     });
+
+        console.log("prompt finishe and response " );
+
 
     if (!response.ok) {
       const err = await response.text();

@@ -1,235 +1,204 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import 'dart:io';
 
+import 'package:unisync/app/providers.dart';
 import 'package:unisync/constants/constant.dart';
 
-class PdfUpload extends StatefulWidget {
+class PdfUpload extends ConsumerStatefulWidget {
   const PdfUpload({super.key});
 
   @override
-  State<PdfUpload> createState() => _PdfUploadScreenState();
+  ConsumerState<PdfUpload> createState() => _PdfUploadState();
 }
 
-class _PdfUploadScreenState extends State<PdfUpload> {
+class _PdfUploadState extends ConsumerState<PdfUpload> {
   PlatformFile? selectedFile;
   bool uploading = false;
 
+  final TextEditingController slugController = TextEditingController();
+
   final Dio dio = Dio(
     BaseOptions(
-      baseUrl: "$BASE_URI/resume/upload-document",
+      baseUrl: BASE_URI, // e.g. http://localhost:3000
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
     ),
   );
 
+  /// Pick PDF
   Future<void> pickPdf() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'],
-        allowMultiple: false,
-      );
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+      allowMultiple: false,
+    );
 
-      if (result == null || result.files.isEmpty) return;
+    if (result == null) return;
 
-      setState(() {
-        selectedFile = result.files.single;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error picking file: $e")),
-      );
-    }
+    setState(() {
+      selectedFile = result.files.single;
+    });
   }
 
+  /// Upload PDF (THIS IS THE IMPORTANT PART)
   Future<void> uploadPdf() async {
-    if (selectedFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select a PDF first")),
-      );
+    // 1️⃣ validations
+    if (selectedFile == null || selectedFile!.path == null) {
+      _toast("Please select a PDF");
       return;
     }
 
-    // Check if path exists (required for mobile/desktop)
-    if (selectedFile!.path == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("File path not available")),
-      );
+    if (slugController.text.trim().isEmpty) {
+      _toast("Please enter a slug");
       return;
     }
+
+    final user = ref.read(userProvider);
+    if (user == null || user.id == null) {
+      _toast("User not authenticated");
+      return;
+    }
+
+    final String userId = user.id!; // ✅ EXACTLY what Postman sends
 
     setState(() => uploading = true);
 
     try {
-      // Create multipart file from the selected file
-      final formData = FormData.fromMap({
-        'pdf': await MultipartFile.fromFile(
-          selectedFile!.path!,
-          filename: selectedFile!.name,
-        ),
-      });
+      // 2️⃣ build multipart EXACTLY like Postman
+      final formData = FormData();
 
-      // Send POST request
-      final response = await dio.post(
-        "/upload",
-        data: formData,
-        options: Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+      formData.fields.add(
+        MapEntry("slug", slugController.text.trim()),
+      );
+      formData.fields.add(
+        MapEntry("userId", userId),
+      );
+
+      formData.files.add(
+        MapEntry(
+          "file",
+          await MultipartFile.fromFile(
+            selectedFile!.path!,
+            filename: selectedFile!.name,
+          ),
         ),
+      );
+
+      // 3️⃣ send request
+      final response = await dio.post(
+        "/api/resume/upload-document",
+        data: formData,
         onSendProgress: (sent, total) {
-          // Optional: Show upload progress
-          print('Upload progress: ${(sent / total * 100).toStringAsFixed(0)}%');
+          debugPrint(
+            "Upload ${(sent / total * 100).toStringAsFixed(0)}%",
+          );
         },
       );
 
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("PDF uploaded successfully"),
-          backgroundColor: Colors.green,
-        ),
-      );
+      final data = response.data;
+      final message =
+          data is Map && data["message"] != null
+              ? data["message"]
+              : "Uploaded successfully";
 
-      // Optional: Clear selection after successful upload
+      _toast(message, success: true);
+
       setState(() {
         selectedFile = null;
+        slugController.clear();
       });
-
-    } on DioException catch (e) {
-      if (!mounted) return;
-      
-      String errorMessage = "Upload failed";
-      
-      if (e.type == DioExceptionType.connectionTimeout) {
-        errorMessage = "Connection timeout - check your server";
-      } else if (e.type == DioExceptionType.connectionError) {
-        errorMessage = "Connection error - check server URL";
-      } else if (e.response != null) {
-        errorMessage = "Server error: ${e.response?.statusCode}";
-      } else {
-        errorMessage = "Error: ${e.message}";
-      }
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.red,
-        ),
-      );
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Unexpected error: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _toast("Upload failed: $e");
     } finally {
-      if (mounted) {
-        setState(() => uploading = false);
-      }
+      setState(() => uploading = false);
     }
+  }
+
+  void _toast(String msg, {bool success = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    slugController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Upload PDF"),
+        title: const Text("Upload Resume"),
         centerTitle: true,
-        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // slug
+            TextField(
+              controller: slugController,
+              decoration: const InputDecoration(
+                labelText: "Portfolio Slug",
+                hintText: "eg: teja",
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // picked file
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: selectedFile != null 
-                      ? Colors.blue.shade300 
-                      : Colors.grey.shade300,
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                color: selectedFile != null 
-                    ? Colors.blue.shade50 
-                    : Colors.grey.shade50,
+                border: Border.all(color: Colors.grey.shade400),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.picture_as_pdf,
-                    size: 60,
-                    color: selectedFile != null 
-                        ? Colors.blue 
-                        : Colors.grey,
-                  ),
-                  const SizedBox(height: 12),
+                  const Icon(Icons.picture_as_pdf, size: 48),
+                  const SizedBox(height: 8),
                   Text(
                     selectedFile?.name ?? "No file selected",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: selectedFile != null 
-                          ? FontWeight.w500 
-                          : FontWeight.normal,
-                    ),
                   ),
-                  if (selectedFile != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      "${(selectedFile!.size / 1024).toStringAsFixed(2)} KB",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton.icon(
-                onPressed: uploading ? null : pickPdf,
-                icon: const Icon(Icons.file_open),
-                label: const Text("Pick PDF"),
-              ),
+            // pick button
+            OutlinedButton.icon(
+              onPressed: uploading ? null : pickPdf,
+              icon: const Icon(Icons.file_open),
+              label: const Text("Pick PDF"),
             ),
 
             const SizedBox(height: 12),
 
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: (uploading || selectedFile == null) ? null : uploadPdf,
-                icon: uploading
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.upload),
-                label: Text(uploading ? "Uploading..." : "Upload"),
-              ),
+            // upload button
+            ElevatedButton.icon(
+              onPressed: uploading ? null : uploadPdf,
+              icon: uploading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.upload),
+              label: Text(uploading ? "Uploading..." : "Upload"),
             ),
           ],
         ),

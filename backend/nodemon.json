@@ -1,0 +1,6 @@
+{
+  "watch": ["."],
+  "ignore": ["portfolios/**"],
+  "ext": "js,json",
+  "delay": "200"
+}
