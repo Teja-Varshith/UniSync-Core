@@ -19,7 +19,7 @@ class AttendanceRepository {
 
 
   Future<UserModel>  completeCampXLogin(String username , String password) async{
-    final url = Uri.parse('https://api.campx.in/auth-server/auth-v2/login-mobile');
+    final url = Uri.parse(anyUrl);
 
   final body = {
     "loginId": username,

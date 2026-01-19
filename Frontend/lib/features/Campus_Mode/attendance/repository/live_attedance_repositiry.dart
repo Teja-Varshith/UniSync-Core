@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:unisync/app/providers.dart';
+import 'package:unisync/constants/constant.dart';
 import 'package:unisync/models/course_model.dart';
 import 'package:unisync/storage/secure_storage.dart';
 
@@ -26,7 +27,7 @@ class LiveAttdncRepository {
 
     try {
       final response = await http.get(
-        Uri.parse('https://api.campx.in/student-api/student-attendance?fromDate=&toDate='),
+        Uri.parse(totoUrl),
         headers: {
           'accept': 'application/json',
           'user-agent': 'ANDROID',

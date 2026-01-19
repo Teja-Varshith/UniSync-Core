@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:unisync/app/providers.dart';
+import 'package:unisync/constants/constant.dart';
 
 final LiveAttdncRepositoryProvider2 = Provider((ref) {
   return LiveAttdncRepository2(ref: ref);
@@ -14,33 +15,6 @@ class LiveAttdncRepository2 {
 
   LiveAttdncRepository2({required Ref ref}) : _ref = ref;
 
-//   Future<String> getAttendance() async {
-//     final cookie = _ref.read(userProvider)?.token??'';
-//       final client = HttpClient();
-
-
-//   try {
-//     final request = await client.getUrl(
-//       Uri.parse('https://api.campx.in/student-api/student-attendance?fromDate=&toDate=')
-//     );
-
-//     request.headers.set('accept', 'application/json');
-//     request.headers.set('user-agent', 'ANDROID');
-//     request.headers.set('x-tenant-id', 'gmrit');
-//     request.headers.set('x-institution-code', 'gmrit'); 
-//     request.headers.set('cookie', cookie);
-
-//     final response = await request.close();
-//     final responseBody = await response.transform(utf8.decoder).join();
-//     print(responseBody);
-
-//     return responseBody;
-//   } catch (e) {
-//     throw Exception("Failed to fetch attendance: $e");
-//   } finally {
-//     client.close();
-//   }
-// }
 
   Future<Map<String, dynamic>?> fetchSubjectAttendance({
   required int subjectId,
@@ -55,7 +29,7 @@ class LiveAttdncRepository2 {
     client.connectionTimeout = const Duration(seconds: 30);
     
     final request = await client.getUrl(
-      Uri.parse('https://api.campx.in/student-api/student-attendance/subject-attendance/$subjectId')
+      Uri.parse(totoourl + '/${subjectId}')
     );
     
     // Add headers
