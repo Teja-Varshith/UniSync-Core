@@ -31,6 +31,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
     'Narsaraopeta Engineering College',
     'JNTU Kakinada',
     'VR Siddhartha Engineering College',
+    'Sri Venkateshwara College of Engineering'
     'Others',
   ];
 

@@ -44,7 +44,7 @@ dependencies:
 
 
   flutter_secure_storage:
-
+  flutter_svg: ^2.2.3
   intl:
 
   #network
@@ -111,6 +111,12 @@ flutter:
     - assets/animations/loading.json
     - assets/icons/profile_bg.png
     - assets/icons/Uni7.png
+    - assets/icons/wavv.png
+    - assets/icons/bg.png
+    - assets/icons/wave.svg
+    - assets/animations/loggg.json
+    - assets/icons/item1.svg
+    - assets/icons/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
