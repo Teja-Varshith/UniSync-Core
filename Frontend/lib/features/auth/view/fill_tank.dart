@@ -31,7 +31,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
     'Narsaraopeta Engineering College',
     'JNTU Kakinada',
     'VR Siddhartha Engineering College',
-    'Sri Venkateshwara College of Engineering'
+    'Sri Venkateshwara College of Engineering',
     'Others',
   ];
 
@@ -121,7 +121,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: Colors.amber.shade600,
+      backgroundColor: const Color(0xFF0F0F0F),
       body: SafeArea(
         child: SingleChildScrollView(
           child: SizedBox(
@@ -137,13 +137,27 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(40),
-                        topRight: Radius.circular(40),
-                      ),
+                    decoration: BoxDecoration(
+                  color: const Color(0xFF222222),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.6),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                      offset: const Offset(0, -10),
                     ),
+                    BoxShadow(
+                      color: Colors.white.withOpacity(0.05),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(30),
                       child: Form(
@@ -156,6 +170,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w700,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -163,7 +178,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                               'Faster than getting your attendance signed!',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: Colors.grey.shade700,
+                                color: const Color(0xFFB3B3B3),
                                 fontWeight: FontWeight.w600,
                                 fontSize: 12,
                               ),
@@ -216,7 +231,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                                       ),
                                       child: const Text(
                                         'Go Back',
-                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,color: Colors.white),
                                       ),
                                     ),
                                   ),
@@ -279,12 +294,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
       children: [
         const Text(
           'What do your friends call you? 🙋',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 6),
         Text(
           'No nicknames like "Chotu" or "Bhai" please 😅',
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 11, color: const Color(0xFFB3B3B3),),
         ),
         const SizedBox(height: 18),
         TextFormField(
@@ -323,12 +338,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
       children: [
         const Text(
           'Where\'s your brain factory? 🏫',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,  color: Colors.white),
         ),
         const SizedBox(height: 6),
         Text(
           'Where you\'re professionally confused 📚',
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 11, color: const Color(0xFFB3B3B3),),
         ),
         const SizedBox(height: 18),
         CustomDropdown<String>(
@@ -354,12 +369,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
       children: [
         const Text(
           'Which semester? 📖',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,color: Colors.white),
         ),
         const SizedBox(height: 6),
         Text(
           'How deep into the rabbit hole? 🐰',
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
         ),
         const SizedBox(height: 18),
         GridView.builder(
@@ -450,12 +465,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
       children: [
         const Text(
           'Spill the beans! ☕',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,color: Colors.white),
         ),
         const SizedBox(height: 6),
         Text(
           'What makes you YOU? (totally optional! 😌)',
-          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
         ),
         const SizedBox(height: 18),
         TextFormField(
@@ -500,7 +515,7 @@ class CustomDropdown<T> extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -523,97 +538,106 @@ class CustomDropdown<T> extends StatelessWidget {
   }
 
   void _showDropdownSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(25),
-            topRight: Radius.circular(25),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                hint,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            Container(
-              height: 1,
-              color: Colors.grey.shade200,
-            ),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: items.length,
-                separatorBuilder: (context, index) => Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Colors.grey.shade200,
-                ),
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  final isSelected = value == item;
-                  return InkWell(
-                    onTap: () {
-                      onChanged(item);
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      color: isSelected ? Colors.grey.shade100 : Colors.white,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.toString(),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                                color: isSelected ? Colors.black : Colors.grey.shade800,
-                              ),
-                            ),
-                          ),
-                          if (isSelected)
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.black,
-                              size: 20,
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF121212), // dark background, not pure black
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
         ),
       ),
-    );
-  }
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              hint,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 15),
+          Container(
+            height: 1,
+            color: Colors.white12,
+          ),
+          Flexible(
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: items.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                thickness: 1,
+                color: Colors.white12,
+              ),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final isSelected = value == item;
+
+                return InkWell(
+                  onTap: () {
+                    onChanged(item);
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    color: isSelected
+                        ? const Color(0xFF1E1E1E)
+                        : const Color(0xFF121212),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.toString(),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.white70,
+                            ),
+                          ),
+                        ),
+                        if (isSelected)
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.greenAccent,
+                            size: 20,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    ),
+  );
+}
+
 }

@@ -180,7 +180,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: height * 0.04),
+
+
+                    SizedBox(height: 4,),
+
+                    Container(
+                      
+                      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.white12, //  Color(0xFF2A2A2A),
+          width: 1,
+        ),
+      ),
+                      
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_circle_outline_rounded,color: Colors.green,),
+                            SizedBox(width: 3),
+                            Text('Trusted by 3k+ students', style: TextStyle(color: Colors.white),),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: height * 0.01),
 
                     SizedBox(
                       width: double.infinity,
@@ -227,9 +255,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    'Signing you securely...',
+                                    'Signing you in securely...',
                                     style: TextStyle(
                                       fontSize: width * 0.038,
+
+                                      color: Colors.white,                                      
                                       fontWeight: FontWeight.w600,
                                     ),
                                   )

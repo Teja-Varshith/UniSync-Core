@@ -169,45 +169,52 @@ class ScribbleLine extends CustomPainter {
 }
 
 Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
-  final String firstName = user.name.trim().split(' ').last;
+   String firstName = user.name.trim().split(' ').last;
+  if(firstName.length < 2){
+    firstName = user.name.trim().split(' ').first;
+  }
   final String formattedName = firstName[0].toUpperCase() + firstName.substring(1).toLowerCase();
 
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Hey 👋,',
-            style: TextStyle(
-              fontSize: 28,
-              color: Colors.grey[700],
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hey 👋,',
+              style: TextStyle(
+                fontSize: 28,
+                color: Colors.grey[700],
+              ),
             ),
-          ),
-          Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6.0),
-                child: Text(
-                  formattedName,
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+            Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6.0),
+                 child: Text(
+                    formattedName,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                bottom: 0,
-                child: CustomPaint(
-                  painter: ScribbleLine(),
-                  size: Size(100, 10),
+                Positioned(
+                  bottom: 0,
+                  child: CustomPaint(
+                    painter: ScribbleLine(),
+                    size: Size(100, 10),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
       Column(
         crossAxisAlignment: CrossAxisAlignment.end,
