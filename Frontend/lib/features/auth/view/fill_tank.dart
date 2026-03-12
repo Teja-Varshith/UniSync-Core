@@ -121,7 +121,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: SizedBox(
@@ -138,7 +138,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                  color: const Color(0xFF222222),
+                  color: Theme.of(context).cardColor,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(32),
                     topRight: Radius.circular(32),
@@ -170,15 +170,13 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Faster than getting your attendance signed!',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: const Color(0xFFB3B3B3),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 12,
                               ),
@@ -231,7 +229,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                                       ),
                                       child: const Text(
                                         'Go Back',
-                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,color: Colors.white),
+                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,),
                                       ),
                                     ),
                                   ),
@@ -294,12 +292,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
       children: [
         const Text(
           'What do your friends call you? 🙋',
-          style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 6),
         Text(
           'No nicknames like "Chotu" or "Bhai" please 😅',
-          style: TextStyle(fontSize: 11, color: const Color(0xFFB3B3B3),),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
         ),
         const SizedBox(height: 18),
         TextFormField(
@@ -338,12 +336,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
       children: [
         const Text(
           'Where\'s your brain factory? 🏫',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,  color: Colors.white),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 6),
         Text(
           'Where you\'re professionally confused 📚',
-          style: TextStyle(fontSize: 11, color: const Color(0xFFB3B3B3),),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
         ),
         const SizedBox(height: 18),
         CustomDropdown<String>(
@@ -369,12 +367,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
       children: [
         const Text(
           'Which semester? 📖',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,color: Colors.white),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 6),
         Text(
           'How deep into the rabbit hole? 🐰',
-          style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
         ),
         const SizedBox(height: 18),
         GridView.builder(
@@ -465,12 +463,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
       children: [
         const Text(
           'Spill the beans! ☕',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,color: Colors.white),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 6),
         Text(
           'What makes you YOU? (totally optional! 😌)',
-          style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
         ),
         const SizedBox(height: 18),
         TextFormField(
@@ -543,7 +541,6 @@ class CustomDropdown<T> extends StatelessWidget {
     backgroundColor: Colors.transparent,
     builder: (context) => Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF121212), // dark background, not pure black
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(25),
           topRight: Radius.circular(25),
@@ -569,7 +566,6 @@ class CustomDropdown<T> extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
               ),
             ),
           ),

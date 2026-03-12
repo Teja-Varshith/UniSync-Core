@@ -30,7 +30,7 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
     final user = ref.watch(userProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -43,7 +43,7 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
   top: false,
   child: Container(
     height: 72,
-    color: Colors.white,
+    color: Theme.of(context).scaffoldBackgroundColor,
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
@@ -117,7 +117,7 @@ Widget _buildNavItem({
           size: 26,
           color: isActive
               ? const Color(0xFF6C5CE7)
-              : Colors.grey.shade400,
+              : Theme.of(context).textTheme.bodySmall?.color,
         ),
         const SizedBox(height: 6),
         Text(
@@ -129,7 +129,7 @@ Widget _buildNavItem({
                 : FontWeight.w400,
             color: isActive
                 ? const Color(0xFF6C5CE7)
-                : Colors.grey.shade400,
+                : Theme.of(context).textTheme.bodySmall?.color,
             letterSpacing: 0.2,
           ),
         ),

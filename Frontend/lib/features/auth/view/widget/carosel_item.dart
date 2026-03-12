@@ -19,10 +19,14 @@ class CarouselItem extends StatelessWidget {
       height: 90,
       margin: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1A1A1A)
+            : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: const Color(0xFF2A2A2A),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF2A2A2A)
+              : Colors.grey.shade300,
           width: 1,
         ),
       ),

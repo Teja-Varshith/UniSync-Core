@@ -61,7 +61,7 @@ class AuthRepository {
         ),
       
       );
-      print(res);
+      print("fdf $res");
 
       final data = res.data["user"];
 if (data == null) {
@@ -109,7 +109,7 @@ return UserModel.fromMap(data);
     },
   ); 
 
-  print(res);
+  print("tehhe $res");
 
   return UserModel.fromMap(res.data['user']);
 }

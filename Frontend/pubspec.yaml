@@ -64,6 +64,9 @@ dependencies:
 
   #design
   lottie:
+
+  neopop: ^1.0.2
+
   icons_flutter: ^0.0.5
   google_fonts: ^6.1.0
   awesome_snackbar_content: ^0.1.6
