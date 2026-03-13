@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:unisync/models/user_model.dart';
 
-enum AppMode { campus, career, builder }
+enum AppMode { campus, career, builder, exam }
 
 final AppModeProvider = StateProvider<AppMode>((ref) => AppMode.campus);
 
@@ -62,7 +62,7 @@ class _AvatarSlideToggleState extends ConsumerState<AvatarSlideToggle> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        mode == AppMode.campus ? Icons.school : (mode == AppMode.career) ? Icons.work : Icons.build,
+                        mode == AppMode.campus ? Icons.school : (mode == AppMode.career) ? Icons.work : (mode == AppMode.builder) ? Icons.build : Icons.assignment,
 
 
                         color: Colors.white,
@@ -70,7 +70,7 @@ class _AvatarSlideToggleState extends ConsumerState<AvatarSlideToggle> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        mode == AppMode.campus ? 'Campus' : (mode == AppMode.career) ? 'Career' : 'Builder',
+                        mode == AppMode.campus ? 'Campus' : (mode == AppMode.career) ? 'Career' : (mode == AppMode.builder) ? 'Builder' : 'Exam',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,

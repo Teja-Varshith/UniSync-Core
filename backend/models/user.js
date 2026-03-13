@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
   },
   accessToken: String,
   password: String,
+  campXUsername: String,
   tenantId: String,
   institutionCode: String,
   collegeName: String,

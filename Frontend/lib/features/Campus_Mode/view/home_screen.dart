@@ -1,4 +1,3 @@
-
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +10,6 @@ import 'package:unisync/models/user_model.dart';
 import 'package:unisync/utils/badge.dart';
 import 'package:unisync/utils/tile.dart';
 
-
-
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -21,7 +18,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -32,24 +28,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(userProvider);
     print(user);
     return Scaffold(
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     Routemaster.of(context).push('/oppurtunitiesEdit');
-      //   },
-      // ),
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: () {
+        //     Routemaster.of(context).push('/oppurtunitiesEdit');
+        //   },
+        // ),
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: LayoutBuilder(builder: (context, constraints) {
             return SingleChildScrollView(
               physics: BouncingScrollPhysics(),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    _appbar(user!,ref,context),
+                    _appbar(user!, ref, context),
                     //SizedBox(height: 10,),
-                    SizedBox(height: 10,),
+                    SizedBox(
+                      height: 10,
+                    ),
                     mainText(),
                     feauture2(context),
                     feauture1(context),
@@ -59,81 +56,79 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             );
-          }
-        ),
-      )
-    );
+          }),
+        ));
   }
-
 }
-
 
 Widget feauture1(BuildContext context) {
   return FeatureTile(
-  title: "Events",
-  subtitle: "Discover upcoming events, workshops, and activities conducted by various clubs/Communities",
-  lottieAsset: "assets/animations/onboard.json",
-  tag: "EVENTS",
-  // gradientColors: [Color(0xFF667eea), Color(0xFF764ba2)],
+    title: "Events",
+    subtitle:
+        "Discover upcoming events, workshops, and activities conducted by various clubs/Communities",
+    lottieAsset: "assets/animations/onboard.json",
+    tag: "EVENTS",
+    // gradientColors: [Color(0xFF667eea), Color(0xFF764ba2)],
     gradientColors: [Color(0xFFf093fb), Color(0xFFf5576c)],
 
-  onTap: () => Routemaster.of(context).push('/events'),
-);
+    onTap: () => Routemaster.of(context).push('/events'),
+  );
 }
 
 Widget feauture2(BuildContext context) {
-return FeatureTile(
-  title: "Hackathons & Internships",
-  subtitle: "Get latest information of all Hackathons & Internships at one place",
-  lottieAsset: "assets/animations/a_lottie.json", 
-  tag: "COMPETE",
-  // gradientColors: [Color(0xFFf093fb), Color(0xFFf5576c)],
+  return FeatureTile(
+    title: "Hackathons & Internships",
+    subtitle:
+        "Get latest information of all Hackathons & Internships at one place",
+    lottieAsset: "assets/animations/a_lottie.json",
+    tag: "COMPETE",
+    // gradientColors: [Color(0xFFf093fb), Color(0xFFf5576c)],
     gradientColors: [Color(0xFF667eea), Color(0xFF764ba2)],
 
-  onTap: () => Routemaster.of(context).push('/oppurtunies'),
-);
+    onTap: () => Routemaster.of(context).push('/oppurtunies'),
+  );
 }
 
 Widget feauture3(BuildContext context) {
-return FeatureTile(
-  title: "Find your Peers", 
-  subtitle: "Create your peerCard and find like minded peers",
-  lottieAsset: "assets/animations/b_lottie.json",
-  tag: "Connect", 
-  gradientColors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
-  onTap: () => Routemaster.of(context).push('/peers'),
-);
+  return FeatureTile(
+    title: "Find your Peers",
+    subtitle: "Create your peerCard and find like minded peers",
+    lottieAsset: "assets/animations/b_lottie.json",
+    tag: "Connect",
+    gradientColors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+    onTap: () => Routemaster.of(context).push('/peers'),
+  );
 }
 
 Widget feauture4(BuildContext context) {
-return FeatureTile(
-  title: "CodeArena", 
-  subtitle: "Compete--Practice--Grow, all in one place",
-  lottieAsset: "assets/animations/d_lottie.json",
-  tag: "Coding </>", 
-  gradientColors: [Color.fromARGB(255, 12, 136, 231), Color.fromARGB(255, 148, 0, 254)],
-  onTap: () {
-  // AdManager1.showInterstitialAd();
-  
-    const snackBar = SnackBar(
-                  elevation: 0,
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: Colors.transparent,
-                  content: AwesomeSnackbarContent(
-                    title: 'We are Working on it!',
-                    message:
-                        'Rolling out soon',
+  return FeatureTile(
+    title: "CodeArena",
+    subtitle: "Compete--Practice--Grow, all in one place",
+    lottieAsset: "assets/animations/d_lottie.json",
+    tag: "Coding </>",
+    gradientColors: [
+      Color.fromARGB(255, 12, 136, 231),
+      Color.fromARGB(255, 148, 0, 254)
+    ],
+    onTap: () {
+      // AdManager1.showInterstitialAd();
 
-                    contentType: ContentType.success,
-                  ),
-                );
+      const snackBar = SnackBar(
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        content: AwesomeSnackbarContent(
+          title: 'We are Working on it!',
+          message: 'Rolling out soon',
+          contentType: ContentType.success,
+        ),
+      );
 
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(snackBar);
-
-  },
-);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(snackBar);
+    },
+  );
 }
 
 Widget mainText() {
@@ -148,7 +143,6 @@ Widget mainText() {
   );
 }
 
-
 class ScribbleLine extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -159,7 +153,8 @@ class ScribbleLine extends CustomPainter {
 
     final path = Path();
     path.moveTo(0, size.height / 2);
-    path.quadraticBezierTo(size.width * 0.25, size.height, size.width * 0.5, size.height / 2);
+    path.quadraticBezierTo(
+        size.width * 0.25, size.height, size.width * 0.5, size.height / 2);
     path.quadraticBezierTo(size.width * 0.75, 0, size.width, size.height / 2);
     canvas.drawPath(path, paint);
   }
@@ -168,12 +163,13 @@ class ScribbleLine extends CustomPainter {
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
-Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
-   String firstName = user.name.trim().split(' ').last;
-  if(firstName.length < 2){
+Widget _appbar(UserModel user, WidgetRef ref, BuildContext context) {
+  String firstName = user.name.trim().split(' ').last;
+  if (firstName.length < 2) {
     firstName = user.name.trim().split(' ').first;
   }
-  final String formattedName = firstName[0].toUpperCase() + firstName.substring(1).toLowerCase();
+  final String formattedName =
+      firstName[0].toUpperCase() + firstName.substring(1).toLowerCase();
 
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -193,7 +189,7 @@ Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6.0),
-                 child: Text(
+                  child: Text(
                     formattedName,
                     maxLines: 1,
                     overflow: TextOverflow.fade,
@@ -222,73 +218,73 @@ Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
           Row(
             children: [
               Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color:Colors.blueAccent, width: 2),
-            ),
-          child: CircleAvatar(
-                radius: 20,
-                backgroundColor: Colors.grey[200],
-                child: GestureDetector(
-                onTap: () {
-                  Routemaster.of(context).push('/profile');
-                },
-                  child: ClipOval(
-                child: CachedNetworkImage(
-            imageUrl: user.photoUrl ?? '',
-            fit: BoxFit.cover,
-            placeholder: (context, url) => const CircularProgressIndicator(
-              strokeWidth: 2,
-            ),
-            errorWidget: (context, url, error) {
-              return const Icon(Icons.person);
-            },
-          )
-          
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.blueAccent, width: 2),
+                ),
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.grey[200],
+                  child: GestureDetector(
+                    onTap: () {
+                      Routemaster.of(context).push('/profile');
+                    },
+                    child: ClipOval(
+                        child: CachedNetworkImage(
+                      imageUrl: user.photoUrl ?? '',
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                      errorWidget: (context, url, error) {
+                        return const Icon(Icons.person);
+                      },
+                    )),
                   ),
                 ),
               ),
-        ),
-        const SizedBox(width: 8),
+              const SizedBox(width: 8),
+              AvatarSlideToggle(
+                currentMode: ref.read(AppModeProvider),
+                menu: [AppMode.campus, AppMode.career, AppMode.builder, AppMode.exam],
+                user: user,
+                onModeChanged: (mode) {
+                  if (mode == AppMode.career) {
+                    Routemaster.of(context).replace("/carrer");
+                    // mode = ref.watch(AppModeProvider);
+                    ref.read(AppModeProvider.notifier).state = AppMode.career;
+                  }
 
-        AvatarSlideToggle(
-          currentMode: ref.read(AppModeProvider), 
-          menu: [AppMode.campus,AppMode.career,AppMode.builder],
-          user: user,
-  onModeChanged: (mode) {
-    if(mode == AppMode.career) {Routemaster.of(context).replace("/carrer");
-      // mode = ref.watch(AppModeProvider);
-      ref.read(AppModeProvider.notifier).state = AppMode.career; 
-    }
+                  if (mode == AppMode.builder) {
+                    Routemaster.of(context).replace("/builderHomeScreen");
+                    // mode = ref.watch(AppModeProvider);
+                    ref.read(AppModeProvider.notifier).state = AppMode.builder;
+                  }
 
-    if(mode == AppMode.builder) {Routemaster.of(context).replace("/builderHomeScreen");
-      // mode = ref.watch(AppModeProvider);
-      ref.read(AppModeProvider.notifier).state = AppMode.builder; 
-    }
+                   if (mode == AppMode.exam) {
+                    Routemaster.of(context).replace("/examHomescreen");
+                    // mode = ref.watch(AppModeProvider);
+                    ref.read(AppModeProvider.notifier).state = AppMode.exam;
+                  }
 
-    
-
-
-    // ref.read(AppModeProvider.notifier).state = AppMode.career;
-    // Routemaster.of(context).replace("/carrer") ;
-    // YOU control this
-    // trigger AnimatedSwitcher / PageTransition
-    debugPrint("Switched to $mode");
-  },
-),
-
+                  // ref.read(AppModeProvider.notifier).state = AppMode.career;
+                  // Routemaster.of(context).replace("/carrer") ;
+                  // YOU control this
+                  // trigger AnimatedSwitcher / PageTransition
+                  debugPrint("Switched to $mode");
+                },
+              ),
             ],
           ),
-         
-
           LiveAttendanceBadge(onTap: () {
             print(ref.read(userProvider)!.cookie);
-            if(user.cookie != null){
+            if (user.cookie != null) {
               print("went in");
-            Routemaster.of(context).push('/liveAttendence');
-            }else{
+              Routemaster.of(context).push('/liveAttendence');
+            } else {
               Routemaster.of(context).push('/campXLogin');
-            } 
+            }
           }),
         ],
       ),

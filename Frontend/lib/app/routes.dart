@@ -9,6 +9,7 @@ import 'package:unisync/features/Carrer_Mode/interview/view/core_interview_scree
 import 'package:unisync/features/Carrer_Mode/interview/view/interview_results_screen.dart';
 import 'package:unisync/features/Carrer_Mode/interview/view/start_interview_screen.dart';
 import 'package:unisync/features/Carrer_Mode/portifolio/view/pdf_upload.dart';
+import 'package:unisync/features/Exam_Mode/exam_homescreen.dart';
 import 'package:unisync/features/auth/view/fill_tank.dart';
 import 'package:unisync/features/auth/view/login_screen.dart';
 import 'package:unisync/features/Carrer_Mode/carrer_main_screen.dart';
@@ -43,5 +44,9 @@ final loggedInRoutes = RouteMap(
     "/liveAttendence": (_) => MaterialPage(child: LiveAttendence()),
     "/campXLogin": (_) => MaterialPage(child: CampxLoginScreen()),
     "/portifolio": (_) => MaterialPage(child: PdfUpload()),
+
+
+    // EXAM MODE
+    "/examHomescreen": (_) => MaterialPage(child: ExamHomescreen()),
   }
 );
