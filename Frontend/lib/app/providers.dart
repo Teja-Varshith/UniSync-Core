@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:unisync/features/auth/auth_repository.dart';
 import 'package:unisync/models/user_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+final firebaseFirestoreProvider = Provider((ref)=>FirebaseFirestore.instance);
 final FirebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
 });

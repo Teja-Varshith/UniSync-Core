@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:unisync/app/providers.dart';
@@ -23,6 +25,52 @@ class AuthRepository {
   })  :  _auth = auth,
         _googleSignIn = signIn;
 
+  Dio _createDioClient() {
+    return Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 12),
+        receiveTimeout: const Duration(seconds: 12),
+        sendTimeout: const Duration(seconds: 12),
+      ),
+    );
+  }
+
+  String _dioMessage(DioException e, String fallback) {
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError) {
+      return 'Unable to reach server. Please try again.';
+    }
+
+    if (e.response?.data is Map && e.response?.data['message'] != null) {
+      return e.response!.data['message'].toString();
+    }
+
+    return fallback;
+  }
+
+  void _showErrorSnackBar(String message) {
+    final messenger = rootScaffoldMessengerKey.currentState;
+    if (messenger == null) return;
+
+    const contentType = ContentType.failure;
+    final snackBar = SnackBar(
+      elevation: 0,
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.transparent,
+      content: AwesomeSnackbarContent(
+        title: 'Sign in failed',
+        message: message,
+        contentType: contentType,
+      ),
+    );
+
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(snackBar);
+  }
+
   Future<UserModel?> signInWithGoogle() async {
 
 
@@ -44,8 +92,8 @@ class AuthRepository {
       final photoUrl = UserMeta.photoURL;
 
 
-     try{
-      final dio = Dio();
+    try{
+     final dio = _createDioClient();
       print('req started////////////////////////////////');
        final res = await dio.post(
         '${BASE_URI}/auth/login',   //// ${BASE_URI}/login
@@ -65,13 +113,22 @@ class AuthRepository {
 
       final data = res.data["user"];
 if (data == null) {
-  throw Exception("User missing in login response");
+  _showErrorSnackBar('Sign in failed. Please try again.');
+  return null;
 }
 return UserModel.fromMap(data);
 
-}catch(e){
+} on DioException catch (e) {
+  final msg = _dioMessage(e, 'Sign in failed. Please try again.');
+  logOut(); // MAY CAUSE ISUUUUUUUUUUUUUUUUUUUUU
+  _showErrorSnackBar(msg);
   print(e);
-};
+  return null;
+} catch(e){
+  _showErrorSnackBar('Sign in failed. Please try again.');
+  print(e);
+  return null;
+}
 
 
 
@@ -99,19 +156,30 @@ return UserModel.fromMap(data);
   required String email,
   required String name,
 }) async {
-  final dio = Dio();
+  try {
+    final dio = _createDioClient();
 
-  final res = await dio.post(
-    '${BASE_URI}/auth/login', // http://10.185.91.196:3000/api/auth/login
-    data: {
-      'emailId': email,
-      'name': name,
-    },
-  ); 
+    final res = await dio.post(
+      '${BASE_URI}/auth/login', // http://10.185.91.196:3000/api/auth/login
+      data: {
+        'emailId': email,
+        'name': name,
+      },
+    ); 
 
-  print(res);
+    print(res);
 
-  return UserModel.fromMap(res.data['user']);
+    return UserModel.fromMap(res.data['user']);
+  } on DioException catch (e) {
+    final msg = _dioMessage(e, 'Login failed. Please try again.');
+    _showErrorSnackBar(msg);
+    print(e);
+    return null;
+  } catch (e) {
+    _showErrorSnackBar('Login failed. Please try again.');
+    print(e);
+    return null;
+  }
 }
 
 
@@ -127,7 +195,7 @@ return UserModel.fromMap(data);
   String? about,
 }) async {
   try{
-    final dio = Dio();
+    final dio = _createDioClient();
 
   final res = await dio.patch(
     '${BASE_URI}/auth/complete-profile',
@@ -146,8 +214,15 @@ return UserModel.fromMap(data);
   final updatedUser =  UserModel.fromMap(res.data["user"]);
   
   return updatedUser;
-  }catch(err){
+  } on DioException catch (err) {
+    final msg = _dioMessage(err, 'Unable to update profile. Please try again.');
+    _showErrorSnackBar(msg);
     print("ERROR upadting: $err");
+    return null;
+  }catch(err){
+    _showErrorSnackBar('Unable to update profile. Please try again.');
+    print("ERROR upadting: $err");
+    return null;
   }
 }
    
