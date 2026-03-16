@@ -1,5 +1,6 @@
-
+import 'dart:async';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:unisync/constants/constant.dart';
@@ -85,10 +86,79 @@ class SocketMethods {
     });
   }
 
-  bool startInterview(String templateId, String userId) {
-    if (socket == null || socket!.connected != true) {
+  Future<bool> warmUpBackend() async {
+    const maxAttempts = 5;
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        final response = await dio.get(
+          HEALTHCHECK_URI,
+          options: Options(
+            sendTimeout: const Duration(seconds: 8),
+            receiveTimeout: const Duration(seconds: 8),
+          ),
+        );
+
+        if (response.statusCode == 200 && response.data is Map && response.data['ok'] == true) {
+          return true;
+        }
+      } catch (_) {
+        if (attempt == maxAttempts) {
+          return false;
+        }
+      }
+
+      await Future<void>.delayed(Duration(seconds: attempt));
+    }
+
+    return false;
+  }
+
+  Future<bool> _ensureConnected() async {
+    if (socket == null) {
+      return false;
+    }
+
+    if (socket!.connected == true) {
+      return true;
+    }
+
+    final completer = Completer<bool>();
+
+    void handleConnect(dynamic _) {
+      if (!completer.isCompleted) {
+        completer.complete(true);
+      }
+    }
+
+    void handleFailure(dynamic _) {
+      if (!completer.isCompleted) {
+        completer.complete(false);
+      }
+    }
+
+    socket!.once('connect', handleConnect);
+    socket!.once('connect_error', handleFailure);
+    socket!.once('disconnect', handleFailure);
+    socket!.connect();
+
+    try {
+      return await completer.future.timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      return false;
+    }
+  }
+
+  Future<bool> startInterview(String templateId, String userId) async {
+    final backendReady = await warmUpBackend();
+    if (!backendReady) {
+      _showSocketError('Interview server is waking up. Please try again in a moment.');
+      return false;
+    }
+
+    final connected = await _ensureConnected();
+    if (!connected) {
       _showSocketError('Server is unreachable. Please try again in a moment.');
-      socket?.connect();
       return false;
     }
 

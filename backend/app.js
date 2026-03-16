@@ -32,6 +32,18 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cookieParser());
 
+const healthHandler = (_req, res) => {
+  res.status(200).json({
+    ok: true,
+    service: "backend",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+};
+
+app.get("/health", healthHandler);
+app.get("/api/health", healthHandler);
+
 app.use(
   "/portfolio",
   express.static(path.join(process.cwd(), "portfolios"))

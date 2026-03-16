@@ -51,11 +51,11 @@ class _StartInterviewScreenState
 
   void _beginStartTimeout() {
     _startTimeout?.cancel();
-    _startTimeout = Timer(const Duration(seconds: 12), () {
+    _startTimeout = Timer(const Duration(seconds: 30), () {
       if (!mounted || !_loading) return;
       setState(() => _loading = false);
       _showStartError(
-        'Unable to start interview right now. Please check server connection and try again.',
+        'Interview service is taking longer than expected to wake up. Please try again.',
       );
     });
   }
@@ -98,16 +98,16 @@ class _StartInterviewScreenState
     if (!mounted) return;
     setState(() => _loading = true);
 
-    final started = ref
+    _beginStartTimeout();
+
+    final started = await ref
         .read(socketMethodProvider)
         .startInterview(tmplte.id, user.id!);
 
     if (!started) {
-      setState(() => _loading = false);
+      _stopLoading();
       return;
     }
-
-    _beginStartTimeout();
   }
 
   @override

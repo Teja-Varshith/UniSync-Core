@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:unisync/constants/constant.dart';
 
 class SocketClient {
   IO.Socket? socket;
@@ -8,14 +9,15 @@ class SocketClient {
 
   SocketClient._internal() {
     socket = IO.io(
-      "http://unisync-core-2.onrender.com", 
+      BACKEND_ORIGIN,
       <String, dynamic>{
         'transports': ['websocket'],
         'autoConnect': false,
+        'reconnection': true,
+        'reconnectionAttempts': 5,
+        'reconnectionDelay': 1500,
       },
     );
-
-    socket!.connect();
 
     socket!.onConnect((_) {
       print("SOCKET CONNECTED");
