@@ -1837,13 +1837,13 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
 
     return Scaffold(
       backgroundColor: UniSyncColors.backgroundPrimary,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAdminToolsSheet,
-        backgroundColor: UniSyncColors.accent,
-        foregroundColor: UniSyncColors.buttonPrimaryFg,
-        icon: const Icon(Icons.build_rounded),
-        label: const Text('Admin Tools'),
-      ),
+      // floatingActionButton: FloatingActionButton.extended(
+      //   onPressed: _showAdminToolsSheet,
+      //   backgroundColor: UniSyncColors.accent,
+      //   foregroundColor: UniSyncColors.buttonPrimaryFg,
+      //   icon: const Icon(Icons.build_rounded),
+      //   label: const Text('Admin Tools'),
+      // ),
       body: SafeArea(
         child: CustomScrollView(slivers: [
           // ── App bar ─────────────────────────────────────────────────
