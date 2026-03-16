@@ -2,6 +2,25 @@ import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const backendRoot = path.resolve(__dirname, "..");
+
+function resolveExistingFilePath(filePath) {
+  if (!filePath) return null;
+
+  const candidatePaths = path.isAbsolute(filePath)
+    ? [filePath]
+    : [
+        path.resolve(process.cwd(), filePath),
+        path.resolve(backendRoot, filePath),
+        path.resolve(__dirname, filePath),
+      ];
+
+  return candidatePaths.find((candidate) => fs.existsSync(candidate)) ?? null;
+}
 
 function parseServiceAccountFromString(raw) {
   const parsed = JSON.parse(raw);
@@ -14,13 +33,19 @@ function parseServiceAccountFromString(raw) {
 function parseServiceAccount() {
   const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   const rawBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-  const rawFilePath =
+  const configuredFilePath =
     process.env.FIREBASE_SERVICE_ACCOUNT_FILE ||
     process.env.GOOGLE_APPLICATION_CREDENTIALS;
   const defaultFileCandidates = [
     path.join(process.cwd(), "firebase-service-account.json"),
     path.join(process.cwd(), "serviceAccountKey.json"),
     path.join(process.cwd(), "configs", "firebase-service-account.json"),
+    path.join(process.cwd(), "backend", "firebase-service-account.json"),
+    path.join(process.cwd(), "backend", "serviceAccountKey.json"),
+    path.join(process.cwd(), "backend", "configs", "firebase-service-account.json"),
+    path.join(backendRoot, "firebase-service-account.json"),
+    path.join(backendRoot, "serviceAccountKey.json"),
+    path.join(backendRoot, "configs", "firebase-service-account.json"),
   ];
 
   if (rawJson) {
@@ -32,8 +57,15 @@ function parseServiceAccount() {
     return parseServiceAccountFromString(decoded);
   }
 
-  if (rawFilePath) {
-    const fileContent = fs.readFileSync(rawFilePath, "utf8");
+  if (configuredFilePath) {
+    const resolvedFilePath = resolveExistingFilePath(configuredFilePath);
+    if (!resolvedFilePath) {
+      throw new Error(
+        `Firebase admin credential file not found: ${configuredFilePath}`
+      );
+    }
+
+    const fileContent = fs.readFileSync(resolvedFilePath, "utf8");
     return parseServiceAccountFromString(fileContent);
   }
 
