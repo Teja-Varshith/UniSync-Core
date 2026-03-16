@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:routemaster/routemaster.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:unisync/features/HomeScreen/homepagetab.dart';
 import 'package:unisync/features/peer_connect/peers/peer_screen.dart';
 
@@ -13,7 +15,7 @@ class NewHomeScreen extends StatefulWidget {
 }
 
 class _NewHomeScreenState extends State<NewHomeScreen> {
-  int _currentIndex = 2;
+  int _currentPageIndex = 3;
 
   static const List<_NavItem> _navItems = [
     _NavItem(icon: Iconsax.code,          activeIcon: Iconsax.code5,           label: 'Opportunities'),
@@ -23,30 +25,57 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
     _NavItem(icon: Iconsax.setting_2,     activeIcon: Iconsax.setting_2,      label: 'Settings'),
   ];
 
-  static const List<Widget> _pages = [
-    _PlaceholderPage(label: 'Opportunities', emoji: '🏆'),
-    _PlaceholderPage(label: 'Mock Interview', emoji: '🎙️'),
-    HomePageTab(),
-    PeerScreen(),
-    _PlaceholderPage(label: 'Settings', emoji: '⚙️'),
+  late final List<Widget> _pages = [
+    const _PlaceholderPage(label: 'Attendance', emoji: '📊'),
+    const _PlaceholderPage(label: 'Opportunities', emoji: '🏆'),
+    const _PlaceholderPage(label: 'Mock Interview', emoji: '🎙️'),
+    HomePageTab(onInternalRouteTap: _handleHomeRouteTap),
+    const PeerScreen(),
+    const _PlaceholderPage(label: 'Settings', emoji: '⚙️'),
   ];
 
-  void _onIndexChanged(int index) {
-    if (_currentIndex == index) return;
-    setState(() => _currentIndex = index);
+  int? get _currentNavIndex => _currentPageIndex == 0 ? null : _currentPageIndex - 1;
+
+  void _onNavIndexChanged(int navIndex) {
+    final targetPageIndex = navIndex + 1;
+    if (_currentPageIndex == targetPageIndex) return;
+    setState(() => _currentPageIndex = targetPageIndex);
+  }
+
+  void _activateAttendanceEdge() {
+    if (_currentPageIndex == 0) return;
+    setState(() => _currentPageIndex = 0);
+  }
+
+  void _handleHomeRouteTap(String route) {
+    if (route == '/peer') {
+      _onNavIndexChanged(3);
+      return;
+    }
+
+    if (route == '/campXLogin' || route == '/liveAttendence') {
+      _activateAttendanceEdge();
+      return;
+    }
+
+    if (!mounted) return;
+    Routemaster.of(context).push(route);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0D),
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(index: _currentPageIndex, children: _pages),
       bottomNavigationBar: _CircleNavBar(
         items: _navItems,
-        currentIndex: _currentIndex,
-        onIndexChanged: _onIndexChanged,
-        leftEdgeWidget: const _NavAvatarWidget(),
-        rightEdgeWidget: const _NavScanWidget(),
+        currentIndex: _currentNavIndex,
+        onIndexChanged: _onNavIndexChanged,
+        leftEdgeWidget: _NavAttendanceWidget(
+          isActive: _currentPageIndex == 0,
+          onTap: _activateAttendanceEdge,
+        ),
+        rightEdgeWidget: const _NavFollowWidget(),
       ),
     );
   }
@@ -58,7 +87,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
 
 class _CircleNavBar extends StatefulWidget {
   final List<_NavItem> items;
-  final int currentIndex;
+  final int? currentIndex;
   final ValueChanged<int> onIndexChanged;
 
   final Widget leftEdgeWidget;
@@ -99,7 +128,7 @@ class _CircleNavBarState extends State<_CircleNavBar> {
     super.initState();
     _sc = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_sc.hasClients) _sc.jumpTo(_clampedOffset(widget.currentIndex));
+      if (_sc.hasClients) _sc.jumpTo(_clampedOffset(widget.currentIndex ?? 0));
     });
   }
 
@@ -109,10 +138,36 @@ class _CircleNavBarState extends State<_CircleNavBar> {
   @override
   void didUpdateWidget(_CircleNavBar old) {
     super.didUpdateWidget(old);
-    if (widget.currentIndex != old.currentIndex && !_scrollDidChange) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _snap(widget.currentIndex));
+    if (widget.currentIndex == null &&
+        old.currentIndex != null &&
+        !_scrollDidChange) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _snapToStart());
+      return;
+    }
+
+    if (widget.currentIndex != null &&
+        widget.currentIndex != old.currentIndex &&
+        !_scrollDidChange) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _snap(widget.currentIndex!));
     }
     _scrollDidChange = false;
+  }
+
+  Future<void> _snapToStart({bool animated = true}) async {
+    if (!_sc.hasClients) return;
+    const target = 0.0;
+    if ((_sc.offset - target).abs() < 0.5) return;
+    _isSnapping = true;
+    if (animated) {
+      await _sc.animateTo(
+        target,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _sc.jumpTo(target);
+    }
+    _isSnapping = false;
   }
 
   double _clampedOffset(int i) {
@@ -226,49 +281,68 @@ class _CircleNavBarState extends State<_CircleNavBar> {
 // Replace with whatever you want
 // ─────────────────────────────────────────────
 
-class _NavAvatarWidget extends StatelessWidget {
-  const _NavAvatarWidget();
+class _NavAttendanceWidget extends StatelessWidget {
+  const _NavAttendanceWidget({required this.isActive, required this.onTap});
+
+  final bool isActive;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: GestureDetector(
         onTap: () {
-          // e.g. open profile drawer
           HapticFeedback.lightImpact();
+          onTap();
         },
-        child: Stack(
-          clipBehavior: Clip.none,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Avatar circle
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF2A2A2A),
-                border: Border.all(
-                  color: const Color(0xFF343434),
-                  width: 1.5,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isActive ? const Color(0x2AFFD72F) : const Color(0xFF2A2A2A),
+                    border: Border.all(
+                      color: isActive ? const Color(0xFFFFD72F) : const Color(0xFF343434),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Iconsax.calendar_1,
+                      size: 18,
+                      color: isActive ? const Color(0xFFFFD72F) : const Color(0xFFA09D95),
+                    ),
+                  ),
                 ),
-              ),
-              child: const Center(
-                child: Icon(Iconsax.user, size: 18, color: Color(0xFFA09D95)),
-              ),
+                Positioned(
+                  top: -1,
+                  right: -1,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isActive ? const Color(0xFFFFD72F) : const Color(0xFF343434),
+                      border: Border.all(color: const Color(0xFF121212), width: 1.5),
+                    ),
+                  ),
+                ),
+              ],
             ),
-
-            // Notification dot
-            Positioned(
-              top: -1,
-              right: -1,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFFFFD72F),
-                  border: Border.all(color: const Color(0xFF121212), width: 1.5),
-                ),
+            const SizedBox(height: 4),
+            Text(
+              'Attendance',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: isActive ? const Color(0xFFFFD72F) : const Color(0xFFA09D95),
+                letterSpacing: 0.2,
               ),
             ),
           ],
@@ -278,46 +352,84 @@ class _NavAvatarWidget extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// EXAMPLE RIGHT EDGE — QR / Scan button
-// Replace with whatever you want
-// ─────────────────────────────────────────────
+class _NavFollowWidget extends StatelessWidget {
+  const _NavFollowWidget();
 
-class _NavScanWidget extends StatelessWidget {
-  const _NavScanWidget();
+  Future<void> _open(String url) async {
+    final uri = Uri.parse(url);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: GestureDetector(
-        onTap: () {
-          // e.g. open QR scanner
-          HapticFeedback.lightImpact();
-        },
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFF1E1E1E),
-            border: Border.all(
-              color: const Color(0xFF343434),
-              width: 1.5,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Follow us on',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFA09D95),
+              letterSpacing: 0.2,
             ),
           ),
-          child: const Center(
-            child: Icon(Iconsax.scan, size: 18, color: Color(0xFFA09D95)),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SocialIcon(
+                icon: Iconsax.link,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  _open('https://www.linkedin.com/company/unisyncofficial');
+                },
+              ),
+              const SizedBox(width: 8),
+              _SocialIcon(
+                icon: Iconsax.instagram,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  _open('https://www.instagram.com/unisyncofficial');
+                },
+              ),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────
-// CIRCLE CHIP
-// ─────────────────────────────────────────────
+class _SocialIcon extends StatelessWidget {
+  const _SocialIcon({required this.icon, required this.onTap});
 
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xFF1E1E1E),
+          border: Border.all(
+            color: const Color(0xFF343434),
+            width: 1.2,
+          ),
+        ),
+        child: Center(
+          child: Icon(icon, size: 16, color: const Color(0xFFA09D95)),
+        ),
+      ),
+    );
+  }
+}
 class _CircleChip extends StatelessWidget {
   final _NavItem item;
   final bool isActive;

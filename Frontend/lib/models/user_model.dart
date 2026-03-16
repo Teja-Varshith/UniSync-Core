@@ -89,7 +89,7 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
   return UserModel(
-    id: map['_id'] as String?,
+    id: (map['id'] ?? map['_id'] ?? map['uid']) as String?,
     name: map['name'] ?? '',
     profileComplete: map['profileComplete'] ?? false,
     photoUrl: map['photoUrl'] as String?,
@@ -97,7 +97,7 @@ class UserModel {
     collegeName: map['collegeName'] as String?,
     tenantId: map['tenantId'] as String?,
     institutionCode: map['institutionCode'] as String?,
-    cookie: map['accessToken'] as String?,
+    cookie: (map['cookie'] ?? map['accessToken']) as String?,
     campXPassword: map['password'] as String?,
     campXUsername: map['campXUsername'] as String?,
     year: map['year'] as int?,

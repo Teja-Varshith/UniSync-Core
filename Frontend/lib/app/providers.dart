@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:unisync/features/auth/auth_repository.dart';
@@ -41,13 +40,7 @@ final appInitProvider = FutureProvider<void>((ref) async {
     return;
   }
 
-  final email = firebaseUser.email!;
-  final name = firebaseUser.displayName ?? "";
-
-  final user = await repo.signInWithGoogleBackendOnly(
-    email: email,
-    name: name,
-  );
+  final user = await repo.loadCurrentUserProfile();
 
   ref.read(userProvider.notifier).state = user;
 });

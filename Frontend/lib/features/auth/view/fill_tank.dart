@@ -78,12 +78,9 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
 
   try {
     final repo = ref.read(AuthRepositoryProvider);
-    final oldUser = ref.read(userProvider);
-
     print("updatinf the old user");
 
     final updatedUser = await repo.completeProfile(
-      emailId: oldUser!.emailId,
       name: _nameController.text.trim(),
       collegeName: _selectedCollege!,
       semester: _selectedSemester!,

@@ -3,10 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:card_swiper/card_swiper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:unisync/app/providers.dart';
 import 'package:unisync/constants/constant.dart';
 import 'package:unisync/features/HomeScreen/controllers/home_carousel_controller.dart';
@@ -60,6 +62,12 @@ enum QuickActionGraphic {
   /// Circuit-board traces               (Tech / Coding …)
   circuit,
 
+  /// Wave pattern for fluid/community themes
+  wave,
+
+  /// Spark/star burst style accents
+  spark,
+
   /// No decoration
   none,
 }
@@ -73,7 +81,10 @@ class QuickActionTile extends StatelessWidget {
     required this.title,
     required this.chipLabel,
     required this.ctaLabel,
-    required this.route,
+    this.route,
+    this.externalUrl,
+    this.creatorCredit,
+    this.onInternalRouteTap,
     this.graphic = QuickActionGraphic.none,
     this.visible = true,
   });
@@ -91,7 +102,16 @@ class QuickActionTile extends StatelessWidget {
   final String ctaLabel;
 
   /// Routemaster route
-  final String route;
+  final String? route;
+
+  /// Optional external URL used when this tile points to a website
+  final String? externalUrl;
+
+  /// Optional credit shown for community-created features
+  final String? creatorCredit;
+
+  /// Optional callback to intercept in-app route taps
+  final ValueChanged<String>? onInternalRouteTap;
 
   /// Decoration graphic drawn in the top-right corner
   final QuickActionGraphic graphic;
@@ -108,7 +128,7 @@ class QuickActionTile extends StatelessWidget {
       bottomShadowColor: scheme.accent,
       rightShadowColor: scheme.accent,
       depth: 4,
-      onTapUp: () => Routemaster.of(context).push(route),
+      onTapUp: () => _handleTap(context),
       onTapDown: () {},
       child: ClipRect(
         child: SizedBox(
@@ -165,6 +185,19 @@ class QuickActionTile extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (creatorCredit != null && creatorCredit!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'By ${creatorCredit!.trim()}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withOpacity(0.68),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 10),
 
                   // CTA link
@@ -187,6 +220,26 @@ class QuickActionTile extends StatelessWidget {
     );
   }
 
+  void _handleTap(BuildContext context) {
+    final website = externalUrl?.trim() ?? '';
+    if (website.isNotEmpty) {
+      final uri = Uri.tryParse(website);
+      if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+        launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      return;
+    }
+
+    final appRoute = route?.trim() ?? '';
+    if (appRoute.isNotEmpty) {
+      if (onInternalRouteTap != null) {
+        onInternalRouteTap!(appRoute);
+        return;
+      }
+      Routemaster.of(context).push(appRoute);
+    }
+  }
+
   static Widget _buildGraphic(QuickActionGraphic graphic, Color accent) {
     switch (graphic) {
       case QuickActionGraphic.network:
@@ -199,6 +252,10 @@ class QuickActionTile extends StatelessWidget {
         return _DotsGraphic(accent: accent);
       case QuickActionGraphic.circuit:
         return _CircuitGraphic(accent: accent);
+      case QuickActionGraphic.wave:
+        return _WaveGraphic(accent: accent);
+      case QuickActionGraphic.spark:
+        return _SparkGraphic(accent: accent);
       case QuickActionGraphic.none:
         return const SizedBox.shrink();
     }
@@ -402,6 +459,100 @@ class _CircuitPainter extends CustomPainter {
   @override bool shouldRepaint(_) => false;
 }
 
+// 6. Wave pattern ────────────────────────────────────────────────────────────
+class _WaveGraphic extends StatelessWidget {
+  const _WaveGraphic({required this.accent});
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) => Opacity(
+    opacity: 0.18,
+    child: SizedBox(
+      width: 72,
+      height: 72,
+      child: CustomPaint(painter: _WavePainter(accent: accent)),
+    ),
+  );
+}
+
+class _WavePainter extends CustomPainter {
+  const _WavePainter({required this.accent});
+  final Color accent;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = accent
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+
+    for (var i = 0; i < 4; i++) {
+      final y = 16.0 + (i * 12);
+      final path = Path()
+        ..moveTo(2, y)
+        ..quadraticBezierTo(18, y - 8, 34, y)
+        ..quadraticBezierTo(50, y + 8, 66, y);
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
+}
+
+// 7. Spark burst ─────────────────────────────────────────────────────────────
+class _SparkGraphic extends StatelessWidget {
+  const _SparkGraphic({required this.accent});
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) => Opacity(
+    opacity: 0.2,
+    child: SizedBox(
+      width: 72,
+      height: 72,
+      child: CustomPaint(painter: _SparkPainter(accent: accent)),
+    ),
+  );
+}
+
+class _SparkPainter extends CustomPainter {
+  const _SparkPainter({required this.accent});
+  final Color accent;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = accent
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    final dotPaint = Paint()
+      ..color = accent
+      ..style = PaintingStyle.fill;
+
+    final center = Offset(size.width * 0.72, size.height * 0.28);
+    for (var i = 0; i < 8; i++) {
+      final angle = (math.pi / 4) * i;
+      final inner = Offset(
+        center.dx + math.cos(angle) * 8,
+        center.dy + math.sin(angle) * 8,
+      );
+      final outer = Offset(
+        center.dx + math.cos(angle) * 20,
+        center.dy + math.sin(angle) * 20,
+      );
+      canvas.drawLine(inner, outer, linePaint);
+    }
+
+    canvas.drawCircle(center, 4, dotPaint);
+    canvas.drawCircle(Offset(16, 54), 3, dotPaint);
+    canvas.drawCircle(Offset(30, 44), 2.5, dotPaint);
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  PALETTE  — pre-defined schemes ready to use
 // ─────────────────────────────────────────────────────────────────────────────
@@ -412,20 +563,177 @@ class TileSchemes {
   static const coding        = QuickActionTileScheme(bg: Color(0xFF0D1A10), accent: Color(0xFF3ECF8E));
   static const mentorship    = QuickActionTileScheme(bg: Color(0xFF1F0E0E), accent: Color(0xFFE05252));
   static const courses       = QuickActionTileScheme(bg: Color(0xFF0E1A1F), accent: Color(0xFF38BDF8));
+  static const neonOrange    = QuickActionTileScheme(bg: Color(0xFF2A1408), accent: Color(0xFFFF8A3D));
+  static const magenta       = QuickActionTileScheme(bg: Color(0xFF240C1F), accent: Color(0xFFFF6BCB));
+  static const lime          = QuickActionTileScheme(bg: Color(0xFF14200D), accent: Color(0xFF9BE15D));
+  static const cyan          = QuickActionTileScheme(bg: Color(0xFF0B1F24), accent: Color(0xFF4DE2FF));
+  static const coral         = QuickActionTileScheme(bg: Color(0xFF2A1115), accent: Color(0xFFFF7A8A));
 }
+
+class TileColorPreset {
+  const TileColorPreset({required this.key, required this.label, required this.scheme});
+
+  final String key;
+  final String label;
+  final QuickActionTileScheme scheme;
+}
+
+class HomeQuickActionConfig {
+  const HomeQuickActionConfig({
+    required this.key,
+    required this.title,
+    required this.chipLabel,
+    required this.ctaLabel,
+    required this.route,
+    required this.iconKey,
+    required this.graphicKey,
+    required this.section,
+    required this.sortOrder,
+    required this.visible,
+    this.creatorName,
+    this.externalUrl,
+    this.bgColorHex,
+    this.accentColorHex,
+  });
+
+  final String key;
+  final String title;
+  final String chipLabel;
+  final String ctaLabel;
+  final String route;
+  final String iconKey;
+  final String graphicKey;
+  final String section;
+  final int sortOrder;
+  final bool visible;
+  final String? creatorName;
+  final String? externalUrl;
+  final String? bgColorHex;
+  final String? accentColorHex;
+
+  factory HomeQuickActionConfig.fromMap(Map<String, dynamic> map, String id) {
+    return HomeQuickActionConfig(
+      key: (map['key'] ?? id).toString(),
+      title: (map['title'] ?? '').toString(),
+      chipLabel: (map['chipLabel'] ?? '').toString(),
+      ctaLabel: (map['ctaLabel'] ?? '').toString(),
+      route: (map['route'] ?? '').toString(),
+      iconKey: (map['iconKey'] ?? 'apps').toString(),
+      graphicKey: (map['graphicKey'] ?? 'none').toString(),
+      section: (map['section'] ?? 'core').toString(),
+      sortOrder: (map['sortOrder'] as num?)?.toInt() ?? 0,
+      visible: map['visible'] != false,
+      creatorName: map['creatorName']?.toString(),
+      externalUrl: map['externalUrl']?.toString(),
+      bgColorHex: map['bgColorHex']?.toString(),
+      accentColorHex: map['accentColorHex']?.toString(),
+    );
+  }
+}
+
+class FeaturedProjectConfig {
+  const FeaturedProjectConfig({
+    required this.key,
+    required this.title,
+    required this.websiteUrl,
+    required this.visible,
+    required this.sortOrder,
+    this.chipLabel,
+    this.ctaLabel,
+    this.graphicKey,
+    this.bgColorHex,
+    this.accentColorHex,
+    this.description,
+    this.creatorName,
+  });
+
+  final String key;
+  final String title;
+  final String websiteUrl;
+  final bool visible;
+  final int sortOrder;
+  final String? chipLabel;
+  final String? ctaLabel;
+  final String? graphicKey;
+  final String? bgColorHex;
+  final String? accentColorHex;
+  final String? description;
+  final String? creatorName;
+
+  factory FeaturedProjectConfig.fromMap(Map<String, dynamic> map, String id) {
+    return FeaturedProjectConfig(
+      key: (map['key'] ?? id).toString(),
+      title: (map['title'] ?? '').toString(),
+      websiteUrl: (map['websiteUrl'] ?? '').toString(),
+      visible: map['visible'] != false,
+      sortOrder: (map['sortOrder'] as num?)?.toInt() ?? 0,
+      chipLabel: map['chipLabel']?.toString(),
+      ctaLabel: map['ctaLabel']?.toString(),
+      graphicKey: map['graphicKey']?.toString(),
+      bgColorHex: map['bgColorHex']?.toString(),
+      accentColorHex: map['accentColorHex']?.toString(),
+      description: map['description']?.toString(),
+      creatorName: map['creatorName']?.toString(),
+    );
+  }
+}
+
+final homeQuickActionsProvider = StreamProvider<List<HomeQuickActionConfig>>((ref) {
+  final firestore = ref.watch(firebaseFirestoreProvider);
+
+  return firestore
+      .collection('config')
+      .doc('homepage')
+      .collection('quick_actions')
+      .orderBy('sortOrder')
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+          .map((doc) => HomeQuickActionConfig.fromMap(doc.data(), doc.id))
+          .toList());
+});
+
+final homeFeaturedProjectsProvider = StreamProvider<List<FeaturedProjectConfig>>((ref) {
+  final firestore = ref.watch(firebaseFirestoreProvider);
+
+  return firestore
+      .collection('config')
+      .doc('homepage')
+      .collection('featured_projects')
+      .orderBy('sortOrder')
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+          .map((doc) => FeaturedProjectConfig.fromMap(doc.data(), doc.id))
+          .toList());
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 //  ROOT PAGE WIDGET
 // ═════════════════════════════════════════════════════════════════════════════
 
 class HomePageTab extends ConsumerStatefulWidget {
-  const HomePageTab({super.key});
+  const HomePageTab({super.key, this.onInternalRouteTap});
+
+  final ValueChanged<String>? onInternalRouteTap;
 
   @override
   ConsumerState<HomePageTab> createState() => _HomePageTabState();
 }
 
 class _HomePageTabState extends ConsumerState<HomePageTab> {
+  static const List<TileColorPreset> _tileColorPresets = [
+    TileColorPreset(key: 'peerConnect', label: 'Ocean Blue', scheme: TileSchemes.peerConnect),
+    TileColorPreset(key: 'resumeBuilder', label: 'Amber Gold', scheme: TileSchemes.resumeBuilder),
+    TileColorPreset(key: 'events', label: 'Violet', scheme: TileSchemes.events),
+    TileColorPreset(key: 'coding', label: 'Mint Green', scheme: TileSchemes.coding),
+    TileColorPreset(key: 'mentorship', label: 'Ruby Red', scheme: TileSchemes.mentorship),
+    TileColorPreset(key: 'courses', label: 'Sky Cyan', scheme: TileSchemes.courses),
+    TileColorPreset(key: 'neonOrange', label: 'Neon Orange', scheme: TileSchemes.neonOrange),
+    TileColorPreset(key: 'magenta', label: 'Magenta Pop', scheme: TileSchemes.magenta),
+    TileColorPreset(key: 'lime', label: 'Lime Fresh', scheme: TileSchemes.lime),
+    TileColorPreset(key: 'cyan', label: 'Aqua Glow', scheme: TileSchemes.cyan),
+    TileColorPreset(key: 'coral', label: 'Coral Bloom', scheme: TileSchemes.coral),
+  ];
+
   // ── Add-carousel bottom sheet (logic unchanged) ───────────────────────────
   Future<void> _showAddCarouselDocSheet() async {
     final imageCtrl       = TextEditingController();
@@ -532,72 +840,873 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
       TextField(controller: controller, keyboardType: keyboardType,
           decoration: InputDecoration(labelText: label));
 
-  // ── Tile grid ─────────────────────────────────────────────────────────────
-  // ADD / REMOVE / REORDER tiles here. Set visible: false to hide without deleting.
-  List<QuickActionTile> get _tiles => [
-    QuickActionTile(
-      scheme: TileSchemes.peerConnect,
-      icon: Icons.people_alt_rounded,
-      title: 'Peer\nConnect',
-      chipLabel: '200+ online',
-      ctaLabel: 'Connect',
-      route: '/peer-connect',
-      graphic: QuickActionGraphic.network,
-      visible: true,
-    ),
-    QuickActionTile(
-      scheme: TileSchemes.resumeBuilder,
-      icon: Icons.description_rounded,
-      title: 'Resume\nBuilder',
-      chipLabel: 'ATS optimised',
-      ctaLabel: 'Build now',
-      route: '/resume-builder',
-      graphic: QuickActionGraphic.resume,
-      visible: true,
-    ),
-    // ── Add more tiles below — they flow into a 2-column wrap automatically ──
-    //
-    QuickActionTile(
-      scheme: TileSchemes.events,
-      icon: Icons.event_rounded,
-      title: 'Campus\nEvents',
-      chipLabel: '8 this week',
-      ctaLabel: 'Explore',
-      route: '/events',
-      graphic: QuickActionGraphic.rings,
-      visible: true,
-    ),
-    QuickActionTile(
-      scheme: TileSchemes.coding,
-      icon: Icons.code_rounded,
-      title: '100 Days\nCode',
-      chipLabel: 'Day streak',
-      ctaLabel: 'Start',
-      route: '/coding',
-      graphic: QuickActionGraphic.circuit,
-      visible: true,   // ← hidden, uncomment visible: true to show
-    ),
-  ];
+  List<HomeQuickActionConfig> _defaultCoreQuickActions() => const [
+        HomeQuickActionConfig(
+          key: 'peer_connect',
+          title: 'Peer\nConnect',
+          chipLabel: '200+ online',
+          ctaLabel: 'Connect',
+          route: '/peer',
+          iconKey: 'people',
+          graphicKey: 'network',
+          section: 'core',
+          sortOrder: 1,
+          visible: true,
+          bgColorHex: '#0E1E38',
+          accentColorHex: '#4A90E2',
+        ),
+        HomeQuickActionConfig(
+          key: 'attendance',
+          title: 'Live\nAttendance',
+          chipLabel: 'Track in real time',
+          ctaLabel: 'Track now',
+          route: '/campXLogin',
+          iconKey: 'calendar',
+          graphicKey: 'rings',
+          section: 'core',
+          sortOrder: 2,
+          visible: true,
+          bgColorHex: '#1A1207',
+          accentColorHex: '#E8A838',
+        ),
+        HomeQuickActionConfig(
+          key: 'aptitude',
+          title: 'Aptitude\nPractice',
+          chipLabel: 'Daily challenge',
+          ctaLabel: 'Start',
+          route: '/nextUpdatePromo',
+          iconKey: 'bolt',
+          graphicKey: 'spark',
+          section: 'core',
+          sortOrder: 3,
+          visible: true,
+          bgColorHex: '#0D1A10',
+          accentColorHex: '#3ECF8E',
+        ),
+        HomeQuickActionConfig(
+          key: 'uni_cards',
+          title: 'Uni\nCards',
+          chipLabel: 'Bite-sized prep',
+          ctaLabel: 'Open',
+          route: '/nextUpdatePromo',
+          iconKey: 'style',
+          graphicKey: 'wave',
+          section: 'core',
+          sortOrder: 4,
+          visible: true,
+          bgColorHex: '#240C1F',
+          accentColorHex: '#FF6BCB',
+        ),
+      ];
+
+  List<FeaturedProjectConfig> _defaultFeaturedProjects() => const [
+        FeaturedProjectConfig(
+          key: 'devfolio_showcase',
+          title: 'DevFolio Showcase',
+          websiteUrl: 'https://example.com/devfolio',
+          visible: true,
+          sortOrder: 1,
+          chipLabel: 'Web platform',
+          ctaLabel: 'Visit site',
+          graphicKey: 'wave',
+          bgColorHex: '#101626',
+          accentColorHex: '#5AA9FF',
+          description: 'Student portfolio and project showcase for campus builders.',
+          creatorName: 'Ananya R',
+        ),
+        FeaturedProjectConfig(
+          key: 'examradar',
+          title: 'ExamRadar',
+          websiteUrl: 'https://example.com/examradar',
+          visible: true,
+          sortOrder: 2,
+          chipLabel: 'Prep assistant',
+          ctaLabel: 'Explore',
+          graphicKey: 'spark',
+          bgColorHex: '#1A1207',
+          accentColorHex: '#E8A838',
+          description: 'Tracks exam patterns and gives quick weekly prep plans.',
+          creatorName: 'Rahul K',
+        ),
+        FeaturedProjectConfig(
+          key: 'hostel_hub',
+          title: 'Hostel Hub',
+          websiteUrl: 'https://example.com/hostelhub',
+          visible: true,
+          sortOrder: 3,
+          chipLabel: 'Campus utility',
+          ctaLabel: 'Open app',
+          graphicKey: 'network',
+          bgColorHex: '#14200D',
+          accentColorHex: '#9BE15D',
+          description: 'Roommate finder and hostel issue tracker by fellow students.',
+          creatorName: 'Siri M',
+        ),
+      ];
+
+  IconData _iconFromKey(String key) {
+    switch (key.toLowerCase()) {
+      case 'people':
+        return Icons.people_alt_rounded;
+      case 'calendar':
+        return Icons.calendar_month_rounded;
+      case 'bolt':
+        return Icons.bolt_rounded;
+      case 'style':
+        return Icons.style_rounded;
+      case 'description':
+        return Icons.description_rounded;
+      case 'event':
+        return Icons.event_rounded;
+      case 'code':
+        return Icons.code_rounded;
+      default:
+        return Icons.apps_rounded;
+    }
+  }
+
+  QuickActionGraphic _graphicFromKey(String key) {
+    switch (key.toLowerCase()) {
+      case 'network':
+        return QuickActionGraphic.network;
+      case 'resume':
+        return QuickActionGraphic.resume;
+      case 'rings':
+        return QuickActionGraphic.rings;
+      case 'dots':
+        return QuickActionGraphic.dots;
+      case 'circuit':
+        return QuickActionGraphic.circuit;
+      case 'wave':
+        return QuickActionGraphic.wave;
+      case 'spark':
+        return QuickActionGraphic.spark;
+      default:
+        return QuickActionGraphic.none;
+    }
+  }
+
+  String _colorToHex(Color color) {
+    final value = color.value.toRadixString(16).padLeft(8, '0').toUpperCase();
+    return '#${value.substring(2)}';
+  }
+
+  bool _isValidWebUrl(String value) {
+    final uri = Uri.tryParse(value.trim());
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
+  }
+
+  String? _normalizeWebUrl(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+
+    if (_isValidWebUrl(trimmed)) return trimmed;
+
+    final withScheme = 'https://$trimmed';
+    if (_isValidWebUrl(withScheme)) return withScheme;
+
+    return null;
+  }
+
+  Color _parseHexColor(String? hex, Color fallback) {
+    if (hex == null || hex.trim().isEmpty) return fallback;
+    final value = hex.replaceAll('#', '').trim();
+    if (value.length != 6 && value.length != 8) return fallback;
+    final normalized = value.length == 6 ? 'FF$value' : value;
+    return Color(int.tryParse(normalized, radix: 16) ?? fallback.value);
+  }
+
+  QuickActionTileScheme _schemeFor(HomeQuickActionConfig config) {
+    final lowerKey = config.key.toLowerCase();
+    QuickActionTileScheme base;
+    switch (lowerKey) {
+      case 'peer_connect':
+        base = TileSchemes.peerConnect;
+        break;
+      case 'attendance':
+        base = TileSchemes.resumeBuilder;
+        break;
+      case 'aptitude':
+        base = TileSchemes.coding;
+        break;
+      case 'uni_cards':
+        base = TileSchemes.magenta;
+        break;
+      default:
+        base = config.section.toLowerCase() == 'core'
+            ? TileSchemes.events
+            : TileSchemes.cyan;
+    }
+    final bg = _parseHexColor(config.bgColorHex, base.bg);
+    final accent = _parseHexColor(config.accentColorHex, base.accent);
+    return QuickActionTileScheme(bg: bg, accent: accent);
+  }
+
+  Future<void> _seedHomeConfig() async {
+    final firestore = ref.read(firebaseFirestoreProvider);
+    final homepageRef = firestore.collection('config').doc('homepage');
+
+    final quickBatch = firestore.batch();
+    for (final item in _defaultCoreQuickActions()) {
+      final docRef = homepageRef.collection('quick_actions').doc(item.key);
+      quickBatch.set(docRef, {
+        'key': item.key,
+        'title': item.title,
+        'chipLabel': item.chipLabel,
+        'ctaLabel': item.ctaLabel,
+        'route': item.route,
+        'externalUrl': item.externalUrl ?? '',
+        'section': item.section,
+        'iconKey': item.iconKey,
+        'graphicKey': item.graphicKey,
+        'bgColorHex': item.bgColorHex,
+        'accentColorHex': item.accentColorHex,
+        'creatorName': item.creatorName ?? '',
+        'visible': item.visible,
+        'sortOrder': item.sortOrder,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+
+    for (final item in _defaultFeaturedProjects()) {
+      final docRef = homepageRef.collection('featured_projects').doc(item.key);
+      quickBatch.set(docRef, {
+        'key': item.key,
+        'title': item.title,
+        'description': item.description ?? '',
+        'websiteUrl': item.websiteUrl,
+        'chipLabel': item.chipLabel ?? 'Student build',
+        'ctaLabel': item.ctaLabel ?? 'Open project',
+        'graphicKey': item.graphicKey ?? 'none',
+        'bgColorHex': item.bgColorHex,
+        'accentColorHex': item.accentColorHex,
+        'creatorName': item.creatorName ?? '',
+        'visible': item.visible,
+        'sortOrder': item.sortOrder,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+
+    await quickBatch.commit();
+  }
+
+  List<HomeQuickActionConfig> _mergeQuickActions(List<HomeQuickActionConfig> remote) {
+    final defaults = _defaultCoreQuickActions();
+    if (remote.isEmpty) return defaults;
+
+    final byKey = <String, HomeQuickActionConfig>{
+      for (final item in remote) item.key: item,
+    };
+
+    final merged = <HomeQuickActionConfig>[];
+    for (final item in defaults) {
+      merged.add(byKey[item.key] ?? item);
+    }
+
+    final defaultKeys = defaults.map((e) => e.key).toSet();
+    merged.addAll(
+      remote.where((e) => !defaultKeys.contains(e.key)),
+    );
+
+    merged.sort((a, b) {
+      final sa = a.section.toLowerCase() == 'core' ? 0 : 1;
+      final sb = b.section.toLowerCase() == 'core' ? 0 : 1;
+      if (sa != sb) return sa.compareTo(sb);
+      return a.sortOrder.compareTo(b.sortOrder);
+    });
+
+    return merged;
+  }
+
+  List<QuickActionTile> _toQuickTiles(List<HomeQuickActionConfig> configs) {
+    return configs
+        .where((c) => c.visible)
+        .map((config) => QuickActionTile(
+              scheme: _schemeFor(config),
+              icon: _iconFromKey(config.iconKey),
+              title: config.title,
+              chipLabel: config.chipLabel,
+              ctaLabel: config.ctaLabel,
+              route: _resolvedRoute(config),
+              externalUrl: config.externalUrl,
+              creatorCredit: config.section.toLowerCase() == 'core'
+                  ? null
+                  : config.creatorName,
+                onInternalRouteTap: widget.onInternalRouteTap,
+              graphic: _graphicFromKey(config.graphicKey),
+              visible: config.visible,
+            ))
+        .toList();
+  }
+
+  String _resolvedRoute(HomeQuickActionConfig config) {
+    final key = config.key.toLowerCase();
+    if (key == 'aptitude' || key == 'uni_cards') {
+      return '/nextUpdatePromo';
+    }
+    return config.route;
+  }
+
+  Future<void> _showAdminToolsSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: UniSyncColors.backgroundSecondary,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Temporary Admin Tools',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: UniSyncColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  leading: const Icon(Icons.view_carousel_rounded),
+                  title: const Text('Add Carousel Doc'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showAddCarouselDocSheet();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.tune_rounded),
+                  title: const Text('Manage Home Config'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showHomeConfigSheet();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cloud_upload_rounded),
+                  title: const Text('Seed Default Home Config'),
+                  subtitle: const Text('Adds core features + 3 featured projects'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _seedHomeConfig();
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      const SnackBar(content: Text('Default home config seeded')),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showHomeConfigSheet() async {
+    final keyCtrl = TextEditingController();
+    final titleCtrl = TextEditingController();
+    final chipCtrl = TextEditingController();
+    final ctaCtrl = TextEditingController();
+    final routeCtrl = TextEditingController();
+    final urlCtrl = TextEditingController();
+    final creatorCtrl = TextEditingController();
+    final orderCtrl = TextEditingController(text: '0');
+    final descriptionCtrl = TextEditingController();
+    final projectChipCtrl = TextEditingController(text: 'Student build');
+    final projectCtaCtrl = TextEditingController(text: 'Open project');
+    final bgColorCtrl = TextEditingController(text: '#0E1E38');
+    final accentColorCtrl = TextEditingController(text: '#4A90E2');
+    var isQuickAction = true;
+    var visible = true;
+    var section = 'core';
+    var iconKey = 'apps';
+    var graphicKey = 'none';
+    var colorPresetKey = 'peerConnect';
+
+    final firestore = ref.read(firebaseFirestoreProvider);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: UniSyncColors.backgroundSecondary,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Home Config (Temporary)',
+                    style: TextStyle(
+                      color: UniSyncColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Quick Action'),
+                          selected: isQuickAction,
+                          onSelected: (_) =>
+                              setModalState(() => isQuickAction = true),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Featured Project'),
+                          selected: !isQuickAction,
+                          onSelected: (_) =>
+                              setModalState(() => isQuickAction = false),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _inputField(controller: keyCtrl, label: 'Key (optional)'),
+                  const SizedBox(height: 8),
+                  _inputField(controller: titleCtrl, label: 'Title *'),
+                  const SizedBox(height: 8),
+                  if (isQuickAction) ...[
+                    _inputField(controller: chipCtrl, label: 'Chip label *'),
+                    const SizedBox(height: 8),
+                    _inputField(controller: ctaCtrl, label: 'CTA label *'),
+                    const SizedBox(height: 8),
+                    _inputField(controller: routeCtrl, label: 'App route'),
+                    const SizedBox(height: 8),
+                    _inputField(controller: urlCtrl, label: 'External URL (optional)'),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: section,
+                      decoration: const InputDecoration(labelText: 'Section'),
+                      items: const [
+                        DropdownMenuItem(value: 'core', child: Text('core')),
+                        DropdownMenuItem(value: 'external', child: Text('external')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setModalState(() => section = v);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: iconKey,
+                      decoration: const InputDecoration(labelText: 'Icon key'),
+                      items: const [
+                        DropdownMenuItem(value: 'apps', child: Text('apps')),
+                        DropdownMenuItem(value: 'people', child: Text('people')),
+                        DropdownMenuItem(value: 'calendar', child: Text('calendar')),
+                        DropdownMenuItem(value: 'bolt', child: Text('bolt')),
+                        DropdownMenuItem(value: 'style', child: Text('style')),
+                        DropdownMenuItem(value: 'description', child: Text('description')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setModalState(() => iconKey = v);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: graphicKey,
+                      decoration: const InputDecoration(labelText: 'Graphic key'),
+                      items: const [
+                        DropdownMenuItem(value: 'none', child: Text('none')),
+                        DropdownMenuItem(value: 'network', child: Text('network')),
+                        DropdownMenuItem(value: 'resume', child: Text('resume')),
+                        DropdownMenuItem(value: 'rings', child: Text('rings')),
+                        DropdownMenuItem(value: 'dots', child: Text('dots')),
+                        DropdownMenuItem(value: 'circuit', child: Text('circuit')),
+                        DropdownMenuItem(value: 'wave', child: Text('wave')),
+                        DropdownMenuItem(value: 'spark', child: Text('spark')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setModalState(() => graphicKey = v);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: colorPresetKey,
+                      decoration: const InputDecoration(labelText: 'Tile color theme'),
+                      items: _tileColorPresets
+                          .map(
+                            (preset) => DropdownMenuItem(
+                              value: preset.key,
+                              child: Text(preset.label),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        if (v == null) return;
+                        final selected = _tileColorPresets.firstWhere((item) => item.key == v);
+                        setModalState(() {
+                          colorPresetKey = v;
+                          bgColorCtrl.text = _colorToHex(selected.scheme.bg);
+                          accentColorCtrl.text = _colorToHex(selected.scheme.accent);
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Selected: bg ${bgColorCtrl.text} · accent ${accentColorCtrl.text}',
+                      style: const TextStyle(
+                        color: UniSyncColors.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ] else ...[
+                    _inputField(controller: descriptionCtrl, label: 'Description'),
+                    const SizedBox(height: 8),
+                    _inputField(controller: projectChipCtrl, label: 'Chip label'),
+                    const SizedBox(height: 8),
+                    _inputField(controller: projectCtaCtrl, label: 'CTA label'),
+                    const SizedBox(height: 8),
+                    _inputField(controller: urlCtrl, label: 'Website URL *'),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: graphicKey,
+                      decoration: const InputDecoration(labelText: 'Graphic key'),
+                      items: const [
+                        DropdownMenuItem(value: 'none', child: Text('none')),
+                        DropdownMenuItem(value: 'network', child: Text('network')),
+                        DropdownMenuItem(value: 'resume', child: Text('resume')),
+                        DropdownMenuItem(value: 'rings', child: Text('rings')),
+                        DropdownMenuItem(value: 'dots', child: Text('dots')),
+                        DropdownMenuItem(value: 'circuit', child: Text('circuit')),
+                        DropdownMenuItem(value: 'wave', child: Text('wave')),
+                        DropdownMenuItem(value: 'spark', child: Text('spark')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setModalState(() => graphicKey = v);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: colorPresetKey,
+                      decoration: const InputDecoration(labelText: 'Tile color theme'),
+                      items: _tileColorPresets
+                          .map(
+                            (preset) => DropdownMenuItem(
+                              value: preset.key,
+                              child: Text(preset.label),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        if (v == null) return;
+                        final selected = _tileColorPresets.firstWhere((item) => item.key == v);
+                        setModalState(() {
+                          colorPresetKey = v;
+                          bgColorCtrl.text = _colorToHex(selected.scheme.bg);
+                          accentColorCtrl.text = _colorToHex(selected.scheme.accent);
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Selected: bg ${bgColorCtrl.text} · accent ${accentColorCtrl.text}',
+                      style: const TextStyle(
+                        color: UniSyncColors.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  _inputField(controller: creatorCtrl, label: 'Creator name (for credits)'),
+                  const SizedBox(height: 8),
+                  _inputField(
+                    controller: orderCtrl,
+                    label: 'Sort order',
+                    keyboardType: TextInputType.number,
+                  ),
+                  SwitchListTile(
+                    value: visible,
+                    onChanged: (v) => setModalState(() => visible = v),
+                    title: const Text('Visible'),
+                    contentPadding: EdgeInsets.zero,
+                    activeThumbColor: UniSyncColors.accent,
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (titleCtrl.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Title is required')),
+                          );
+                          return;
+                        }
+
+                        final normalizedUrl = _normalizeWebUrl(urlCtrl.text);
+
+                        if (isQuickAction &&
+                            (chipCtrl.text.trim().isEmpty || ctaCtrl.text.trim().isEmpty)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Chip and CTA are required for quick action')),
+                          );
+                          return;
+                        }
+
+                        if (isQuickAction &&
+                            routeCtrl.text.trim().isEmpty &&
+                            urlCtrl.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Provide either app route or external URL')),
+                          );
+                          return;
+                        }
+
+                        if (isQuickAction &&
+                            urlCtrl.text.trim().isNotEmpty &&
+                            normalizedUrl == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Enter a valid external URL (http/https)')),
+                          );
+                          return;
+                        }
+
+                        if (!isQuickAction && urlCtrl.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Website URL is required for project')),
+                          );
+                          return;
+                        }
+
+                        if (!isQuickAction && normalizedUrl == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Enter a valid website URL (http/https)')),
+                          );
+                          return;
+                        }
+
+                        final docId = keyCtrl.text.trim().isEmpty
+                            ? DateTime.now().millisecondsSinceEpoch.toString()
+                            : keyCtrl.text.trim();
+                        final order = int.tryParse(orderCtrl.text.trim()) ?? 0;
+
+                        if (isQuickAction) {
+                          await firestore
+                              .collection('config')
+                              .doc('homepage')
+                              .collection('quick_actions')
+                              .doc(docId)
+                              .set({
+                            'key': docId,
+                            'title': titleCtrl.text.trim(),
+                            'chipLabel': chipCtrl.text.trim(),
+                            'ctaLabel': ctaCtrl.text.trim(),
+                            'route': routeCtrl.text.trim(),
+                            'externalUrl': normalizedUrl ?? '',
+                            'section': section,
+                            'iconKey': iconKey,
+                            'graphicKey': graphicKey,
+                            'bgColorHex': bgColorCtrl.text.trim(),
+                            'accentColorHex': accentColorCtrl.text.trim(),
+                            'creatorName': creatorCtrl.text.trim(),
+                            'visible': visible,
+                            'sortOrder': order,
+                            'updatedAt': FieldValue.serverTimestamp(),
+                          }, SetOptions(merge: true));
+                        } else {
+                          await firestore
+                              .collection('config')
+                              .doc('homepage')
+                              .collection('featured_projects')
+                              .doc(docId)
+                              .set({
+                            'key': docId,
+                            'title': titleCtrl.text.trim(),
+                            'description': descriptionCtrl.text.trim(),
+                            'websiteUrl': normalizedUrl,
+                            'chipLabel': projectChipCtrl.text.trim(),
+                            'ctaLabel': projectCtaCtrl.text.trim(),
+                            'graphicKey': graphicKey,
+                            'bgColorHex': bgColorCtrl.text.trim(),
+                            'accentColorHex': accentColorCtrl.text.trim(),
+                            'creatorName': creatorCtrl.text.trim(),
+                            'visible': visible,
+                            'sortOrder': order,
+                            'updatedAt': FieldValue.serverTimestamp(),
+                          }, SetOptions(merge: true));
+                        }
+
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(this.context).showSnackBar(
+                          const SnackBar(content: Text('Home config updated')),
+                        );
+                      },
+                      child: const Text('Save to Firebase'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Quick Action Visibility',
+                    style: TextStyle(
+                      color: UniSyncColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: firestore
+                        .collection('config')
+                        .doc('homepage')
+                        .collection('quick_actions')
+                        .orderBy('sortOrder')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Text(
+                          'No quick actions in config yet.',
+                          style: TextStyle(color: UniSyncColors.textSecondary),
+                        );
+                      }
+
+                      final docs = snapshot.data!.docs;
+                      return Column(
+                        children: docs.map((doc) {
+                          final data = doc.data();
+                          return SwitchListTile(
+                            title: Text(
+                              (data['title'] ?? doc.id).toString(),
+                              style: const TextStyle(color: UniSyncColors.textPrimary),
+                            ),
+                            subtitle: Text(
+                              (data['section'] ?? 'core').toString(),
+                              style: const TextStyle(color: UniSyncColors.textMuted),
+                            ),
+                            value: data['visible'] != false,
+                            onChanged: (value) {
+                              doc.reference.set({'visible': value}, SetOptions(merge: true));
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            activeThumbColor: UniSyncColors.accent,
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Featured Project Visibility',
+                    style: TextStyle(
+                      color: UniSyncColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: firestore
+                        .collection('config')
+                        .doc('homepage')
+                        .collection('featured_projects')
+                        .orderBy('sortOrder')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Text(
+                          'No featured projects in config yet.',
+                          style: TextStyle(color: UniSyncColors.textSecondary),
+                        );
+                      }
+
+                      final docs = snapshot.data!.docs;
+                      return Column(
+                        children: docs.map((doc) {
+                          final data = doc.data();
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: SwitchListTile(
+                                  title: Text(
+                                    (data['title'] ?? doc.id).toString(),
+                                    style: const TextStyle(color: UniSyncColors.textPrimary),
+                                  ),
+                                  subtitle: Text(
+                                    (data['creatorName'] ?? 'Creator not set').toString(),
+                                    style: const TextStyle(color: UniSyncColors.textMuted),
+                                  ),
+                                  value: data['visible'] != false,
+                                  onChanged: (value) {
+                                    doc.reference.set({'visible': value}, SetOptions(merge: true));
+                                  },
+                                  contentPadding: EdgeInsets.zero,
+                                  activeThumbColor: UniSyncColors.accent,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded),
+                                color: UniSyncColors.error,
+                                onPressed: () => doc.reference.delete(),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    keyCtrl.dispose();
+    titleCtrl.dispose();
+    chipCtrl.dispose();
+    ctaCtrl.dispose();
+    routeCtrl.dispose();
+    urlCtrl.dispose();
+    creatorCtrl.dispose();
+    orderCtrl.dispose();
+    descriptionCtrl.dispose();
+    projectChipCtrl.dispose();
+    projectCtaCtrl.dispose();
+    bgColorCtrl.dispose();
+    accentColorCtrl.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final user          = ref.watch(userProvider);
     final carouselState = ref.watch(homeCarouselControllerProvider);
+    final quickActionsState = ref.watch(homeQuickActionsProvider);
+    final featuredProjectsState = ref.watch(homeFeaturedProjectsProvider);
     final userName      = user?.name.trim();
     final firstName     = (userName == null || userName.isEmpty)
         ? 'there' : userName.split(' ').first;
 
-    // Filter visible tiles for layout
-    final visibleTiles = _tiles.where((t) => t.visible).toList();
+    final mergedQuickActions = _mergeQuickActions(
+      quickActionsState.valueOrNull ?? const [],
+    );
+    final visibleTiles = _toQuickTiles(mergedQuickActions);
+    final featuredProjects = (featuredProjectsState.valueOrNull ?? const [])
+        .where((item) => item.visible)
+        .toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     return Scaffold(
       backgroundColor: UniSyncColors.backgroundPrimary,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddCarouselDocSheet,
+        onPressed: _showAdminToolsSheet,
         backgroundColor: UniSyncColors.accent,
         foregroundColor: UniSyncColors.buttonPrimaryFg,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Carousel Doc'),
+        icon: const Icon(Icons.build_rounded),
+        label: const Text('Admin Tools'),
       ),
       body: SafeArea(
         child: CustomScrollView(slivers: [
@@ -647,6 +1756,26 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
                   // Tiles auto-wrap: odd count gets a full-width last tile
                   if (visibleTiles.isNotEmpty)
                     _TileGrid(tiles: visibleTiles),
+
+                  if (featuredProjects.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    const _SpotlightHeader(
+                      eyebrow: '#FEATURED PROJECTS',
+                      title: 'Built by',
+                      highlight: 'fellow students',
+                    ),
+                    const SizedBox(height: 14),
+                    _FeaturedProjectList(projects: featuredProjects),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Built something cool and want your project to be listed and visible to 5k+ students? Email us at hello.unisync@gmail.com',
+                      style: TextStyle(
+                        color: UniSyncColors.textMuted,
+                        fontSize: 11,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
                 ]),
               ),
 
@@ -662,7 +1791,7 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
 // ─── 2-column grid that wraps automatically ──────────────────────────────────
 class _TileGrid extends StatelessWidget {
   const _TileGrid({required this.tiles});
-  final List<QuickActionTile> tiles;
+  final List<Widget> tiles;
 
   @override
   Widget build(BuildContext context) {
@@ -677,6 +1806,199 @@ class _TileGrid extends StatelessWidget {
       if (i + 2 < tiles.length) rows.add(const SizedBox(height: 12));
     }
     return Column(children: rows);
+  }
+}
+
+class _FeaturedProjectList extends StatelessWidget {
+  const _FeaturedProjectList({required this.projects});
+  final List<FeaturedProjectConfig> projects;
+
+  @override
+  Widget build(BuildContext context) {
+    final tiles = projects
+        .map(
+          (project) => _FeaturedProjectTile(project: project),
+        )
+        .toList();
+    return _TileGrid(tiles: tiles);
+  }
+}
+
+class _FeaturedProjectTile extends StatelessWidget {
+  const _FeaturedProjectTile({required this.project});
+  final FeaturedProjectConfig project;
+
+  Color _parseHexColor(String? hex, Color fallback) {
+    if (hex == null || hex.trim().isEmpty) return fallback;
+    final value = hex.replaceAll('#', '').trim();
+    if (value.length != 6 && value.length != 8) return fallback;
+    final normalized = value.length == 6 ? 'FF$value' : value;
+    return Color(int.tryParse(normalized, radix: 16) ?? fallback.value);
+  }
+
+  QuickActionGraphic _graphicFromKey(String key) {
+    switch (key.toLowerCase()) {
+      case 'network':
+        return QuickActionGraphic.network;
+      case 'resume':
+        return QuickActionGraphic.resume;
+      case 'rings':
+        return QuickActionGraphic.rings;
+      case 'dots':
+        return QuickActionGraphic.dots;
+      case 'circuit':
+        return QuickActionGraphic.circuit;
+      case 'wave':
+        return QuickActionGraphic.wave;
+      case 'spark':
+        return QuickActionGraphic.spark;
+      default:
+        return QuickActionGraphic.none;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final creator = (project.creatorName ?? '').trim();
+    final desc = (project.description ?? '').trim();
+    final chipLabel = (project.chipLabel ?? 'Student build').trim();
+    final ctaLabel = (project.ctaLabel ?? 'Open project').trim();
+    final accent = _parseHexColor(project.accentColorHex, const Color(0xFF5AA9FF));
+    final bg = _parseHexColor(project.bgColorHex, const Color(0xFF101626));
+    final graphic = _graphicFromKey(project.graphicKey ?? 'none');
+
+    return NeoPopButton(
+      color: bg,
+      bottomShadowColor: accent,
+      rightShadowColor: accent,
+      depth: 4,
+      onTapDown: () {},
+      onTapUp: () {
+        final url = project.websiteUrl.trim();
+        if (url.isNotEmpty) {
+          final uri = Uri.tryParse(url);
+          if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+            launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        }
+      },
+      child: SizedBox(
+        height: 220,
+        child: Stack(
+          children: [
+            if (graphic != QuickActionGraphic.none)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: QuickActionTile._buildGraphic(graphic, accent),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: accent.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(color: accent.withOpacity(0.28)),
+                    ),
+                    child: Icon(Icons.travel_explore_rounded,
+                        size: 18, color: accent),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          project.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            height: 1.15,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: accent.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            chipLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: accent,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                        if (desc.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            desc,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: UniSyncColors.textSecondary,
+                              fontSize: 11,
+                              height: 1.25,
+                            ),
+                          ),
+                        ],
+                        if (creator.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'By $creator',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withOpacity(0.68),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 7),
+                        Row(
+                          children: [
+                            Text(
+                              ctaLabel,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: accent,
+                              ),
+                            ),
+                            const SizedBox(width: 3),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 12,
+                              color: accent,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
