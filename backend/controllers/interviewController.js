@@ -1,8 +1,7 @@
 import { Template } from "../models/template.js";
 import { InterviewSession } from "../models/interviewsession.js";
-import mongoose from "mongoose";
-import { InterviewAIService } from "../services/interviewAiService.js";
 import { ai } from "../services/ai.js";
+import { spendUserCoins } from "../services/firebaseAdmin.js";
 import { exchangeStore } from "../storre/exchangestore.js";
 
 function rebuildExchangeFromSession(session, template) {
@@ -36,9 +35,14 @@ function rebuildExchangeFromSession(session, template) {
 
 export async function StartInterview(socket, io, { templateId, userId }) {
   try {
+    const normalizedUserId = String(userId ?? "").trim();
+    if (!normalizedUserId) {
+      return socket.emit("error", { message: "Missing userId" });
+    }
+
     console.log(
       "Starting interview for user:",
-      userId,
+      normalizedUserId,
       "with template:",
       templateId
     );
@@ -51,7 +55,7 @@ export async function StartInterview(socket, io, { templateId, userId }) {
     console.log("Template Found the title", template.title);
 
     let session = await InterviewSession.findOne({
-      userId,
+      userId: normalizedUserId,
       templateId,
       status: "inProgress",
     });
@@ -69,9 +73,29 @@ export async function StartInterview(socket, io, { templateId, userId }) {
         exchangeStore.set(session._id.toString(), exchange);
       }
     } else {
+      const interviewCoinPrice = Number(template.coinPrice ?? 0);
+      try {
+        await spendUserCoins({
+          uid: normalizedUserId,
+          amount: interviewCoinPrice,
+          reason: `interview_start:${template._id}`,
+        });
+      } catch (coinErr) {
+        if (coinErr?.code === "INSUFFICIENT_COINS") {
+          return socket.emit("error", {
+            message: `Not enough coins. This interview costs ${interviewCoinPrice} coins.`,
+          });
+        }
+
+        console.error("Coin verification/debit failed:", coinErr);
+        return socket.emit("error", {
+          message: "Unable to verify coin balance right now.",
+        });
+      }
+
       console.log("no session found creating a new one:", userId);
       session = await InterviewSession.create({
-        userId: new mongoose.Types.ObjectId(userId),
+        userId: normalizedUserId,
         templateId: template._id,
         status: "inProgress",
         endedAt: null,
@@ -256,5 +280,32 @@ export async function SubmitAnswer(socket,io,{ sessionId, answerTranscript }) {
     console.error("SUBMIT ANSWER ERROR:", e);
     console.log("Emitting error event to socket");
     socket.emit("error", { message: "Failed to submit  answer." + e });
+  }
+}
+
+export async function CancelInterview(socket, io, { sessionId }) {
+  try {
+    const normalizedSessionId = String(sessionId ?? "").trim();
+    if (!normalizedSessionId) {
+      return socket.emit("error", { message: "Missing sessionId" });
+    }
+
+    console.log("Cancelling interview for session:", normalizedSessionId);
+
+    await InterviewSession.findByIdAndUpdate(normalizedSessionId, {
+      status: "aborted",
+      endedAt: new Date(),
+    });
+
+    exchangeStore.delete(normalizedSessionId);
+    socket.leave(normalizedSessionId);
+
+    socket.emit("interviewCancelled", {
+      sessionId: normalizedSessionId,
+      success: true,
+    });
+  } catch (e) {
+    console.error("CANCEL INTERVIEW ERROR:", e);
+    socket.emit("error", { message: "Failed to cancel interview." + e });
   }
 }

@@ -8,6 +8,7 @@ class TemplateModel {
   final List<EvaluationMetric> evaluationMetrics;
   final String domain;
   final String icon;
+  final int coinPrice;
 
   TemplateModel({
     required this.id,
@@ -16,6 +17,7 @@ class TemplateModel {
     required this.evaluationMetrics,
     required this.domain,
     required this.icon,
+    required this.coinPrice,
   });
 
   factory TemplateModel.fromMap(Map<String, dynamic> map) {
@@ -37,12 +39,13 @@ class TemplateModel {
           .toList(),
       domain: map['domain']?.toString() ?? '',
       icon: map['icon']?.toString() ?? '',
+      coinPrice: (map['coinPrice'] as num?)?.toInt() ?? 0,
     );
   }
 
   @override
   String toString() {
-    return 'TemplateModel(id: $id, title: $title, topics: $topics, evaluationMetrics: $evaluationMetrics, domain: $domain, icon: $icon)';
+    return 'TemplateModel(id: $id, title: $title, topics: $topics, evaluationMetrics: $evaluationMetrics, domain: $domain, icon: $icon, coinPrice: $coinPrice)';
   }
 
 
@@ -53,7 +56,8 @@ class TemplateModel {
         topics.hashCode ^
         evaluationMetrics.hashCode ^
         domain.hashCode ^
-        icon.hashCode;
+        icon.hashCode ^
+        coinPrice.hashCode;
   }
 }
 

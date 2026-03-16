@@ -75,6 +75,7 @@ class AuthRepository {
       'year': existing['year'],
       'semester': existing['semester'],
       'about': existing['about'],
+      'coins': existing['coins'] ?? 100,
       'updatedAt': FieldValue.serverTimestamp(),
     };
 
@@ -184,6 +185,7 @@ class AuthRepository {
       'year': year,
       'about': about,
       'profileComplete': true,
+      'coins': FieldValue.increment(0),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
 

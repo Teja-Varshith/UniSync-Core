@@ -9,6 +9,11 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 
 final dio = Dio();
 
+const anyUrl = 'https://api.campx.in/auth-server/auth-v2/login-mobile';
+const totoUrl = 'https://api.campx.in/student-api/student-attendance?fromDate=&toDate=';
+const totoourl = "https://api.campx.in/student-api/student-attendance/subject-attendance/";
+
+
 
 
 

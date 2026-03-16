@@ -1719,7 +1719,11 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
             automaticallyImplyLeading: false,
             shape: const Border(
                 bottom: BorderSide(color: UniSyncColors.divider, width: 0.8)),
-            title: _TopBar(firstName: firstName, userPhotoUrl: user?.photoUrl),
+            title: _TopBar(
+              firstName: firstName,
+              userPhotoUrl: user?.photoUrl,
+              coins: user?.coins ?? 0,
+            ),
           ),
 
           SliverToBoxAdapter(
@@ -1749,7 +1753,10 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
                   const SizedBox(height: 20),
 
                   // Interview card
-                  _NeoInterviewCard(parentContext: context),
+                  _NeoInterviewCard(
+                    parentContext: context,
+                    onInternalRouteTap: widget.onInternalRouteTap,
+                  ),
                   const SizedBox(height: 14),
 
                   // ── 2-column tile grid ───────────────────────────
@@ -2055,9 +2062,14 @@ class _SpotlightHeader extends StatelessWidget {
 
 // ── App bar ──────────────────────────────────────────────────────────────────
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.firstName, required this.userPhotoUrl});
+  const _TopBar({
+    required this.firstName,
+    required this.userPhotoUrl,
+    required this.coins,
+  });
   final String firstName;
   final String? userPhotoUrl;
+  final int coins;
 
   @override
   Widget build(BuildContext context) {
@@ -2066,8 +2078,10 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Stack(alignment: Alignment.center, children: [
         NeoPopButton(
-          buttonPosition: Position.center, parentColor: Colors.transparent,
-          color: Colors.transparent, onTapUp: () {},
+          buttonPosition: Position.center,
+          parentColor: Colors.transparent,
+          color: Colors.transparent,
+          onTapUp: () {},
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: SvgPicture.asset('assets/svg/unisync_svg.svg', height: 34),
@@ -2075,59 +2089,115 @@ class _TopBar extends StatelessWidget {
         ),
         Align(
           alignment: Alignment.centerLeft,
-          child: Column(mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(mainAxisSize: MainAxisSize.min, children: const [
-              Text('HEY', style: TextStyle(color: UniSyncColors.textSecondary,
-                  fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 2.2)),
-              SizedBox(width: 3),
-              Text('👋', style: TextStyle(fontSize: 11)),
-            ]),
-            const SizedBox(height: 1),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 120),
-              child: Text(username, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: UniSyncColors.textPrimary,
-                      fontSize: 19, fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3)),
-            ),
-          ]),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: InkWell(
-            onTap: () => Routemaster.of(context).push('/profile'),
-            borderRadius: BorderRadius.circular(999),
-            child: Stack(children: [
-              Container(
-                decoration: BoxDecoration(shape: BoxShape.circle,
-                    border: Border.all(color: UniSyncColors.accent, width: 1.8)),
-                child: CircleAvatar(
-                  radius: 19,
-                  backgroundColor: UniSyncColors.surfaceElevated,
-                  child: ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: userPhotoUrl ?? '',
-                      fit: BoxFit.cover, width: 38, height: 38,
-                      placeholder: (_, __) => const SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2)),
-                      errorWidget: (_, __, ___) => const Icon(Icons.person,
-                          color: UniSyncColors.textMuted, size: 18),
-                    ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(mainAxisSize: MainAxisSize.min, children: const [
+                Text('HEY', style: TextStyle(
+                    color: UniSyncColors.textSecondary,
+                    fontSize: 10, fontWeight: FontWeight.w700,
+                    letterSpacing: 2.2)),
+                SizedBox(width: 3),
+                Text('👋', style: TextStyle(fontSize: 11)),
+              ]),
+              const SizedBox(height: 1),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 120),
+                child: Text(
+                  username,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: UniSyncColors.textPrimary,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
                   ),
                 ),
               ),
-              Positioned(right: 1, top: 1,
-                  child: Container(
-                    width: 8, height: 8,
-                    decoration: BoxDecoration(
-                      color: UniSyncColors.accent, shape: BoxShape.circle,
-                      border: Border.all(
-                          color: UniSyncColors.backgroundSecondary, width: 1.5),
-                    ),
-                  )),
-            ]),
+            ],
           ),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            NeoPopButton(
+              color: UniSyncColors.surfaceCard,
+              bottomShadowColor: UniSyncColors.accent,
+              rightShadowColor: UniSyncColors.accent,
+              depth: 3,
+              onTapUp: () {},
+              onTapDown: () {},
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.monetization_on_rounded,
+                      size: 14, color: UniSyncColors.accent),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$coins',
+                    style: const TextStyle(
+                      color: UniSyncColors.accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ]),
+              ),
+            ),
+            const SizedBox(width: 8),
+            InkWell(
+              onTap: () => Routemaster.of(context).push('/profile'),
+              borderRadius: BorderRadius.circular(999),
+              child: Stack(children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: UniSyncColors.accent, width: 1.8),
+                  ),
+                  child: CircleAvatar(
+                    radius: 19,
+                    backgroundColor: UniSyncColors.surfaceElevated,
+                    child: ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: userPhotoUrl ?? '',
+                        fit: BoxFit.cover,
+                        width: 38,
+                        height: 38,
+                        placeholder: (_, __) => const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        errorWidget: (_, __, ___) => const Icon(
+                          Icons.person,
+                          color: UniSyncColors.textMuted,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 1,
+                  top: 1,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: UniSyncColors.accent,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: UniSyncColors.backgroundSecondary,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
         ),
       ]),
     );
@@ -2136,11 +2206,24 @@ class _TopBar extends StatelessWidget {
 
 // ── Interview card (emerald theme, unchanged) ─────────────────────────────────
 class _NeoInterviewCard extends StatelessWidget {
-  const _NeoInterviewCard({required this.parentContext});
+  const _NeoInterviewCard({
+    required this.parentContext,
+    this.onInternalRouteTap,
+  });
   final BuildContext parentContext;
+  final ValueChanged<String>? onInternalRouteTap;
 
   static const _accent = Color(0xFF3ECF8E);
   static const _bg     = Color(0xFF0D1F18);
+
+  void _openInterview() {
+    const interviewRoute = '/carrer-interview-screen';
+    if (onInternalRouteTap != null) {
+      onInternalRouteTap!(interviewRoute);
+      return;
+    }
+    Routemaster.of(parentContext).push(interviewRoute);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2149,7 +2232,7 @@ class _NeoInterviewCard extends StatelessWidget {
       bottomShadowColor: _accent,
       rightShadowColor: _accent,
       depth: 5,
-      onTapUp: () {}, onTapDown: () {},
+      onTapUp: _openInterview, onTapDown: () {},
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -2213,8 +2296,7 @@ class _NeoInterviewCard extends StatelessWidget {
             rightShadowColor: Colors.black,
             depth: 4,
             buttonPosition: Position.fullBottom,
-            onTapUp: () =>
-                Routemaster.of(parentContext).push('/carrer-interview-screen'),
+            onTapUp: _openInterview,
             onTapDown: () {},
             child: const SizedBox(height: 46,
               child: Center(child: Row(mainAxisSize: MainAxisSize.min, children: [

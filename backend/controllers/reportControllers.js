@@ -2,7 +2,8 @@ import { InterviewSession } from "../models/interviewsession.js";
 
 export const reportControllers = async (req, res) => {
   try {
-    const { userId, templateId } = req.body;
+    const templateId = req.body.templateId;
+    const userId = String(req.body.userId ?? "").trim();
 
     if (!userId || !templateId) {
       return res.status(400).json({

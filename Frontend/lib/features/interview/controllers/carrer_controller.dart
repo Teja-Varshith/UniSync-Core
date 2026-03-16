@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/Carrer_Mode/interview/repository/carrer_repository.dart';
+import 'package:unisync/features/interview/repository/carrer_repository.dart';
 import 'package:unisync/models/template_model.dart';
 
 final carrerRepositoryProvider = Provider<CarrerRepository>((ref) {
@@ -22,6 +22,7 @@ class CarrerController extends AsyncNotifier<List<TemplateModel>> {
   late final CarrerRepository _repo;
 
   List<TemplateModel> _allTemplates = [];
+  List<TemplateModel> get allTemplates => _allTemplates;
 
   @override
   Future<List<TemplateModel>> build() async {
@@ -52,6 +53,7 @@ class CarrerController extends AsyncNotifier<List<TemplateModel>> {
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = AsyncData(await _repo.getTemplates());
+    _allTemplates = await _repo.getTemplates();
+    state = AsyncData(_allTemplates);
   }
 }

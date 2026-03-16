@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:unisync/features/HomeScreen/homepagetab.dart';
+import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/features/peer_connect/peers/peer_screen.dart';
 
 
@@ -28,7 +29,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
   late final List<Widget> _pages = [
     const _PlaceholderPage(label: 'Attendance', emoji: '📊'),
     const _PlaceholderPage(label: 'Opportunities', emoji: '🏆'),
-    const _PlaceholderPage(label: 'Mock Interview', emoji: '🎙️'),
+    const CarrerInterviewScreen(),
     HomePageTab(onInternalRouteTap: _handleHomeRouteTap),
     const PeerScreen(),
     const _PlaceholderPage(label: 'Settings', emoji: '⚙️'),
@@ -50,6 +51,11 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
   void _handleHomeRouteTap(String route) {
     if (route == '/peer') {
       _onNavIndexChanged(3);
+      return;
+    }
+
+    if (route == '/carrer-interview-screen') {
+      _onNavIndexChanged(1);
       return;
     }
 

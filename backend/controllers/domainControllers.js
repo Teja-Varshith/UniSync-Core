@@ -83,3 +83,34 @@ export const getAllDomains = async (req,res) => {
   });
     }
 }
+
+export const deleteDomain = async (req, res) => {
+  try {
+    const domainName = String(req.params.domain ?? "").trim().toLowerCase();
+    if (!domainName) {
+      return res.status(400).json({
+        success: false,
+        message: "domain is required",
+      });
+    }
+
+    const deleted = await Domain.findOneAndDelete({ domain: domainName });
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Domain not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Domain deleted successfully",
+    });
+  } catch (e) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete domain",
+      error: String(e),
+    });
+  }
+};

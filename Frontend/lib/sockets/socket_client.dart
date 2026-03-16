@@ -8,7 +8,7 @@ class SocketClient {
 
   SocketClient._internal() {
     socket = IO.io(
-      "http://10.185.91.196:3000", 
+      "http://10.171.216.196:3000", 
       <String, dynamic>{
         'transports': ['websocket'],
         'autoConnect': false,

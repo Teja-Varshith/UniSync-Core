@@ -16,6 +16,7 @@ class UserModel {
   final int? year;
   final int? semester;
   final String? about;
+  final int coins;
 
   UserModel({
     this.institutionCode,
@@ -32,6 +33,7 @@ class UserModel {
     this.year,
     this.semester,
     this.about,
+    this.coins = 0,
   });
 
   UserModel copyWith({
@@ -49,6 +51,7 @@ class UserModel {
     int? year,
     int? semester,
     String? about,
+    int? coins,
   }) {
     return UserModel(
       institutionCode: institutionCode ?? this.institutionCode,
@@ -65,6 +68,7 @@ class UserModel {
       year: year ?? this.year,
       semester: semester ?? this.semester,
       about: about ?? this.about,
+      coins: coins ?? this.coins,
     );
   }
 
@@ -84,6 +88,7 @@ class UserModel {
       'year': year,
       'semester': semester,
       'about': about,
+      'coins': coins,
     };
   }
 
@@ -103,6 +108,7 @@ class UserModel {
     year: map['year'] as int?,
     semester: map['semester'] as int?,
     about: map['about'] as String?,
+    coins: (map['coins'] as num?)?.toInt() ?? 0,
   );
 }
 
@@ -113,7 +119,7 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, name: $name,  cookie: $cookie profileComplete: $profileComplete, photoUrl: $photoUrl, emailId: $emailId, collegeName: $collegeName, tenantId: $tenantId, campXPassword: $campXPassword, campXUsername: $campXUsername, year: $year, semester: $semester, about: $about, institutionCode: $institutionCode)';
+    return 'UserModel(id: $id, name: $name,  cookie: $cookie profileComplete: $profileComplete, photoUrl: $photoUrl, emailId: $emailId, collegeName: $collegeName, tenantId: $tenantId, campXPassword: $campXPassword, campXUsername: $campXUsername, year: $year, semester: $semester, about: $about, coins: $coins, institutionCode: $institutionCode)';
   }
 
 }

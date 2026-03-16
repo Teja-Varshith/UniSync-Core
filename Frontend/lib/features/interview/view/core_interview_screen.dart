@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/features/Carrer_Mode/interview/controllers/interview_controller.dart';
+import 'package:unisync/features/interview/controllers/interview_controller.dart';
 import 'package:unisync/models/interview_state.dart';
 import 'package:unisync/sockets/socket_methods.dart';
 
@@ -15,11 +15,26 @@ class CoreInterviewScreen extends ConsumerStatefulWidget {
 
 class _CoreInterviewScreenState
     extends ConsumerState<CoreInterviewScreen> {
+  Future<bool> _confirmExitInterview() async {
+    final shouldExit = await showExitInterviewDialog(context);
+    if (shouldExit && mounted) {
+      final sessionId = ref.read(interviewControllerProvider).sessionId;
+      if (sessionId != null && sessionId.isNotEmpty) {
+        ref.read(socketMethodProvider).cancelInterview(sessionId: sessionId);
+      }
+
+      ref.read(voiceServiceProvider).stopSpeaking();
+      ref.read(interviewControllerProvider.notifier).resetInterview();
+      Routemaster.of(context).replace('/carrer-interview-screen');
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen(interviewControllerProvider, (prev, next) {
       if (next.interviewState == InterviewState.completed) {
-        Routemaster.of(context).push('/carrer');
+        Routemaster.of(context).replace('/reportsScreen');
       }
     });
 
@@ -34,10 +49,12 @@ class _CoreInterviewScreenState
 
     final isRecording = interview.isRecording;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0B),
-      body: SafeArea(
-        child: Column(
+    return WillPopScope(
+      onWillPop: _confirmExitInterview,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0B0B0B),
+        body: SafeArea(
+          child: Column(
           children: [
             // ───────── TOP BAR ─────────
             Padding(
@@ -46,8 +63,8 @@ class _CoreInterviewScreenState
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: ()  {
-                      showExitInterviewDialog(context, Navigator.of(context).pop);  // TODO: add the intervie end logics
+                    onPressed: () {
+                      _confirmExitInterview();
                     },
                     icon: const Icon(Icons.close,
                         color: Colors.white70),
@@ -181,6 +198,7 @@ class _CoreInterviewScreenState
             const SizedBox(height: 32),
           ],
         ),
+      ),
       ),
     );
   }
@@ -341,8 +359,8 @@ void showInterviewHelpDialog(BuildContext context) {
 }
 
 
-void showExitInterviewDialog(BuildContext context, VoidCallback onExit) {
-  showDialog(
+Future<bool> showExitInterviewDialog(BuildContext context) async {
+  final shouldExit = await showDialog<bool>(
     context: context,
     builder: (context) {
       return AlertDialog(
@@ -367,8 +385,7 @@ void showExitInterviewDialog(BuildContext context, VoidCallback onExit) {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              onExit();  
+              Navigator.pop(context, true);
             },
             child: const Text(
               'Exit',
@@ -379,4 +396,6 @@ void showExitInterviewDialog(BuildContext context, VoidCallback onExit) {
       );
     },
   );
+  return shouldExit ?? false;
 }
+

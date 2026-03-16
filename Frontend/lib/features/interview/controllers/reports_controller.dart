@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/Carrer_Mode/interview/repository/reports_repository.dart';
-import 'package:unisync/features/Carrer_Mode/interview/view/carrer_interview_screen.dart';
+import 'package:unisync/features/interview/repository/reports_repository.dart';
+import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/models/interview_report_model.dart';
 
 final ReportsRepositoryProvider = Provider((ref) => ReportsRepository());

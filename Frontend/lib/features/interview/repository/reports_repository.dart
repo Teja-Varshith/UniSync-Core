@@ -3,11 +3,15 @@ import 'package:unisync/constants/constant.dart';
 import 'package:unisync/models/interview_report_model.dart';
 
 class ReportsRepository {
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 10),
+    ),
+  );
+
   Future<List<InterviewSession>> getInterviewReports({required userId, required templateId}) async{
-    final _dio = Dio();
-    
-
-
     final res = await _dio.get("${BASE_URI}/carrer/getAllReports",
       data: {
         "userId": userId,

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/features/Carrer_Mode/interview/services/voice_service.dart';
+import 'package:unisync/features/interview/services/voice_service.dart';
 import 'package:unisync/models/interview_state.dart';
 import 'package:unisync/sockets/socket_methods.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -34,6 +34,8 @@ class InterviewController extends StateNotifier<InterviewStateModel> {
   final Ref ref;
 
   String _currentTranscript = "";
+  bool _isOutroSpeaking = false;
+  bool _pendingCompletion = false;
 
 
   void onQuestionReceived({required String question, required String sessionId}) async{
@@ -52,14 +54,23 @@ class InterviewController extends StateNotifier<InterviewStateModel> {
   }
 
   void onOutroQuestionReceived({required String outro, required String sessionId}) async{
-    
+    _isOutroSpeaking = true;
+
+    state = state.copyWith(
+      sessionId: sessionId,
+      questionreceived: outro,
+      isRecording: false,
+      interviewState: InterviewState.evaluating,
+    );
+
     final voice = ref.read(voiceServiceProvider);
 
     await voice.speak(outro, () {
-      state = state.copyWith(
-        questionreceived: outro,
-        interviewState: InterviewState.completed,
-      );
+      _isOutroSpeaking = false;
+      if (_pendingCompletion) {
+        _pendingCompletion = false;
+        state = state.copyWith(interviewState: InterviewState.completed);
+      }
     });
   }
 
@@ -99,7 +110,26 @@ class InterviewController extends StateNotifier<InterviewStateModel> {
 
    // TODO: NAVIGATE TO TH E RESULTS PAGE
    void onInterviewCompleted() {
+    if (_isOutroSpeaking) {
+      _pendingCompletion = true;
+      return;
+    }
     state = state.copyWith(interviewState: InterviewState.completed);
+  }
+
+  void resetInterview() {
+    _currentTranscript = "";
+    _isOutroSpeaking = false;
+    _pendingCompletion = false;
+    state = InterviewStateModel(
+      interviewState: InterviewState.asking,
+      sessionId: null,
+      questionreceived: null,
+      isRecording: false,
+      answerToSend: null,
+      questions: null,
+      answers: null,
+    );
   }
 
  }

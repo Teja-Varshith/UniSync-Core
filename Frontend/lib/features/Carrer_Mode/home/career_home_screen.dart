@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:unisync/app/providers.dart';
 import 'package:unisync/features/services/appMode.dart';
-import 'package:unisync/sockets/socket_methods.dart';
 
 class CareerHomeScreen extends ConsumerStatefulWidget {
   const CareerHomeScreen({super.key});
@@ -14,15 +13,6 @@ class CareerHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _CareerHomeScreenState extends ConsumerState<CareerHomeScreen> {
-
-  @override
-void initState() {
-  super.initState();
-  ref.read(socketMethodProvider).initListeners();
-}
-
-
-
 final topics = [
   {
     "title": "Programming Languages",
