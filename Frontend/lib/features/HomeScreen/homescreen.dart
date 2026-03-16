@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:unisync/features/Campus_Mode/attendance/view/live_attendance_screen.dart';
 import 'package:unisync/features/HomeScreen/homepagetab.dart';
 import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/features/peer_connect/peers/peer_screen.dart';
@@ -27,7 +28,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
   ];
 
   late final List<Widget> _pages = [
-    const _PlaceholderPage(label: 'Attendance', emoji: '📊'),
+    const LiveAttendence(),
     const _PlaceholderPage(label: 'Opportunities', emoji: '🏆'),
     const CarrerInterviewScreen(),
     HomePageTab(onInternalRouteTap: _handleHomeRouteTap),

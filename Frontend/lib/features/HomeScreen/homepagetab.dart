@@ -860,7 +860,7 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
           title: 'Live\nAttendance',
           chipLabel: 'Track in real time',
           ctaLabel: 'Track now',
-          route: '/campXLogin',
+          route: '/liveAttendence',
           iconKey: 'calendar',
           graphicKey: 'rings',
           section: 'core',

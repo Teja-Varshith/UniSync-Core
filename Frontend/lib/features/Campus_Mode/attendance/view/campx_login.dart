@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
+import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/app/providers.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:unisync/constants/constant.dart';
 import 'package:unisync/features/Campus_Mode/attendance/repository/attendance_repository.dart';
+import 'package:unisync/storage/secure_storage.dart';
 
 class CampxLoginScreen extends ConsumerStatefulWidget {
   const CampxLoginScreen({super.key});
@@ -19,9 +22,76 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
+  void _showAwesomeMessage({
+    required String title,
+    required String message,
+    required ContentType type,
+  }) {
+    final messenger = rootScaffoldMessengerKey.currentState;
+    if (messenger == null) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          content: AwesomeSnackbarContent(
+            title: title,
+            message: message,
+            contentType: type,
+          ),
+        ),
+      );
+  }
+
+  String _mapCampXErrorToMessage(Object error) {
+    final raw = error.toString().replaceFirst('Exception: ', '').toLowerCase();
+
+    if (raw.contains('invalid') ||
+        raw.contains('credential') ||
+        raw.contains('username') ||
+        raw.contains('password') ||
+        raw.contains('401') ||
+        raw.contains('403') ||
+        raw.contains('unauthorized') ||
+        raw.contains('forbidden')) {
+      return 'Invalid CampX credentials. Check your username and password and try again.';
+    }
+
+    if (raw.contains('timeout') ||
+        raw.contains('socket') ||
+        raw.contains('network') ||
+        raw.contains('connection')) {
+      return 'Network issue detected. Please check your internet and retry.';
+    }
+
+    if (raw.contains('500') ||
+        raw.contains('502') ||
+        raw.contains('503') ||
+        raw.contains('504') ||
+        raw.contains('server')) {
+      return 'CampX is having trouble right now. Please try again in a minute.';
+    }
+
+    return 'Unable to sign in to CampX right now. Please try again.';
+  }
+
   @override
   void initState() {
     super.initState();
+    _prefillStoredCredentials();
+  }
+
+  Future<void> _prefillStoredCredentials() async {
+    final storage = SecureStorageService();
+    final savedUser = await storage.getCampXUsername();
+    final savedPass = await storage.getCampXPassword();
+    if (!mounted) return;
+    setState(() {
+      if ((savedUser ?? '').isNotEmpty) emailController.text = savedUser!;
+      if ((savedPass ?? '').isNotEmpty) passwordController.text = savedPass!;
+    });
   }
 
   @override
@@ -29,36 +99,82 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
-  } 
+  }
 
   void _showDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text(
-            'How to Sign In?',
-            style: TextStyle(fontWeight: FontWeight.bold),
+        return Dialog(
+          backgroundColor: UniSyncColors.backgroundSecondary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: UniSyncColors.border),
           ),
-          content: const Text(
-            'Use your JNTU Number or College Email registered on CampX along with your password to sign in.\n\nyour password is the one you set during your CampX registration.\n\nIf you face any issues, please contact hello.unisync@gmail.com',
-            style: TextStyle(fontSize: 16),
-          ),
-          actions: [
-            Container(
-              child: TextButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all<Color>(Colors.black),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // eyebrow
+                const Text(
+                  '#HELP',
+                  style: TextStyle(
+                    color: UniSyncColors.accent,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.8,
+                  ),
                 ),
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Okay',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                const SizedBox(height: 6),
+                const Text(
+                  'How to Sign In?',
+                  style: TextStyle(
+                    color: UniSyncColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 14),
+                Container(height: 0.8, color: UniSyncColors.divider),
+                const SizedBox(height: 14),
+                const Text(
+                  'Use your JNTU Number or College Email registered on CampX along with your password to sign in.\n\nYour password is the one you set during your CampX registration.\n\nIf you face any issues, please contact hello.unisync@gmail.com',
+                  style: TextStyle(
+                    color: UniSyncColors.textSecondary,
+                    fontSize: 13,
+                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: NeoPopButton(
+                    color: UniSyncColors.accent,
+                    bottomShadowColor: UniSyncColors.backgroundPrimary,
+                    rightShadowColor: UniSyncColors.backgroundPrimary,
+                    depth: 3,
+                    onTapUp: () => Navigator.pop(context),
+                    onTapDown: () {},
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Text(
+                        'Got it',
+                        style: TextStyle(
+                          color: UniSyncColors.backgroundPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -66,39 +182,37 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    ref.listen(
-      userProvider,
-      (prev, next) {
-        if(next!.cookie != null){
-          Routemaster.of(context).push('/liveAttendance');
-        }
-      }
-    );
-
-
-    Future<void> _login() async {
+    Future<void> login() async {
       if (_formKey.currentState!.validate()) {
-        print('Login button pressed');
-        _isloading = true;
-
-        ref.read(AttendanceRepositoryProvider).completeCampXLogin(emailController.text, passwordController.text);
-
-        _isloading = false;
-
-
-
+        setState(() => _isloading = true);
+        try {
+          await ref.read(AttendanceRepositoryProvider).completeCampXLogin(
+                emailController.text.trim(),
+                passwordController.text,
+              );
+          if (!mounted) return;
+          Routemaster.of(context).replace('/liveAttendence');
+        } catch (e) {
+          if (!mounted) return;
+          _showAwesomeMessage(
+            title: 'CampX login failed',
+            message: _mapCampXErrorToMessage(e),
+            type: ContentType.failure,
+          );
+        } finally {
+          if (mounted) setState(() => _isloading = false);
+        }
       }
     }
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: Colors.amber.shade600,
+      backgroundColor: UniSyncColors.backgroundPrimary,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              physics: AlwaysScrollableScrollPhysics(),
+              physics: const AlwaysScrollableScrollPhysics(),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
@@ -106,198 +220,253 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
 
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
+                      // ── Top bar ────────────────────────────────────────
+                      Container(
+                        color: UniSyncColors.backgroundSecondary,
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            IconButton(
-                              onPressed: () {
-                                _showDialog(context);
-                              },
-                              icon: Icon(Icons.question_mark),
-                              color: Colors.black,
-                              tooltip: 'Need Help?',
-                              enableFeedback: true,
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all<Color>(Colors.white),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    '#CAMPUS MODE',
+                                    style: TextStyle(
+                                      color: UniSyncColors.accent,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.8,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  RichText(
+                                    text: const TextSpan(children: [
+                                      TextSpan(
+                                        text: 'Camp',
+                                        style: TextStyle(
+                                          color: UniSyncColors.textPrimary,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: 'X Login',
+                                        style: TextStyle(
+                                          color: UniSyncColors.accent,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                    ]),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Help button
+                            GestureDetector(
+                              onTap: () => _showDialog(context),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: UniSyncColors.surfaceCard,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: UniSyncColors.border),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.question_mark_rounded,
+                                    size: 16,
+                                    color: UniSyncColors.textMuted,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
 
-                      Lottie.asset(
-                        'assets/animations/login_lottie.json',
-                        height: 250,
+                      Container(height: 0.8, color: UniSyncColors.divider),
+
+                      // ── Lottie ─────────────────────────────────────────
+                      Container(
+                        color: UniSyncColors.backgroundSecondary,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Lottie.asset(
+                          'assets/animations/login_lottie.json',
+                          height: 200,
+                        ),
                       ),
 
+                      Container(height: 0.8, color: UniSyncColors.divider),
+
+                      // ── Form card ──────────────────────────────────────
                       Expanded(
                         child: Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(40),
-                              topRight: Radius.circular(40),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                              top: 50,
-                              left: 30,
-                              right: 30,
-                              bottom: 30,
-                            ),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    'Your Campus, Your Vibe.',
-                                    style: TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                          color: UniSyncColors.backgroundPrimary,
+                          padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+
+                                // Tagline
+                                const Text(
+                                  'Your Campus,\nYour Vibe.',
+                                  style: TextStyle(
+                                    color: UniSyncColors.textPrimary,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                    height: 1.2,
                                   ),
-
-                                  SizedBox(height: 20),
-
-                                  Text(
-                                    'Use your College Credentials to Sign in instantly. No hassle, Just vibes!',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 14,
-                                    ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Use your College Credentials to sign in instantly.',
+                                  style: TextStyle(
+                                    color: UniSyncColors.textSecondary,
+                                    fontSize: 13,
+                                    height: 1.5,
                                   ),
+                                ),
 
-                                  SizedBox(height: 40),
+                                const SizedBox(height: 28),
 
-                                  TextFormField(
-                                    controller: emailController,
-                                    decoration: InputDecoration(
-                                      labelText: 'Jntu No / Email',
-                                      labelStyle: TextStyle(color: Colors.black),
-                                      floatingLabelStyle: TextStyle(color: Colors.black),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.black),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.black, width: 2),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      errorBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.red),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      focusedErrorBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.red, width: 2),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
+                                // ── JNTU / Email field ─────────────────
+                                _UniSyncTextField(
+                                  controller: emailController,
+                                  label: 'JNTU No / Email',
+                                  keyboardType: TextInputType.emailAddress,
+                                  prefixIcon: Icons.school_outlined,
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Example: 23341XXXXX';
+                                    }
+                                    return null;
+                                  },
+                                ),
+
+                                const SizedBox(height: 16),
+
+                                // ── Password field ─────────────────────
+                                _UniSyncTextField(
+                                  controller: passwordController,
+                                  label: 'Password',
+                                  prefixIcon: Icons.lock_outline_rounded,
+                                  obscureText: !_isPasswordVisible,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _isPasswordVisible
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                      size: 18,
+                                      color: UniSyncColors.textMuted,
                                     ),
-                                    keyboardType: TextInputType.emailAddress,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Example 23341XXXXX';
-                                      }
-                                      // if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                      //   return 'Please enter a valid email address';
-                                      // }
-                                      return null;
-                                    },
+                                    onPressed: () => setState(
+                                        () => _isPasswordVisible = !_isPasswordVisible),
                                   ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Password? Brain go brrrrr';
+                                    }
+                                    if (value.length < 3) return "Don't lie guys";
+                                    return null;
+                                  },
+                                ),
 
-                                  SizedBox(height: 20),
+                                const SizedBox(height: 28),
 
-                                  TextFormField(
-                                    controller: passwordController,
-                                    decoration: InputDecoration(
-                                      labelText: 'Password',
-                                      labelStyle: TextStyle(color: Colors.black),
-                                      floatingLabelStyle: TextStyle(color: Colors.black),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.black),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.black, width: 2),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      errorBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.red),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      focusedErrorBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.red, width: 2),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _isPasswordVisible
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: Colors.grey[600],
+                                // ── Login button ───────────────────────
+                                _isloading
+                                    ? Container(
+                                        padding: const EdgeInsets.all(14),
+                                        decoration: BoxDecoration(
+                                          color: UniSyncColors.surfaceCard,
+                                          border: Border.all(color: UniSyncColors.border),
+                                          borderRadius: BorderRadius.circular(4),
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _isPasswordVisible = !_isPasswordVisible;
-                                          });
-                                        },
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: const [
+                                            SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: UniSyncColors.accent,
+                                              ),
+                                            ),
+                                            SizedBox(width: 12),
+                                            Text(
+                                              'Signing you securely...',
+                                              style: TextStyle(
+                                                color: UniSyncColors.textSecondary,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : NeoPopButton(
+                                        color: UniSyncColors.accent,
+                                        bottomShadowColor: UniSyncColors.backgroundPrimary,
+                                        rightShadowColor: UniSyncColors.backgroundPrimary,
+                                        depth: 5,
+                                        onTapUp: login,
+                                        onTapDown: () {},
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(vertical: 16),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.rocket_launch_rounded,
+                                                color: UniSyncColors.backgroundPrimary,
+                                                size: 18,
+                                              ),
+                                              SizedBox(width: 10),
+                                              Text(
+                                                "Let's Go.....",
+                                                style: TextStyle(
+                                                  color: UniSyncColors.backgroundPrimary,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w800,
+                                                  letterSpacing: 0.3,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    obscureText: !_isPasswordVisible,
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Password? Brain go brrrrr';
-                                      }
-                                      if (value.length < 3) {
-                                        return "Don't lie guys";
-                                      }
-                                      return null;
-                                    },
-                                  ),
 
-                                  SizedBox(height: 30),
+                                const SizedBox(height: 20),
 
-                                  ElevatedButton.icon(
-                                    onPressed: _isloading ? null : _login,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.black,
-                                      foregroundColor: Colors.white,
-                                      elevation: 3,
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 32, vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
+                                // ── Secure note ────────────────────────
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(
+                                      Icons.lock_rounded,
+                                      size: 11,
+                                      color: UniSyncColors.textMuted,
                                     ),
-                                    
-                                    icon: _isloading?
-                                    SizedBox():
-                                    Icon(Icons.rocket_launch, color: Colors.white,size: 20,),
-                                    label: _isloading?
-                                    Center(child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        CircularProgressIndicator(backgroundColor: Colors.white,valueColor: AlwaysStoppedAnimation<Color>(Colors.black)),
-                                        SizedBox(width: 10,),
-                                        Text('Signing you securely...')
-                                      ],
-                                    ),):
+                                    SizedBox(width: 5),
                                     Text(
-                                      "Let's Go.....",
+                                      'Your credentials are stored securely on-device',
                                       style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.5,
+                                        color: UniSyncColors.textMuted,
+                                        fontSize: 11,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -310,6 +479,85 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  UNISYNC TEXT FIELD
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _UniSyncTextField extends StatelessWidget {
+  const _UniSyncTextField({
+    required this.controller,
+    required this.label,
+    required this.validator,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.obscureText = false,
+    this.keyboardType,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final FormFieldValidator<String> validator;
+  final IconData? prefixIcon;
+  final Widget? suffixIcon;
+  final bool obscureText;
+  final TextInputType? keyboardType;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: const TextStyle(
+        color: UniSyncColors.textPrimary,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+      cursorColor: UniSyncColors.accent,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(
+          color: UniSyncColors.textMuted,
+          fontSize: 13,
+        ),
+        floatingLabelStyle: const TextStyle(
+          color: UniSyncColors.accent,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        filled: true,
+        fillColor: UniSyncColors.surfaceCard,
+        prefixIcon: prefixIcon != null
+            ? Icon(prefixIcon, size: 18, color: UniSyncColors.textMuted)
+            : null,
+        suffixIcon: suffixIcon,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        enabledBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: UniSyncColors.border),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: UniSyncColors.accent, width: 1.5),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: UniSyncColors.error),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: UniSyncColors.error, width: 1.5),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        errorStyle: const TextStyle(
+          color: UniSyncColors.error,
+          fontSize: 11,
+        ),
+      ),
+      validator: validator,
     );
   }
 }

@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:unisync/app/providers.dart';
 import 'package:unisync/constants/constant.dart';
+import 'package:unisync/features/Campus_Mode/attendance/repository/attendance_repository.dart';
+import 'package:unisync/storage/secure_storage.dart';
 
 final LiveAttdncRepositoryProvider2 = Provider((ref) {
   return LiveAttdncRepository2(ref: ref);
@@ -12,16 +13,30 @@ final LiveAttdncRepositoryProvider2 = Provider((ref) {
 
 class LiveAttdncRepository2 {
   final Ref _ref;
+  final SecureStorageService _secureStorage = SecureStorageService();
 
   LiveAttdncRepository2({required Ref ref}) : _ref = ref;
 
 
   Future<Map<String, dynamic>?> fetchSubjectAttendance({
   required int subjectId,
+  bool tryAgain = true,
 }) async {
-      final cookie = _ref.read(userProvider)?.cookie??'';
-      final tenantId = _ref.read(userProvider)?.tenantId??'';
-      final institutionCode = _ref.read(userProvider)?.institutionCode??'';
+    final hasSession = await _ref
+        .read(AttendanceRepositoryProvider)
+        .ensureCampXSession(allowRelogin: tryAgain);
+
+    if (!hasSession) {
+      throw Exception('CampX is not connected. Please connect your account.');
+    }
+
+    final cookie = (await _secureStorage.getCampXSessionToken()) ?? '';
+    final tenantId = (await _secureStorage.getXTenantId()) ?? '';
+    final institutionCode = (await _secureStorage.getXInstitutionCode()) ?? '';
+
+    if (cookie.isEmpty || tenantId.isEmpty || institutionCode.isEmpty) {
+      throw Exception('CampX session is missing. Please connect again.');
+    }
 
   try {
       final client = HttpClient();
@@ -29,7 +44,7 @@ class LiveAttdncRepository2 {
     client.connectionTimeout = const Duration(seconds: 30);
     
     final request = await client.getUrl(
-      Uri.parse(totoourl + '/${subjectId}')
+      Uri.parse('$totoourl$subjectId')
     );
     
     // Add headers
@@ -43,16 +58,21 @@ class LiveAttdncRepository2 {
     final responseBody = await response.transform(utf8.decoder).join();
     client.close();
 
+    print('[CampX Subject Attendance] statusCode: ${response.statusCode}');
+    print('[CampX Subject Attendance] response body: $responseBody');
+
     if (response.statusCode == 200) {
-      print(responseBody);
       return json.decode(responseBody);
     } else {
-      print('API Error: ${response.statusCode}');
-      return null;
+      if (tryAgain && (response.statusCode == 401 || response.statusCode == 403)) {
+        await _ref.read(AttendanceRepositoryProvider).reloginWithStoredCredentials();
+        return fetchSubjectAttendance(subjectId: subjectId, tryAgain: false);
+      }
+      throw Exception('Failed to fetch subject attendance: ${response.statusCode}');
     }
   } catch (e) {
-    print('Error: $e');
-    return null;
+    print('[CampX Subject Attendance] error: $e');
+    rethrow;
   }
 }
 

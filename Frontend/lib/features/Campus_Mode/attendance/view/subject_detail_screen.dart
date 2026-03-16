@@ -1,482 +1,488 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:neopop/neopop.dart';
+import 'package:unisync/constants/constant.dart';
 import 'package:unisync/features/Campus_Mode/attendance/repository/live_attendance_repository2.dart';
 
-// Create a FutureProvider for the attendance data
-final subjectAttendanceProvider = FutureProvider.family<Map<String, dynamic>?, int>((ref, subjectId) {
-  return ref.read(LiveAttdncRepositoryProvider2).fetchSubjectAttendance(subjectId: subjectId);
+final subjectAttendanceProvider =
+    FutureProvider.family<Map<String, dynamic>?, int>((ref, subjectId) {
+  return ref
+      .read(LiveAttdncRepositoryProvider2)
+      .fetchSubjectAttendance(subjectId: subjectId);
 });
 
 class SubjectDetailsScreen extends ConsumerWidget {
   final int subjectId;
   final String subjectName;
-  
+
   const SubjectDetailsScreen({
-    super.key, 
-    required this.subjectId, 
-    required this.subjectName
+    super.key,
+    required this.subjectId,
+    required this.subjectName,
   });
+
+  double _floorToDecimals(double value, int decimals) {
+    final factor = math.pow(10, decimals).toDouble();
+    return (value * factor).floorToDouble() / factor;
+  }
+
+  String _formatPctFloor(double value, {int decimals = 2}) {
+    return _floorToDecimals(value, decimals).toStringAsFixed(decimals);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final attendanceAsync = ref.watch(subjectAttendanceProvider(subjectId));
-    
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: Column(
-        children: [
-          _appBar(context),
-          Expanded(child: _buildBody(attendanceAsync)),
-        ],
+      backgroundColor: UniSyncColors.backgroundPrimary,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _AppBar(subjectName: subjectName),
+            Container(height: 0.8, color: UniSyncColors.divider),
+            Expanded(child: _buildBody(attendanceAsync, ref)),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _appBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 50, bottom: 16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 20,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      subjectName,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Attendance Details',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF666666),
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBody(AsyncValue<Map<String, dynamic>?> attendanceAsync) {
+  Widget _buildBody(
+      AsyncValue<Map<String, dynamic>?> attendanceAsync, WidgetRef ref) {
     return attendanceAsync.when(
-        loading: () => const Center(
+      loading: () => const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
           child: CircularProgressIndicator(
-            color: Color(0xFF1A1A1A),
-          ),
+              strokeWidth: 2, color: UniSyncColors.accent),
         ),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(40),
-                ),
-                child: Icon(
-                  Icons.error_outline,
-                  size: 40,
-                  color: Colors.red[400],
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Error loading attendance',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Color(0xFF1A1A1A),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Please try again',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  // ref.invalidate(subjectAttendanceProvider(subjectId));
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1A1A1A),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      ),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline_rounded,
+                color: UniSyncColors.textMuted, size: 36),
+            const SizedBox(height: 12),
+            const Text(
+              'Unable to load attendance.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: UniSyncColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            NeoPopButton(
+              color: UniSyncColors.accent,
+              bottomShadowColor: UniSyncColors.backgroundPrimary,
+              rightShadowColor: UniSyncColors.backgroundPrimary,
+              depth: 4,
+              onTapUp: () => ref.invalidate(subjectAttendanceProvider(subjectId)),
+              onTapDown: () {},
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Text(
+                  'Retry',
+                  style: TextStyle(
+                    color: UniSyncColors.backgroundPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                child: const Text('Retry'),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        data: (attendanceData) {
-          if (attendanceData == null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                    child: const Icon(
-                      Icons.warning_outlined,
-                      size: 40,
-                      color: Colors.orange,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'No attendance data available',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Color(0xFF1A1A1A),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-          
-          final totalClasses = attendanceData['totalClasses'] ?? 0;
-          final present = attendanceData['present'] ?? 0;
-          final timeline = attendanceData['timeline'] as List<dynamic>? ?? [];
-          final absent = totalClasses - present;
-          final attendancePercentage = totalClasses > 0 
-              ? ((present / totalClasses) * 100).toStringAsFixed(1) 
-              : '0.0';
-          
-          return SingleChildScrollView(
+      ),
+      data: (attendanceData) {
+        if (attendanceData == null) {
+          return Center(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Attendance Summary Card
                 Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        double.parse(attendancePercentage) >= 75 
-                          ? const Color(0xFFF0FDF4) 
-                          : const Color(0xFFFFF7ED),
-                        double.parse(attendancePercentage) >= 75 
-                          ? const Color(0xFFDCFCE7) 
-                          : const Color(0xFFFFEDD5),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: double.parse(attendancePercentage) >= 75 
-                        ? const Color(0xFFBBF7D0) 
-                        : const Color(0xFFFED7AA),
-                      width: 1,
-                    ),
+                  width: 60,
+                  height: 60,
+                  color: UniSyncColors.surfaceCard,
+                  child: const Icon(Icons.warning_amber_rounded,
+                      color: UniSyncColors.textMuted, size: 26),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'No data available',
+                  style: TextStyle(
+                    color: UniSyncColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
                   ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'No attendance records found for this subject',
+                  style: TextStyle(
+                      color: UniSyncColors.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final totalClasses = attendanceData['totalClasses'] ?? 0;
+        final present = attendanceData['present'] ?? 0;
+        final timeline = attendanceData['timeline'] as List<dynamic>? ?? [];
+        final absent = totalClasses - present;
+        final attendancePercentage = totalClasses > 0
+            ? _formatPctFloor((present / totalClasses) * 100)
+            : '0.00';
+        final pct = double.parse(attendancePercentage);
+        final isSafe = pct >= 75;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+
+              // ── Summary card ────────────────────────────────────
+              NeoPopButton(
+                color: UniSyncColors.surfaceCard,
+                bottomShadowColor: UniSyncColors.accent,
+                rightShadowColor: UniSyncColors.accent,
+                depth: 4,
+                onTapUp: () {},
+                onTapDown: () {},
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
+
+                      // Eyebrow
+                      Row(
+                        children: [
+                          const Text(
+                            '#ATTENDANCE SUMMARY',
+                            style: TextStyle(
+                              color: UniSyncColors.accent,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.8,
+                            ),
+                          ),
+                          const Spacer(),
+                          // Safe / At-risk badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isSafe
+                                  ? UniSyncColors.accent.withValues(alpha: 0.12)
+                                  : UniSyncColors.error.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: isSafe
+                                    ? UniSyncColors.accent.withValues(alpha: 0.4)
+                                    : UniSyncColors.error.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Text(
+                              isSafe ? 'Safe' : 'At Risk',
+                              style: TextStyle(
+                                color: isSafe
+                                    ? UniSyncColors.accent
+                                    : UniSyncColors.error,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // Big percentage
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isSafe
+                                ? Icons.trending_up_rounded
+                                : Icons.trending_down_rounded,
+                            color: isSafe
+                                ? UniSyncColors.accent
+                                : UniSyncColors.error,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$attendancePercentage%',
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -1,
+                              color: isSafe
+                                  ? UniSyncColors.accent
+                                  : UniSyncColors.error,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      Container(height: 0.8, color: UniSyncColors.divider),
+                      const SizedBox(height: 18),
+
+                      // Stats row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildStatColumn('Total', totalClasses.toString(), const Color(0xFF374151)),
-                          _buildStatColumn('Present', present.toString(), const Color(0xFF059669)),
-                          _buildStatColumn('Absent', absent.toString(), const Color(0xFFDC2626)),
+                          _StatChip(
+                              label: 'Total',
+                              value: totalClasses.toString(),
+                              color: UniSyncColors.textPrimary),
+                          Container(
+                              width: 0.8,
+                              height: 36,
+                              color: UniSyncColors.divider),
+                          _StatChip(
+                              label: 'Present',
+                              value: present.toString(),
+                              color: UniSyncColors.accent),
+                          Container(
+                              width: 0.8,
+                              height: 36,
+                              color: UniSyncColors.divider),
+                          _StatChip(
+                              label: 'Absent',
+                              value: absent.toString(),
+                              color: UniSyncColors.error),
                         ],
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              double.parse(attendancePercentage) >= 75 
-                                ? Icons.trending_up 
-                                : Icons.trending_down,
-                              color: double.parse(attendancePercentage) >= 75 
-                                ? const Color(0xFF059669) 
-                                : const Color(0xFFDC2626),
-                              size: 24,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '$attendancePercentage%',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: double.parse(attendancePercentage) >= 75 
-                                  ? const Color(0xFF059669) 
-                                  : const Color(0xFFDC2626),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Attendance',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[700],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ],
                   ),
                 ),
-                
-                // Classes List Header
-                if (timeline.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'Class History',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1A1A),
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3F4F6),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${timeline.length} classes',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF6B7280),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                
-                // Classes List
-                timeline.isEmpty
-                    ? Container(
-                        height: 300,
-                        child: const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.calendar_today_outlined,
-                                size: 64,
-                                color: Color(0xFFD1D5DB),
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                'No classes found',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFF6B7280),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: timeline.length,
-                        itemBuilder: (context, index) {
-                          final classData = timeline[index];
-                          final isPresent = classData['status'] == false;
-                          final date = classData['date'] ?? '';
-                          final fromTime = classData['fromTime'] ?? '';
-                          final toTime = classData['toTime'] ?? '';
-                          final orderNumber = classData['orderNumber'] ?? 0;
-                          
-                          // Parse date for better formatting
-                          DateTime? parsedDate;
-                          try {
-                            parsedDate = DateTime.parse(date);
-                          } catch (e) {
-                            parsedDate = null;
-                          }
-                          
-                          final formattedDate = parsedDate != null
-                              ? '$date (${_getWeekday(parsedDate.weekday)})'
-                              : date;
-                          
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFFE5E7EB),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.02),
-                                  spreadRadius: 0,
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: isPresent 
-                                        ? const Color(0xFFDCFCE7) 
-                                        : const Color(0xFFFEE2E2),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Icon(
-                                      isPresent ? Icons.check : Icons.close,
-                                      color: isPresent 
-                                        ? const Color(0xFF059669) 
-                                        : const Color(0xFFDC2626),
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          formattedDate,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                            color: Color(0xFF1A1A1A),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Period $orderNumber • $fromTime - $toTime',
-                                          style: const TextStyle(
-                                            color: Color(0xFF6B7280),
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: isPresent 
-                                        ? const Color(0xFFDCFCE7) 
-                                        : const Color(0xFFFEE2E2),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      isPresent ? 'P' : 'A',
-                                      style: TextStyle(
-                                        color: isPresent 
-                                          ? const Color(0xFF059669) 
-                                          : const Color(0xFFDC2626),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Class History header ─────────────────────────────
+              if (timeline.isNotEmpty) ...[
+                Row(
+                  children: [
+                    const Text(
+                      '#CLASS HISTORY',
+                      style: TextStyle(
+                        color: UniSyncColors.accent,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.8,
                       ),
-                
-                const SizedBox(height: 20),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: UniSyncColors.surfaceCard,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: UniSyncColors.border),
+                      ),
+                      child: Text(
+                        '${timeline.length} classes',
+                        style: const TextStyle(
+                          color: UniSyncColors.textMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // ── Timeline list ────────────────────────────────────
+              timeline.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 48),
+                          Container(
+                            width: 60,
+                            height: 60,
+                            color: UniSyncColors.surfaceCard,
+                            child: const Icon(
+                              Icons.calendar_today_outlined,
+                              color: UniSyncColors.textMuted,
+                              size: 26,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No classes found',
+                            style: TextStyle(
+                              color: UniSyncColors.textPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: timeline.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: 10),
+                      itemBuilder: (context, index) {
+                        final classData = timeline[index];
+                        final isPresent = classData['status'] == false;
+                        final date = classData['date'] ?? '';
+                        final fromTime = classData['fromTime'] ?? '';
+                        final toTime = classData['toTime'] ?? '';
+                        final orderNumber = classData['orderNumber'] ?? 0;
+
+                        DateTime? parsedDate;
+                        try {
+                          parsedDate = DateTime.parse(date);
+                        } catch (_) {}
+
+                        final formattedDate = parsedDate != null
+                            ? '$date (${_getWeekday(parsedDate.weekday)})'
+                            : date;
+
+                        return _ClassCard(
+                          isPresent: isPresent,
+                          formattedDate: formattedDate,
+                          orderNumber: orderNumber,
+                          fromTime: fromTime,
+                          toTime: toTime,
+                        );
+                      },
+                    ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _getWeekday(int weekday) {
+    const weekdays = [
+      'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'
+    ];
+    return weekdays[weekday - 1];
+  }
+
+  String _getMonth(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  APP BAR
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AppBar extends StatelessWidget {
+  const _AppBar({required this.subjectName});
+  final String subjectName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: UniSyncColors.backgroundSecondary,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Back button
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: UniSyncColors.surfaceCard,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: UniSyncColors.border),
+              ),
+              child: const Center(
+                child: Icon(Icons.arrow_back_ios_new_rounded,
+                    size: 15, color: UniSyncColors.textMuted),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '#SUBJECT DETAILS',
+                  style: TextStyle(
+                    color: UniSyncColors.accent,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.8,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subjectName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: UniSyncColors.textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Attendance Details',
+                  style: TextStyle(
+                    color: UniSyncColors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
-          );
-        },
-      );
+          ),
+        ],
+      ),
+    );
   }
-    
-  }
-  
-  Widget _buildStatColumn(String label, String value, Color color) {
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  STAT CHIP
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Text(
@@ -485,28 +491,139 @@ class SubjectDetailsScreen extends ConsumerWidget {
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: color,
+            letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF6B7280),
+            fontSize: 11,
+            color: UniSyncColors.textMuted,
             fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
           ),
         ),
       ],
     );
   }
-  
-  String _getWeekday(int weekday) {
-    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return weekdays[weekday - 1];
-  }
+}
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  CLASS CARD
+// ─────────────────────────────────────────────────────────────────────────────
 
-String _getMonth(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months[month - 1];
+class _ClassCard extends StatelessWidget {
+  const _ClassCard({
+    required this.isPresent,
+    required this.formattedDate,
+    required this.orderNumber,
+    required this.fromTime,
+    required this.toTime,
+  });
+
+  final bool isPresent;
+  final String formattedDate;
+  final dynamic orderNumber;
+  final String fromTime;
+  final String toTime;
+
+  @override
+  Widget build(BuildContext context) {
+    return NeoPopButton(
+      color: UniSyncColors.surfaceCard,
+      bottomShadowColor:
+          isPresent ? UniSyncColors.accent : UniSyncColors.error,
+      rightShadowColor:
+          isPresent ? UniSyncColors.accent : UniSyncColors.error,
+      depth: 3,
+      onTapUp: () {},
+      onTapDown: () {},
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Row(
+          children: [
+            // Status icon block
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isPresent
+                    ? UniSyncColors.accent.withValues(alpha: 0.12)
+                    : UniSyncColors.error.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isPresent
+                      ? UniSyncColors.accent.withValues(alpha: 0.35)
+                      : UniSyncColors.error.withValues(alpha: 0.35),
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  isPresent
+                      ? Icons.check_rounded
+                      : Icons.close_rounded,
+                  color:
+                      isPresent ? UniSyncColors.accent : UniSyncColors.error,
+                  size: 18,
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // Text
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    formattedDate,
+                    style: const TextStyle(
+                      color: UniSyncColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Period $orderNumber  ·  $fromTime – $toTime',
+                    style: const TextStyle(
+                      color: UniSyncColors.textSecondary,
+                      fontSize: 11,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // P / A badge
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: isPresent
+                    ? UniSyncColors.accent
+                    : UniSyncColors.error,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Center(
+                child: Text(
+                  isPresent ? 'P' : 'A',
+                  style: const TextStyle(
+                    color: UniSyncColors.backgroundPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
+}

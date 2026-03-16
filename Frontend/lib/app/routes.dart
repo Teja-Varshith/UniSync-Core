@@ -48,6 +48,7 @@ final loggedInRoutes = RouteMap(
     "/cardsQuiz": (_) => MaterialPage(child: CardQuiz()),
     "/reportsScreen": (_) => MaterialPage(child: InterviewResultsScreen()),
     "/liveAttendence": (_) => MaterialPage(child: LiveAttendence()),
+    "/liveAttendance": (_) => MaterialPage(child: LiveAttendence()),
     "/campXLogin": (_) => MaterialPage(child: CampxLoginScreen()),
     "/portifolio": (_) => MaterialPage(child: PdfUpload()),
     "/nextUpdatePromo": (_) => MaterialPage(child: NextUpdatePromoScreen()),
