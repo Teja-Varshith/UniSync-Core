@@ -2,7 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const BASE_URI  = "http://10.171.216.196:3000/api";
+// const BASE_URI  = "http://10.171.216.196:3000/api";  // https://unisync-core-2.onrender.com/
+const BASE_URI  = "https://unisync-core-2.onrender.com/api";
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 	GlobalKey<ScaffoldMessengerState>();
