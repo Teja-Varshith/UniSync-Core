@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/Campus_Mode/attendance/repository/attendance_repository.dart';
-import 'package:unisync/features/Campus_Mode/attendance/controller/attendance_controller.dart';
-import 'package:unisync/features/Campus_Mode/attendance/view/subject_detail_screen.dart';
+import 'package:unisync/features/attendance/repository/attendance_repository.dart';
+import 'package:unisync/features/attendance/controller/attendance_controller.dart';
+import 'package:unisync/features/attendance/view/subject_detail_screen.dart';
 import 'package:unisync/models/course_model.dart';
 
 class LiveAttendence extends ConsumerStatefulWidget {

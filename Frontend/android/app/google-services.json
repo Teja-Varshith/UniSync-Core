@@ -7,12 +7,72 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:580979400430:android:26a3ac648c57aa6841ddff",
+        "android_client_info": {
+          "package_name": "com.tejavarshith.UniSyncv1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "580979400430-5g7nlhgfv7ep79h4j5a287dsgr631smv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tejavarshith.UniSyncv1",
+            "certificate_hash": "4d022934f4ec2deb61aefe6f517d9f22ef4f033f"
+          }
+        },
+        {
+          "client_id": "580979400430-e3q4r78iltt6mr5bhkjrhip2v4c5qap4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tejavarshith.UniSyncv1",
+            "certificate_hash": "ab1f4337db6512c73eb8b46174fd6e8dc3b0deef"
+          }
+        },
+        {
+          "client_id": "580979400430-0h6ti3cep4uq0ci01mg4rtjv5dt4jf06.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDK8CMxIl-WVckftUFmFZyij5fPaKNaJtg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "580979400430-0h6ti3cep4uq0ci01mg4rtjv5dt4jf06.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "580979400430-02nhv4egmo7d05lh3vvcgurtvnlvj8k3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.unisync.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:580979400430:android:5f7ecd85854c824541ddff",
         "android_client_info": {
           "package_name": "com.unisync.app"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "580979400430-h1hnfflnkpjjk8nspkkf8bl2c27ar7b0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.unisync.app",
+            "certificate_hash": "ab1f4337db6512c73eb8b46174fd6e8dc3b0deef"
+          }
+        },
         {
           "client_id": "580979400430-0h6ti3cep4uq0ci01mg4rtjv5dt4jf06.apps.googleusercontent.com",
           "client_type": 3

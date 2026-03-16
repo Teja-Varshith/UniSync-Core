@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/Campus_Mode/attendance/repository/live_attendance_repository2.dart';
+import 'package:unisync/features/attendance/repository/live_attendance_repository2.dart';
 
 final subjectAttendanceProvider =
     FutureProvider.family<Map<String, dynamic>?, int>((ref, subjectId) {

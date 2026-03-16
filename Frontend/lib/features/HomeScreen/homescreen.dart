@@ -3,9 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:unisync/features/Campus_Mode/attendance/view/live_attendance_screen.dart';
+import 'package:unisync/features/attendance/view/live_attendance_screen.dart';
 import 'package:unisync/features/HomeScreen/homepagetab.dart';
 import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
+import 'package:unisync/features/opputunities/oppurtunities_screen.dart';
 import 'package:unisync/features/peer_connect/peers/peer_screen.dart';
 
 
@@ -18,6 +19,7 @@ class NewHomeScreen extends StatefulWidget {
 
 class _NewHomeScreenState extends State<NewHomeScreen> {
   int _currentPageIndex = 3;
+  Widget? _attendancePage;
 
   static const List<_NavItem> _navItems = [
     _NavItem(icon: Iconsax.code,          activeIcon: Iconsax.code5,           label: 'Opportunities'),
@@ -28,8 +30,8 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
   ];
 
   late final List<Widget> _pages = [
-    const LiveAttendence(),
-    const _PlaceholderPage(label: 'Opportunities', emoji: '🏆'),
+    const SizedBox.shrink(),
+    const OpportunitiesScreen(),
     const CarrerInterviewScreen(),
     HomePageTab(onInternalRouteTap: _handleHomeRouteTap),
     const PeerScreen(),
@@ -46,7 +48,11 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
 
   void _activateAttendanceEdge() {
     if (_currentPageIndex == 0) return;
-    setState(() => _currentPageIndex = 0);
+    setState(() {
+      _attendancePage ??= const LiveAttendence();
+      _pages[0] = _attendancePage!;
+      _currentPageIndex = 0;
+    });
   }
 
   void _handleHomeRouteTap(String route) {
@@ -60,7 +66,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
       return;
     }
 
-    if (route == '/campXLogin' || route == '/liveAttendence') {
+    if (route == '/campXLogin' || route == '/liveAttendence' || route == '/liveAttendance') {
       _activateAttendanceEdge();
       return;
     }

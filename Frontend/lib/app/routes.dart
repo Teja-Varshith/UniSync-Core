@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/features/Campus_Mode/attendance/view/campx_login.dart';
-import 'package:unisync/features/Campus_Mode/attendance/view/live_attendance_screen.dart';
+import 'package:unisync/features/attendance/view/campx_login.dart';
+import 'package:unisync/features/attendance/view/live_attendance_screen.dart';
 import 'package:unisync/features/Carrer_Mode/cards/view/card_quiz.dart';
 import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
 import 'package:unisync/features/interview/view/core_interview_screen.dart';
@@ -18,6 +18,8 @@ import 'package:unisync/features/interview/view/user_interview_details.dart';
 import 'package:unisync/features/peer_connect/peers/peer_profile.dart';
 import 'package:unisync/features/peer_connect/peers/peer_screen.dart';
 import 'package:unisync/features/profile/profile_screen.dart';
+import 'package:unisync/features/opputunities/oppurtunities_screen.dart';
+import 'package:unisync/features/opputunities/oppurtunity_detail_screen.dart';
 
 final loggedOutRoutes = RouteMap(
   routes: {
@@ -53,5 +55,11 @@ final loggedInRoutes = RouteMap(
     "/portifolio": (_) => MaterialPage(child: PdfUpload()),
     "/nextUpdatePromo": (_) => MaterialPage(child: NextUpdatePromoScreen()),
     "/userInterviewDetails": (_) => MaterialPage(child: UserInterviewDetails()),
+    "/opportunities": (_) => MaterialPage(child: OpportunitiesScreen()),
+    "/opportunity/:id": (route) => MaterialPage(
+      child: OpportunityDetailsScreen(
+        opportunityId: route.pathParameters['id'] ?? '',
+      ),
+    ),
   }
 );

@@ -11,6 +11,7 @@ import 'package:routemaster/routemaster.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:unisync/app/providers.dart';
 import 'package:unisync/constants/constant.dart';
+import 'package:unisync/features/coins/coin_purchase_service.dart';
 import 'package:unisync/features/HomeScreen/controllers/home_carousel_controller.dart';
 import 'package:unisync/features/HomeScreen/models/home_carousel_item.dart';
 
@@ -734,6 +735,141 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
     TileColorPreset(key: 'coral', label: 'Coral Bloom', scheme: TileSchemes.coral),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await ref.read(coinPurchaseServiceProvider).initialize();
+      } catch (_) {
+        // Billing setup is best-effort here; purchase flow will show user-facing errors.
+      }
+    });
+  }
+
+  Future<void> _openCoinPurchaseSheet() async {
+    final user = ref.read(userProvider);
+    final currentCoins = user?.coins ?? 0;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: UniSyncColors.backgroundSecondary,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Buy Coins',
+                  style: TextStyle(
+                    color: UniSyncColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Current balance: $currentCoins coins',
+                  style: const TextStyle(
+                    color: UniSyncColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: UniSyncColors.surfaceCard,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: UniSyncColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.monetization_on_rounded,
+                        color: UniSyncColors.accent,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          '100 Coins Pack',
+                          style: TextStyle(
+                            color: UniSyncColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      NeoPopButton(
+                        color: UniSyncColors.accent,
+                        bottomShadowColor: UniSyncColors.backgroundPrimary,
+                        rightShadowColor: UniSyncColors.backgroundPrimary,
+                        depth: 3,
+                        onTapDown: () {},
+                        onTapUp: () async {
+                          final error = await ref
+                              .read(coinPurchaseServiceProvider)
+                              .buy100CoinsPack();
+
+                          if (!mounted) return;
+
+                          if (error != null) {
+                            rootScaffoldMessengerKey.currentState
+                              ?..hideCurrentSnackBar()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text(error),
+                                  behavior: SnackBarBehavior.floating,
+                                  backgroundColor: UniSyncColors.error,
+                                ),
+                              );
+                            return;
+                          }
+
+                          Navigator.of(ctx).pop();
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 9,
+                          ),
+                          child: Text(
+                            'Rs 9',
+                            style: TextStyle(
+                              color: UniSyncColors.buttonPrimaryFg,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Note: Product ID must be coins_100_inr9 in Play Console.',
+                  style: TextStyle(
+                    color: UniSyncColors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // ── Add-carousel bottom sheet (logic unchanged) ───────────────────────────
   Future<void> _showAddCarouselDocSheet() async {
     final imageCtrl       = TextEditingController();
@@ -1184,19 +1320,19 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
                     _showHomeConfigSheet();
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.cloud_upload_rounded),
-                  title: const Text('Seed Default Home Config'),
-                  subtitle: const Text('Adds core features + 3 featured projects'),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await _seedHomeConfig();
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(this.context).showSnackBar(
-                      const SnackBar(content: Text('Default home config seeded')),
-                    );
-                  },
-                ),
+                // ListTile(
+                //   leading: const Icon(Icons.cloud_upload_rounded),
+                //   title: const Text('Seed Default Home Config'),
+                //   subtitle: const Text('Adds core features + 3 featured projects'),
+                //   onTap: () async {
+                //     Navigator.pop(context);
+                //     await _seedHomeConfig();
+                //     if (!mounted) return;
+                //     ScaffoldMessenger.of(this.context).showSnackBar(
+                //       const SnackBar(content: Text('Default home config seeded')),
+                //     );
+                //   },
+                // ),
               ],
             ),
           ),
@@ -1723,6 +1859,7 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
               firstName: firstName,
               userPhotoUrl: user?.photoUrl,
               coins: user?.coins ?? 0,
+              onCoinTap: _openCoinPurchaseSheet,
             ),
           ),
 
@@ -2066,10 +2203,12 @@ class _TopBar extends StatelessWidget {
     required this.firstName,
     required this.userPhotoUrl,
     required this.coins,
+    required this.onCoinTap,
   });
   final String firstName;
   final String? userPhotoUrl;
   final int coins;
+  final VoidCallback onCoinTap;
 
   @override
   Widget build(BuildContext context) {
@@ -2127,7 +2266,7 @@ class _TopBar extends StatelessWidget {
               bottomShadowColor: UniSyncColors.accent,
               rightShadowColor: UniSyncColors.accent,
               depth: 3,
-              onTapUp: () {},
+              onTapUp: onCoinTap,
               onTapDown: () {},
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),

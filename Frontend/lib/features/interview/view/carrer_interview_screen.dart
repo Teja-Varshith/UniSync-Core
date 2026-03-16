@@ -490,19 +490,19 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
 
     return Scaffold(
       backgroundColor: UniSyncColors.backgroundPrimary,
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: UniSyncColors.accent,
-        foregroundColor: UniSyncColors.buttonPrimaryFg,
-        onPressed: () => _openManageDataSheet(
-          allTemplates: allTemplates,
-          allDomains: allDomains,
-        ),
-        icon: const Icon(Icons.tune_rounded, size: 18),
-        label: const Text(
-          'Manage',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-      ),
+      // floatingActionButton: FloatingActionButton.extended(
+      //   backgroundColor: UniSyncColors.accent,
+      //   foregroundColor: UniSyncColors.buttonPrimaryFg,
+      //   onPressed: () => _openManageDataSheet(
+      //     allTemplates: allTemplates,
+      //     allDomains: allDomains,
+      //   ),
+      //   icon: const Icon(Icons.tune_rounded, size: 18),
+      //   label: const Text(
+      //     'Manage',
+      //     style: TextStyle(fontWeight: FontWeight.w700),
+      //   ),
+      // ),
       body: SafeArea(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 

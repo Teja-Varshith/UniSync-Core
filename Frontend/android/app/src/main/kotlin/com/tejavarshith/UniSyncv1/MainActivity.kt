@@ -1,4 +1,4 @@
-package com.unisync.app
+package com.tejavarshith.UniSyncv1
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine

@@ -5,7 +5,7 @@ import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/Campus_Mode/attendance/repository/attendance_repository.dart';
+import 'package:unisync/features/attendance/repository/attendance_repository.dart';
 import 'package:unisync/storage/secure_storage.dart';
 
 class CampxLoginScreen extends ConsumerStatefulWidget {
