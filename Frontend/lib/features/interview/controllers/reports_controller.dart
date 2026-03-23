@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/interview/repository/reports_repository.dart';
-import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
-import 'package:unisync/models/interview_report_model.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/features/interview/repository/reports_repository.dart';
+import 'package:UniSync/features/interview/view/carrer_interview_screen.dart';
+import 'package:UniSync/models/interview_report_model.dart';
 
 final ReportsRepositoryProvider = Provider((ref) => ReportsRepository());
 final ReportsControllerProvider = AsyncNotifierProvider<ReportsController,List<InterviewSession>>(ReportsController.new);

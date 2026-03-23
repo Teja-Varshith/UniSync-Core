@@ -4,16 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:icons_flutter/icons_flutter.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/Campus_Mode/view/home_screen.dart';
-import 'package:unisync/features/Carrer_Mode/home/career_home_screen.dart';
-import 'package:unisync/features/interview/view/interview_results_screen.dart';
-import 'package:unisync/features/interview/view/user_interview_details.dart';
-import 'package:unisync/features/Carrer_Mode/cards/view/carrer_card_screen.dart';
-import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
-import 'package:unisync/features/Carrer_Mode/portifolio/view/pdf_upload.dart';
-import 'package:unisync/features/Carrer_Mode/sub_views/carrer_resume_screen.dart';
-import 'package:unisync/features/services/appMode.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/features/Campus_Mode/view/home_screen.dart';
+import 'package:UniSync/features/Carrer_Mode/home/career_home_screen.dart';
+import 'package:UniSync/features/interview/view/interview_results_screen.dart';
+import 'package:UniSync/features/interview/view/user_interview_details.dart';
+import 'package:UniSync/features/Carrer_Mode/cards/view/carrer_card_screen.dart';
+import 'package:UniSync/features/interview/view/carrer_interview_screen.dart';
+import 'package:UniSync/features/Carrer_Mode/portifolio/view/pdf_upload.dart';
+import 'package:UniSync/features/Carrer_Mode/sub_views/carrer_resume_screen.dart';
+import 'package:UniSync/features/services/appMode.dart';
 
 class CareerScreen extends ConsumerStatefulWidget {
   const CareerScreen({super.key});

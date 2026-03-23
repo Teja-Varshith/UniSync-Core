@@ -1,29 +1,42 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:UniSync/ads%20Manager/add_manager.dart';
+import 'package:UniSync/app/providers.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:unisync/features/attendance/view/live_attendance_screen.dart';
-import 'package:unisync/features/HomeScreen/homepagetab.dart';
-import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
-import 'package:unisync/features/opputunities/oppurtunities_screen.dart';
-import 'package:unisync/features/peer_connect/peers/peer_screen.dart';
+import 'package:UniSync/features/attendance/view/live_attendance_screen.dart';
+import 'package:UniSync/features/HomeScreen/homepagetab.dart';
+import 'package:UniSync/features/interview/view/carrer_interview_screen.dart';
+import 'package:UniSync/features/opputunities/oppurtunities_screen.dart';
+import 'package:UniSync/features/peer_connect/peers/peer_screen.dart';
+import 'package:UniSync/features/profile/settings_screen.dart';
+import 'package:UniSync/firebase_service.dart';
+import 'package:UniSync/notifications.dart';
 
 
-class NewHomeScreen extends StatefulWidget {
+class NewHomeScreen extends ConsumerStatefulWidget {
   const NewHomeScreen({super.key});
 
   @override
-  State<NewHomeScreen> createState() => _NewHomeScreenState();
+  ConsumerState<NewHomeScreen> createState() => _NewHomeScreenState();
 }
 
-class _NewHomeScreenState extends State<NewHomeScreen> {
+class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
   int _currentPageIndex = 3;
   Widget? _attendancePage;
+  StreamSubscription<RemoteMessage>? _foregroundMessageSub;
+  bool _updateCheckStarted = false;
+  bool _hasLoggedHomeOpen = false;
 
   static const List<_NavItem> _navItems = [
     _NavItem(icon: Iconsax.code,          activeIcon: Iconsax.code5,           label: 'Opportunities'),
-    _NavItem(icon: Iconsax.microphone,    activeIcon: Iconsax.microphone5,     label: 'Mock'),
+    _NavItem(icon: Iconsax.microphone,    activeIcon: Iconsax.microphone5,     label: 'Mock Interviews'),
     _NavItem(icon: Iconsax.home_2,        activeIcon: Iconsax.home_25,         label: 'Home', isHome: true),
     _NavItem(icon: Iconsax.profile_2user, activeIcon: Iconsax.profile_2user5,  label: 'Peer Connect'),
     _NavItem(icon: Iconsax.setting_2,     activeIcon: Iconsax.setting_2,      label: 'Settings'),
@@ -35,10 +48,43 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
     const CarrerInterviewScreen(),
     HomePageTab(onInternalRouteTap: _handleHomeRouteTap),
     const PeerScreen(),
-    const _PlaceholderPage(label: 'Settings', emoji: '⚙️'),
+    const ProfileScreen(),
   ];
 
   int? get _currentNavIndex => _currentPageIndex == 0 ? null : _currentPageIndex - 1;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || ref.read(userProvider) == null) return;
+      if (!_hasLoggedHomeOpen) {
+        _hasLoggedHomeOpen = true;
+        FirebaseService.logScreenView(screenName: 'home_screen');
+        FirebaseService.logFeatureUsage('home');
+      }
+      final notificationService = ref.read(firebaseNotificationServiceProvider);
+      notificationService.initNotification();
+      notificationService.initLocalNotifications();
+
+      _foregroundMessageSub ??= FirebaseMessaging.onMessage.listen((
+        RemoteMessage message,
+      ) {
+        debugPrint(
+          'Foreground message: ${message.notification?.title}',
+        );
+        notificationService.showForegroundNotification(message);
+      });
+
+      _checkForUpdate();
+    });
+  }
+
+  @override
+  void dispose() {
+    _foregroundMessageSub?.cancel();
+    super.dispose();
+  }
 
   void _onNavIndexChanged(int navIndex) {
     final targetPageIndex = navIndex + 1;
@@ -71,12 +117,35 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
       return;
     }
 
+    if (route == '/settings') {
+      _onNavIndexChanged(4);
+      return;
+    }
+
     if (!mounted) return;
     Routemaster.of(context).push(route);
   }
 
+  Future<void> _checkForUpdate() async {
+    if (_updateCheckStarted) return;
+    _updateCheckStarted = true;
+
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        await InAppUpdate.performImmediateUpdate().catchError((error) {
+          debugPrint('Immediate update failed: $error');
+        });
+      }
+    } catch (error) {
+      debugPrint('Update check failed: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0D),
       body: IndexedStack(index: _currentPageIndex, children: _pages),
@@ -143,6 +212,8 @@ class _CircleNavBarState extends State<_CircleNavBar> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_sc.hasClients) _sc.jumpTo(_clampedOffset(widget.currentIndex ?? 0));
     });
+   
+
   }
 
   @override
@@ -567,27 +638,3 @@ class _NavItem {
 // ─────────────────────────────────────────────
 // PLACEHOLDER PAGES
 // ─────────────────────────────────────────────
-
-class _PlaceholderPage extends StatelessWidget {
-  final String label;
-  final String emoji;
-  const _PlaceholderPage({required this.label, required this.emoji});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 52)),
-          const SizedBox(height: 16),
-          Text(label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: Color(0xFFF1EFE7), fontSize: 22,
-                  fontWeight: FontWeight.w600, letterSpacing: 0.3)),
-        ],
-      ),
-    );
-  }
-}

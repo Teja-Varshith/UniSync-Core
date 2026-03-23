@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:neopop/neopop.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/interview/controllers/reports_controller.dart';
-import 'package:unisync/models/interview_report_model.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/interview/controllers/reports_controller.dart';
+import 'package:UniSync/models/interview_report_model.dart';
 
 class InterviewResultsScreen extends ConsumerStatefulWidget {
   const InterviewResultsScreen({super.key});

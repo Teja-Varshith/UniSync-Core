@@ -1,7 +1,7 @@
 // repositories/opportunity_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/features/opputunities/oppurtunity_model.dart';
+import 'package:UniSync/features/opputunities/oppurtunity_model.dart';
 
 final opportunityRepositoryProvider = Provider<OpportunityRepository>((ref) {
   return OpportunityRepository();

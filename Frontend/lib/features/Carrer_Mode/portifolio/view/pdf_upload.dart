@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/constants/constant.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/constants/constant.dart';
 
 class PdfUpload extends ConsumerStatefulWidget {
   const PdfUpload({super.key});

@@ -4,10 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/models/user_model.dart';
-import 'package:unisync/storage/secure_storage.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/models/user_model.dart';
+import 'package:UniSync/storage/secure_storage.dart';
 
 final AttendanceRepositoryProvider = Provider((ref) {
   return AttendanceRepository(ref: ref);

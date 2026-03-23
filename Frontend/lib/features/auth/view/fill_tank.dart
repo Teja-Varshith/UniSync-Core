@@ -1,10 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/auth/auth_repository.dart';
-import 'package:unisync/models/user_model.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/features/auth/auth_repository.dart';
+import 'package:UniSync/models/user_model.dart';
 
 class FillTank extends ConsumerStatefulWidget {
   const FillTank({super.key});
@@ -14,33 +15,73 @@ class FillTank extends ConsumerStatefulWidget {
 }
 
 class _FillTankScreenState extends ConsumerState<FillTank> {
+  static const String _othersCollegeOption = 'Others';
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _aboutController = TextEditingController();
+  final _customCollegeController = TextEditingController();
   final _pageController = PageController();
-  
+   
   String? _selectedCollege;
   int? _selectedSemester;
   int _currentPage = 0;
   bool _isLoading = false;
 
-  final List<String> _colleges = [
-    'GMR Institute of Technology',
-    'Anil Neerukonda Institute of Technology',
-    'MVGR College of Engeineering',
-    'Narsaraopeta Engineering College',
-    'JNTU Kakinada',
-    'VR Siddhartha Engineering College',
-    'Sri Venkateshwara College of Engineering',
-    'Others',
-  ];
+  InputDecoration _buildInputDecoration({
+    required String hintText,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: const TextStyle(
+        color: Color(0xFF8F8F8F),
+        fontSize: 14,
+      ),
+      filled: true,
+      fillColor: const Color(0xFF141414),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFF2C2C2C)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.white70),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
+      counterStyle: const TextStyle(color: Color(0xFF8F8F8F)),
+    );
+  }
 
   final List<int> _semesters = [1, 2, 3, 4, 5, 6, 7, 8];
+
+  bool get _isUsingCustomCollege => _selectedCollege == _othersCollegeOption;
+
+  String? get _resolvedCollegeName {
+    if (_isUsingCustomCollege) {
+      final customCollege = _customCollegeController.text.trim();
+      return customCollege.isEmpty ? null : customCollege;
+    }
+    final selectedCollege = _selectedCollege?.trim();
+    if (selectedCollege == null || selectedCollege.isEmpty) return null;
+    return selectedCollege;
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _aboutController.dispose();
+    _customCollegeController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -52,6 +93,11 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
   void _nextPage() {
     if (_formKey.currentState!.validate()) {
       if (_currentPage == 1 && _selectedCollege == null) return;
+      if (_currentPage == 1 &&
+          _isUsingCustomCollege &&
+          _customCollegeController.text.trim().isEmpty) {
+        return;
+      }
       if (_currentPage == 2 && _selectedSemester == null) return;
       
       if (_currentPage < 3) {
@@ -61,6 +107,49 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
         );
       }
     }
+  }
+
+  Future<void> _saveCollegeForFutureUsers(String collegeName) async {
+    final normalizedName = collegeName.trim();
+    if (normalizedName.isEmpty) return;
+
+    final firestore = ref.read(firebaseFirestoreProvider) as FirebaseFirestore;
+    final docId = normalizedName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+    final collegeRef = firestore.collection('colleges').doc(docId);
+
+    await collegeRef.set(
+      {
+        'name': normalizedName,
+        'normalizedName': normalizedName.toLowerCase(),
+        'isUserSubmitted': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+  }
+
+  Future<void> _seedTemporaryColleges() async {
+    const sampleColleges = [
+      'GMR Institute of Technology',
+      'Anil Neerukonda Institute of Technology',
+      'MVGR College of Engineering',
+      'Narsaraopeta Engineering College',
+      'JNTU Kakinada',
+      'VR Siddhartha Engineering College',
+      'Sri Venkateswara College of Engineering',
+      'Vasireddy Venkatadri Institute of Technology',
+    ];
+
+    for (final college in sampleColleges) {
+      await _saveCollegeForFutureUsers(college);
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Temporary college seed added to Firebase'),
+      ),
+    );
   }
 
   void _previousPage() {
@@ -78,11 +167,20 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
 
   try {
     final repo = ref.read(AuthRepositoryProvider);
+    final collegeName = _resolvedCollegeName;
+    if (collegeName == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    if (_isUsingCustomCollege) {
+      await _saveCollegeForFutureUsers(collegeName);
+    }
     print("updatinf the old user");
 
     final updatedUser = await repo.completeProfile(
       name: _nameController.text.trim(),
-      collegeName: _selectedCollege!,
+      collegeName: collegeName,
       semester: _selectedSemester!,
       year: _calculateYear(_selectedSemester!),
       about: _aboutController.text.trim().isEmpty
@@ -94,6 +192,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
 
     // ✅ update state ONLY with backend-confirmed data
     ref.read(userProvider.notifier).state = updatedUser;
+    _selectedCollege = collegeName;
 
   } catch (e) {
     // show error snackbar
@@ -116,21 +215,27 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+    final pageHeight = screenHeight < 750 ? 280.0 : 350.0;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFF0F0F0F),
       body: SafeArea(
         child: SingleChildScrollView(
+          padding: EdgeInsets.only(bottom: keyboardInset),
+          physics: const BouncingScrollPhysics(),
           child: SizedBox(
             height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
             child: Column(
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
                 Lottie.asset(
                   'assets/animations/login_lottie.json',
-                  height: 180,
+                  height: screenHeight < 750 ? 130 : 180,
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 16),
                 Expanded(
                   child: Container(
                     width: double.infinity,
@@ -198,7 +303,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                             ),
                             const SizedBox(height: 25),
                             SizedBox(
-                              height: 350,
+                              height: pageHeight,
                               child: PageView(
                                 controller: _pageController,
                                 physics: const NeverScrollableScrollPhysics(),
@@ -302,18 +407,14 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
         TextFormField(
           controller: _nameController,
           textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          cursorColor: Colors.white,
+          decoration: _buildInputDecoration(
             hintText: 'Your awesome name',
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.red),
-            ),
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
@@ -330,33 +431,114 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
   }
 
   Widget _buildCollegePage() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Where\'s your brain factory? 🏫',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,  color: Colors.white),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Where you\'re professionally confused 📚',
-          style: TextStyle(fontSize: 11, color: const Color(0xFFB3B3B3),),
-        ),
-        const SizedBox(height: 18),
-        CustomDropdown<String>(
-          hint: 'Select your college',
-          value: _selectedCollege,
-          items: _colleges,
-          onChanged: (value) => setState(() => _selectedCollege = value),
-        ),
-        if (_selectedCollege == null) ...[
-          const SizedBox(height: 8),
-          Text(
-            '☝️ Pick one to continue!',
-            style: TextStyle(fontSize: 11, color: Colors.red.shade700),
-          ),
-        ],
-      ],
+    final firestore = ref.read(firebaseFirestoreProvider) as FirebaseFirestore;
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: firestore.collection('colleges').orderBy('name').snapshots(),
+      builder: (context, snapshot) {
+        final colleges = snapshot.data?.docs
+                .map((doc) => (doc.data()['name'] ?? '').toString().trim())
+                .where((name) => name.isNotEmpty)
+                .toSet()
+                .toList() ??
+            <String>[];
+
+        colleges.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        if (!colleges.contains(_othersCollegeOption)) {
+          colleges.add(_othersCollegeOption);
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Where\'s your brain factory? 🏫',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Where you\'re professionally confused 📚',
+              style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
+            ),
+            const SizedBox(height: 18),
+            CustomDropdown(
+              hint: snapshot.connectionState == ConnectionState.waiting
+                  ? 'Loading colleges...'
+                  : 'Select your college',
+              value: _selectedCollege,
+              items: colleges,
+              enabled: snapshot.connectionState != ConnectionState.waiting,
+              emptyMessage: 'No colleges found yet. Pick Others and add yours.',
+              onChanged: (value) => setState(() {
+                _selectedCollege = value;
+                if (value != _othersCollegeOption) {
+                  _customCollegeController.clear();
+                }
+              }),
+            ),
+            // const SizedBox(height: 10),
+            // Align(
+            //   alignment: Alignment.centerRight,
+            //   child: TextButton(
+            //     onPressed: _seedTemporaryColleges,
+            //     style: TextButton.styleFrom(
+            //       foregroundColor: Colors.white70,
+            //       padding: const EdgeInsets.symmetric(horizontal: 0),
+            //     ),
+            //     child: const Text(
+            //       'Temp Seed Firebase',
+            //       style: TextStyle(
+            //         fontSize: 11,
+            //         fontWeight: FontWeight.w700,
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            if (_isUsingCustomCollege) ...[
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _customCollegeController,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                cursorColor: Colors.white,
+                textCapitalization: TextCapitalization.words,
+                decoration: _buildInputDecoration(
+                  hintText: 'Enter your college name',
+                ),
+                validator: (_) {
+                  if (_currentPage != 1 || !_isUsingCustomCollege) return null;
+                  if (_customCollegeController.text.trim().isEmpty) {
+                    return 'Enter your college name so we can add it.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'We will save this college for future users too.',
+                style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
+              ),
+            ],
+            if (_selectedCollege == null) ...[
+              const SizedBox(height: 8),
+              Text(
+                '☝️ Pick one to continue!',
+                style: TextStyle(fontSize: 11, color: Colors.red.shade700),
+              ),
+            ],
+            if (snapshot.hasError) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Could not load colleges right now. You can still use Others.',
+                style: TextStyle(fontSize: 11, color: Colors.orange.shade300),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 
@@ -475,14 +657,14 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
           maxLines: 5,
           maxLength: 200,
           textCapitalization: TextCapitalization.sentences,
-          decoration: InputDecoration(
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          cursorColor: Colors.white,
+          decoration: _buildInputDecoration(
             hintText: 'Tech geek? Coffee addict? Meme lord?',
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
           ),
         ),
       ],
@@ -491,11 +673,13 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
 }
 
 // Custom Dropdown Widget
-class CustomDropdown<T> extends StatelessWidget {
+class CustomDropdown extends StatelessWidget {
   final String hint;
-  final T? value;
-  final List<T> items;
-  final Function(T?) onChanged;
+  final String? value;
+  final List<String> items;
+  final ValueChanged<String?> onChanged;
+  final bool enabled;
+  final String emptyMessage;
 
   const CustomDropdown({
     super.key,
@@ -503,17 +687,20 @@ class CustomDropdown<T> extends StatelessWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    this.enabled = true,
+    this.emptyMessage = 'No options available',
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _showDropdownSheet(context),
+      onTap: enabled ? () => _showDropdownSheet(context) : null,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF141414),
           borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFF2C2C2C)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -523,11 +710,16 @@ class CustomDropdown<T> extends StatelessWidget {
                 value?.toString() ?? hint,
                 style: TextStyle(
                   fontSize: 14,
-                  color: value == null ? Colors.grey.shade600 : Colors.black,
+                  color: value == null
+                      ? (enabled ? const Color(0xFF8F8F8F) : Colors.white38)
+                      : Colors.white,
                 ),
               ),
             ),
-            Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade700),
+            Icon(
+              Icons.keyboard_arrow_down,
+              color: enabled ? Colors.white70 : Colors.white38,
+            ),
           ],
         ),
       ),
@@ -535,106 +727,164 @@ class CustomDropdown<T> extends StatelessWidget {
   }
 
   void _showDropdownSheet(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.transparent,
-    builder: (context) => Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF121212), // dark background, not pure black
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(25),
-          topRight: Radius.circular(25),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              hint,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 15),
-          Container(
-            height: 1,
-            color: Colors.white12,
-          ),
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: items.length,
-              separatorBuilder: (context, index) => Divider(
-                height: 1,
-                thickness: 1,
-                color: Colors.white12,
-              ),
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final isSelected = value == item;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        var query = '';
 
-                return InkWell(
-                  onTap: () {
-                    onChanged(item);
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    color: isSelected
-                        ? const Color(0xFF1E1E1E)
-                        : const Color(0xFF121212),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.toString(),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.white70,
-                            ),
-                          ),
-                        ),
-                        if (isSelected)
-                          const Icon(
-                            Icons.check_circle,
-                            color: Colors.greenAccent,
-                            size: 20,
-                          ),
-                      ],
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final filteredItems = items
+                .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+                .toList();
+            final hasOthers = items.any(
+              (item) => item.toLowerCase() == 'others',
+            );
+            final visibleItems = <String>[
+              ...filteredItems,
+              if (hasOthers && !filteredItems.any((item) => item.toLowerCase() == 'others'))
+                items.firstWhere((item) => item.toLowerCase() == 'others'),
+            ];
+
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.78,
+              decoration: const BoxDecoration(
+                color: Color(0xFF121212),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(25),
+                ),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    ),
-  );
-}
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      hint,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: TextField(
+                      onChanged: (value) => setModalState(() => query = value),
+                      style: const TextStyle(color: Colors.white),
+                      cursorColor: Colors.white,
+                      decoration: InputDecoration(
+                        hintText: 'Search college',
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                        filled: true,
+                        fillColor: const Color(0xFF1B1B1B),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF2C2C2C)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.white54),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(height: 1, color: Colors.white12),
+                  Expanded(
+                    child: visibleItems.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              child: Text(
+                                emptyMessage,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: visibleItems.length,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: Colors.white12,
+                            ),
+                            itemBuilder: (context, index) {
+                              final item = visibleItems[index];
+                              final isSelected = value == item;
 
+                              return InkWell(
+                                onTap: () {
+                                  onChanged(item);
+                                  Navigator.pop(context);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 16,
+                                  ),
+                                  color: isSelected
+                                      ? const Color(0xFF1E1E1E)
+                                      : const Color(0xFF121212),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.w400,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : Colors.white70,
+                                          ),
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.greenAccent,
+                                          size: 20,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }

@@ -3,15 +3,16 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/interview/controllers/reports_controller.dart';
-import 'package:unisync/features/interview/controllers/interview_controller.dart';
-import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
-import 'package:unisync/sockets/socket_methods.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/interview/controllers/reports_controller.dart';
+import 'package:UniSync/features/interview/controllers/interview_controller.dart';
+import 'package:UniSync/features/interview/view/carrer_interview_screen.dart';
+import 'package:UniSync/sockets/socket_methods.dart';
 
 class StartInterviewScreen extends ConsumerStatefulWidget {
   const StartInterviewScreen({super.key});
@@ -23,8 +24,13 @@ class StartInterviewScreen extends ConsumerStatefulWidget {
 
 class _StartInterviewScreenState
     extends ConsumerState<StartInterviewScreen> {
+  static const int _defaultQuestionCount = 6;
+  static const List<int> _questionPresets = [4, 6, 8, 10, 12];
+
   bool _loading = false;
   Timer? _startTimeout;
+  final TextEditingController _questionCountController =
+      TextEditingController();
 
   void _showStartError(String message) {
     final messenger = rootScaffoldMessengerKey.currentState;
@@ -78,9 +84,88 @@ class _StartInterviewScreenState
     }
   }
 
+  Future<bool> _confirmInterviewStart({
+    required int coinPrice,
+    required int availableCoins,
+    required int effectiveQuestionCount,
+  }) async {
+    final remainingCoins = availableCoins - coinPrice;
+    final shouldStart = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: UniSyncColors.backgroundSecondary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Start Interview?',
+          style: TextStyle(
+            color: UniSyncColors.textPrimary,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'This will deduct $coinPrice UniCoins from your wallet.\n'
+          'Questions to be asked: $effectiveQuestionCount\n'
+          'Remaining balance: ${remainingCoins < 0 ? 0 : remainingCoins} UniCoins.',
+          style: const TextStyle(
+            color: UniSyncColors.textSecondary,
+            fontSize: 13,
+            height: 1.45,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                color: UniSyncColors.textMuted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Start',
+              style: TextStyle(
+                color: UniSyncColors.accent,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return shouldStart ?? false;
+  }
+
+  int? _parseQuestionLimit() {
+    final raw = _questionCountController.text.trim();
+    if (raw.isEmpty) return null;
+    final parsed = int.tryParse(raw);
+    if (parsed == null || parsed < 4 || parsed > 20) return null;
+    return parsed;
+  }
+
+  void _setQuestionLimitFromPreset(int value) {
+    _questionCountController.text = value.toString();
+    _questionCountController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _questionCountController.text.length),
+    );
+    setState(() {});
+  }
+
   Future<void> _handleStartTap() async {
     final user = ref.read(userProvider);
     final tmplte = ref.read(selectedTemplateProvider)!;
+    final rawQuestionCount = _questionCountController.text.trim();
+    final requestedQuestionLimit = _parseQuestionLimit();
+
+    if (rawQuestionCount.isNotEmpty && requestedQuestionLimit == null) {
+      _showStartError('Please enter between 4 and 20 questions.');
+      return;
+    }
 
     if (user == null || user.id == null || user.id!.isEmpty) {
       _showStartError('Unable to verify your account. Please sign in again.');
@@ -96,13 +181,25 @@ class _StartInterviewScreenState
     }
 
     if (!mounted) return;
+    final confirmed = await _confirmInterviewStart(
+      coinPrice: tmplte.coinPrice,
+      availableCoins: latestCoins,
+      effectiveQuestionCount:
+          requestedQuestionLimit ?? _defaultQuestionCount,
+    );
+    if (!confirmed || !mounted) return;
+
     setState(() => _loading = true);
 
     _beginStartTimeout();
 
     final started = await ref
         .read(socketMethodProvider)
-        .startInterview(tmplte.id, user.id!);
+        .startInterview(
+          tmplte.id,
+          user.id!,
+          questionLimit: requestedQuestionLimit,
+        );
 
     if (!started) {
       _stopLoading();
@@ -113,6 +210,7 @@ class _StartInterviewScreenState
   @override
   void dispose() {
     _startTimeout?.cancel();
+    _questionCountController.dispose();
     super.dispose();
   }
 
@@ -131,6 +229,10 @@ class _StartInterviewScreenState
     final chips  = tmplte.topics;
     final availableCoins = user?.coins ?? 0;
     final hasEnoughCoins = availableCoins >= tmplte.coinPrice;
+    final rawQuestionInput = _questionCountController.text.trim();
+    final parsedQuestionLimit = _parseQuestionLimit();
+    final hasInvalidQuestionInput =
+        rawQuestionInput.isNotEmpty && parsedQuestionLimit == null;
     // ──────────────────────────────────────────────────────────────
 
     return Scaffold(
@@ -379,7 +481,204 @@ class _StartInterviewScreenState
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 12),
                             ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: UniSyncColors.backgroundSecondary,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: UniSyncColors.borderSubtle),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: const [
+                            Icon(
+                              Icons.tune_rounded,
+                              size: 16,
+                              color: UniSyncColors.accent,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Interview Length',
+                              style: TextStyle(
+                                color: UniSyncColors.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Select how many questions AI should ask. Minimum 4, maximum 20. Leave custom empty to use default 6.',
+                          style: TextStyle(
+                            color: UniSyncColors.textSecondary,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _questionPresets.map((count) {
+                            final currentValue =
+                                _questionCountController.text.trim();
+                            final isSelected =
+                                currentValue == count.toString() ||
+                                    (currentValue.isEmpty &&
+                                        count == _defaultQuestionCount);
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () => _setQuestionLimitFromPreset(count),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? UniSyncColors.accent.withOpacity(0.15)
+                                      : UniSyncColors.surfaceCard,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? UniSyncColors.accent
+                                        : UniSyncColors.border,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '$count',
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? UniSyncColors.accent
+                                            : UniSyncColors.textSecondary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    if (count == _defaultQuestionCount) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 5,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: UniSyncColors.accentSoft,
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                        child: const Text(
+                                          'DEFAULT',
+                                          style: TextStyle(
+                                            color: UniSyncColors.accent,
+                                            fontSize: 8.5,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.4,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _questionCountController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            TextInputFormatter.withFunction(
+                              (oldValue, newValue) {
+                                if (newValue.text.isEmpty) return newValue;
+                                final value = int.tryParse(newValue.text);
+                                if (value == null || value > 20) {
+                                  return oldValue;
+                                }
+                                return newValue;
+                              },
+                            ),
+                          ],
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            labelText: 'Custom question count',
+                            hintText: 'Min 4, max 20, default 6',
+                            errorText: hasInvalidQuestionInput
+                                ? 'Enter between 4 and 20'
+                                : null,
+                            prefixIcon: const Icon(
+                              Icons.help_outline_rounded,
+                              size: 18,
+                              color: UniSyncColors.accent,
+                            ),
+                            suffixIcon:
+                                _questionCountController.text.trim().isEmpty
+                                    ? null
+                                    : IconButton(
+                                        onPressed: () {
+                                          _questionCountController.clear();
+                                          setState(() {});
+                                        },
+                                        icon: const Icon(
+                                          Icons.close_rounded,
+                                          size: 18,
+                                          color: UniSyncColors.textMuted,
+                                        ),
+                                      ),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            filled: true,
+                            fillColor: UniSyncColors.surfaceCard,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                color: UniSyncColors.border,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                color: UniSyncColors.accent,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          style: const TextStyle(
+                            color: UniSyncColors.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Interview will run for ${parsedQuestionLimit ?? _defaultQuestionCount} question${(parsedQuestionLimit ?? _defaultQuestionCount) > 1 ? 's' : ''}.',
+                          style: const TextStyle(
+                            color: UniSyncColors.textMuted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],

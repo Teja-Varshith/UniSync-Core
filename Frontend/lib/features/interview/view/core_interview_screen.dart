@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/features/interview/controllers/interview_controller.dart';
-import 'package:unisync/models/interview_state.dart';
-import 'package:unisync/sockets/socket_methods.dart';
+import 'package:UniSync/features/interview/controllers/interview_controller.dart';
+import 'package:UniSync/models/interview_state.dart';
+import 'package:UniSync/sockets/socket_methods.dart';
 
 class CoreInterviewScreen extends ConsumerStatefulWidget {
   const CoreInterviewScreen({super.key});

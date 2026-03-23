@@ -3,10 +3,10 @@ import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/interview/controllers/interview_controller.dart';
-import 'package:unisync/models/interview_state.dart';
-import 'package:unisync/sockets/socket_client.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/interview/controllers/interview_controller.dart';
+import 'package:UniSync/models/interview_state.dart';
+import 'package:UniSync/sockets/socket_client.dart';
 
 
 final socketMethodProvider = Provider<SocketMethods>((ref) => SocketMethods(ref: ref));
@@ -149,7 +149,11 @@ class SocketMethods {
     }
   }
 
-  Future<bool> startInterview(String templateId, String userId) async {
+  Future<bool> startInterview(
+    String templateId,
+    String userId, {
+    int? questionLimit,
+  }) async {
     final backendReady = await warmUpBackend();
     if (!backendReady) {
       _showSocketError('Interview server is waking up. Please try again in a moment.');
@@ -165,6 +169,7 @@ class SocketMethods {
     socket!.emit("startInterview", {
       'templateId': templateId,
       'userId': userId,
+      if (questionLimit != null) 'questionLimit': questionLimit,
     });
     return true;
   }

@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:unisync/models/peer_model.dart';
+import 'package:neopop/neopop.dart';
+import 'package:UniSync/models/peer_model.dart';
 import 'peer_card.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  PeerCardDeck
-//
-//  currentUserId — passed down to every PeerCard so the like button
-//  knows whether to show and what state it's in.
 // ─────────────────────────────────────────────────────────────────────────────
 class PeerCardDeck extends StatefulWidget {
   const PeerCardDeck({
     super.key,
     required this.peers,
-    required this.currentUserId,   // ← NEW
+    required this.currentUserId,
   });
 
   final List<PeerModel> peers;
@@ -24,27 +22,60 @@ class PeerCardDeck extends StatefulWidget {
 
 class _PeerCardDeckState extends State<PeerCardDeck>
     with SingleTickerProviderStateMixin {
-  int    _topIndex  = 0;
+  int _topIndex = 0;
+
   double _dragOffset = 0;
-  double _dragAngle  = 0;
   bool   _isDragging = false;
 
-  static const double _swipeThreshold = 100;
-  static const int    _visibleCount   = 3;
+  late AnimationController _snapCtrl;
+  late Animation<double>   _snapAnim;
+
+  // Gen Z slangs — right swipe = positive, left = skip
+  static const List<String> _rightSlangs = ['SLAY', 'RIZZ', 'FR FR', 'BUSSIN', 'NO CAP', 'GOATED'];
+  static const List<String> _leftSlangs  = ['PASS', 'MID', 'NPC', 'SKIP', 'L BOZO', 'RATIO'];
+
+  static const double _velocityThreshold  = 500;
+  static const double _distanceThreshold  = 90;
+  static const int    _visibleCount       = 3;
+  static const double _peekShift          = 10.0;
+
+  // Pick a slang based on the current card index so it's consistent per card
+  String get _rightSlang => _rightSlangs[_topIndex % _rightSlangs.length];
+  String get _leftSlang  => _leftSlangs[_topIndex  % _leftSlangs.length];
+
+  @override
+  void initState() {
+    super.initState();
+    _snapCtrl = AnimationController(vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _snapCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(PeerCardDeck old) {
     super.didUpdateWidget(old);
-    if (old.peers != widget.peers) {
-      setState(() { _topIndex = 0; _dragOffset = 0; _dragAngle = 0; });
-    }
+    if (old.peers != widget.peers) _hardReset();
+  }
+
+  void _hardReset() {
+    _snapCtrl.stop();
+    setState(() {
+      _topIndex   = 0;
+      _dragOffset = 0;
+      _isDragging = false;
+    });
   }
 
   void _advance() {
     if (widget.peers.isEmpty) return;
     setState(() {
       _topIndex   = (_topIndex + 1) % widget.peers.length;
-      _dragOffset = 0; _dragAngle = 0;
+      _dragOffset = 0;
+      _isDragging = false;
     });
   }
 
@@ -52,81 +83,86 @@ class _PeerCardDeckState extends State<PeerCardDeck>
     if (widget.peers.isEmpty) return;
     setState(() {
       _topIndex   = (_topIndex - 1 + widget.peers.length) % widget.peers.length;
-      _dragOffset = 0; _dragAngle = 0;
+      _dragOffset = 0;
     });
   }
 
-  void _onDragUpdate(DragUpdateDetails d) => setState(() {
-    _isDragging  = true;
-    _dragOffset += d.delta.dx;
-    _dragAngle   = (_dragOffset / 300).clamp(-0.25, 0.25);
-  });
+  void _onDragStart(DragStartDetails _) {
+    _snapCtrl.stop();
+    setState(() => _isDragging = true);
+  }
+
+  void _onDragUpdate(DragUpdateDetails d) =>
+      setState(() => _dragOffset += d.delta.dx);
 
   void _onDragEnd(DragEndDetails d) {
-    if (_dragOffset.abs() >= _swipeThreshold) {
+    final velocity = d.velocity.pixelsPerSecond.dx;
+    final shouldSwipe = _dragOffset.abs() > _distanceThreshold ||
+        velocity.abs() > _velocityThreshold;
+
+    if (shouldSwipe) {
       _advance();
     } else {
-      setState(() { _dragOffset = 0; _dragAngle = 0; _isDragging = false; });
+      final from = _dragOffset;
+      _snapAnim = Tween<double>(begin: from, end: 0).animate(
+        CurvedAnimation(parent: _snapCtrl, curve: Curves.elasticOut),
+      )..addListener(() => setState(() => _dragOffset = _snapAnim.value));
+      _snapCtrl
+        ..value    = 0
+        ..duration = const Duration(milliseconds: 500)
+        ..forward(from: 0);
+      setState(() => _isDragging = false);
     }
   }
 
+  double get _tilt          => (_dragOffset / 320).clamp(-0.28, 0.28);
+  double get _swipeProgress => (_dragOffset.abs() / _distanceThreshold).clamp(0.0, 1.0);
+
   @override
   Widget build(BuildContext context) {
-    if (widget.peers.isEmpty) return _EmptyDeck();
+    if (widget.peers.isEmpty) return const _EmptyDeck();
+
+    final stackHeight = kCardHeight + (_visibleCount - 1) * _peekShift + 14;
 
     return Column(children: [
-      // Card count
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Center(child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
-            border: Border.all(color: const Color(0xFF333333)),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text('${_topIndex + 1} / ${widget.peers.length}',
-            style: const TextStyle(color: Color(0xFF888888),
-                fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
-        )),
-      ),
-
-      // Stack
+      // ── Card stack ──────────────────────────────────────────
       SizedBox(
-        height: 560,
+        height: stackHeight,
         child: Stack(
-          alignment: Alignment.topCenter,
           clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
           children: [
-            // Background cards
             for (int layer = _visibleCount - 1; layer >= 1; layer--)
               _BackCard(
-                peer: widget.peers[(_topIndex + layer) % widget.peers.length],
+                peer:          widget.peers[(_topIndex + layer) % widget.peers.length],
                 currentUserId: widget.currentUserId,
-                layer: layer,
+                layer:         layer,
+                swipeProgress: _swipeProgress,
               ),
 
-            // Top card (draggable)
             GestureDetector(
+              onHorizontalDragStart:  _onDragStart,
               onHorizontalDragUpdate: _onDragUpdate,
-              onHorizontalDragEnd: _onDragEnd,
-              child: AnimatedContainer(
-                duration: _isDragging
-                    ? Duration.zero
-                    : const Duration(milliseconds: 200),
-                curve: Curves.easeOut,
+              onHorizontalDragEnd:    _onDragEnd,
+              child: Transform(
+                alignment: Alignment.bottomCenter,
                 transform: Matrix4.identity()
                   ..translate(_dragOffset, 0.0)
-                  ..rotateZ(_dragAngle),
-                transformAlignment: Alignment.bottomCenter,
+                  ..rotateZ(_tilt),
                 child: Stack(children: [
                   PeerCard(
                     peerModel:     widget.peers[_topIndex],
                     currentUserId: widget.currentUserId,
                     expanded:      true,
                   ),
-                  if (_isDragging)
-                    Positioned.fill(child: _SwipeHint(offset: _dragOffset)),
+                  if (_isDragging && _dragOffset.abs() > 8)
+                    Positioned.fill(
+                      child: _SwipeStamp(
+                        offset:     _dragOffset,
+                        rightSlang: _rightSlang,
+                        leftSlang:  _leftSlang,
+                      ),
+                    ),
                 ]),
               ),
             ),
@@ -134,51 +170,85 @@ class _PeerCardDeckState extends State<PeerCardDeck>
         ),
       ),
 
-      const SizedBox(height: 20),
+      const SizedBox(height: 22),
 
-      // Nav buttons
+      // ── Nav ─────────────────────────────────────────────────
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        _NavBtn(icon: Icons.arrow_back_rounded, onTap: _goBack, tooltip: 'Previous'),
-        const SizedBox(width: 16),
-        _NavBtn(
-          icon: Icons.close_rounded, onTap: _advance, tooltip: 'Skip',
-          size: 56, iconSize: 24,
-          color: const Color(0xFF2A1010), iconColor: const Color(0xFFE05252),
-          borderColor: const Color(0xFF3D1515),
+        NeoPopButton(
+          color:             const Color(0xFF161B22),
+          bottomShadowColor: const Color(0xFF090C12),
+          rightShadowColor:  const Color(0xFF090C12),
+          depth: 5,
+          onTapUp:   _goBack,
+          onTapDown: () {},
+          child: SizedBox(
+            width: 50, height: 44,
+            child: Center(child: Icon(Icons.arrow_back_rounded,
+                size: 17, color: Colors.white.withOpacity(0.45)))),
         ),
         const SizedBox(width: 16),
-        _NavBtn(icon: Icons.arrow_forward_rounded, onTap: _advance, tooltip: 'Next'),
+        NeoPopButton(
+          color:             const Color(0xFF161B22),
+          bottomShadowColor: const Color(0xFF090C12),
+          rightShadowColor:  const Color(0xFF090C12),
+          depth: 5,
+          onTapUp:   _advance,
+          onTapDown: () {},
+          child: SizedBox(
+            width: 50, height: 44,
+            child: Center(child: Icon(Icons.arrow_forward_rounded,
+                size: 17, color: Colors.white.withOpacity(0.45)))),
+        ),
       ]),
 
       const SizedBox(height: 10),
-      const Text('Swipe or use arrows · Cycles back at end',
-          style: TextStyle(color: Color(0xFF555555), fontSize: 11)),
+      Text('swipe or tap arrows',
+          style: TextStyle(color: Colors.white,
+              fontSize: 11, letterSpacing: 0.6)),
     ]);
   }
 }
 
-// ── Background card ───────────────────────────────────────────────────────────
+// ── Back card ─────────────────────────────────────────────────────────────────
 class _BackCard extends StatelessWidget {
-  const _BackCard({required this.peer, required this.currentUserId, required this.layer});
+  const _BackCard({
+    required this.peer,
+    required this.currentUserId,
+    required this.layer,
+    required this.swipeProgress,
+  });
   final PeerModel peer;
-  final String currentUserId;
-  final int layer;
+  final String    currentUserId;
+  final int       layer;
+  final double    swipeProgress;
+
+  static const double _peekShift = 10.0;
+  static const double _scaleStep = 0.030;
 
   @override
   Widget build(BuildContext context) {
-    final scale    = 1.0 - layer * 0.04;
-    final yOffset  = layer * 10.0;
-    final rotation = (layer % 2 == 0 ? 1 : -1) * layer * 0.015;
+    final currentScale = 1.0 -  layer      * _scaleStep;
+    final targetScale  = 1.0 - (layer - 1) * _scaleStep;
+    final scale        = currentScale + (targetScale - currentScale) * swipeProgress;
+
+    final currentY = layer       * _peekShift;
+    final targetY  = (layer - 1) * _peekShift;
+    final yOffset  = currentY + (targetY - currentY) * swipeProgress;
+    final tilt     = (layer % 2 == 0 ? 1 : -1) * layer * 0.012;
+
     return Transform(
       alignment: Alignment.topCenter,
       transform: Matrix4.identity()
-        ..translate(0.0, yOffset)..scale(scale)..rotateZ(rotation),
-      child: Opacity(opacity: 1.0 - layer * 0.15,
+        ..translate(0.0, yOffset)
+        ..scale(scale)
+        ..rotateZ(tilt),
+      child: Opacity(
+        opacity: (1.0 - layer * 0.22).clamp(0.0, 1.0),
         child: IgnorePointer(
           child: PeerCard(
-            peerModel: peer,
+            peerModel:     peer,
             currentUserId: currentUserId,
-            expanded: true,
+            expanded:      true,
           ),
         ),
       ),
@@ -186,74 +256,82 @@ class _BackCard extends StatelessWidget {
   }
 }
 
-// ── Swipe hint overlay ────────────────────────────────────────────────────────
-class _SwipeHint extends StatelessWidget {
-  const _SwipeHint({required this.offset});
+// ── Swipe stamp with gen z slangs ────────────────────────────────────────────
+class _SwipeStamp extends StatelessWidget {
+  const _SwipeStamp({
+    required this.offset,
+    required this.rightSlang,
+    required this.leftSlang,
+  });
   final double offset;
+  final String rightSlang;
+  final String leftSlang;
+
   @override
   Widget build(BuildContext context) {
-    if (offset.abs() < 20) return const SizedBox.shrink();
     final isRight = offset > 0;
-    final opacity = ((offset.abs() - 20) / 80).clamp(0.0, 0.8);
-    return Container(
-      decoration: BoxDecoration(
-        color: (isRight ? const Color(0xFF3ECF8E) : const Color(0xFFE05252))
-            .withOpacity(opacity * 0.15),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: (isRight ? const Color(0xFF3ECF8E) : const Color(0xFFE05252))
-              .withOpacity(opacity * 0.5)),
-      ),
-      child: Align(
-        alignment: isRight ? Alignment.centerLeft : Alignment.centerRight,
-        child: Padding(padding: const EdgeInsets.all(16),
-          child: Icon(
-            isRight ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
-            color: (isRight ? const Color(0xFF3ECF8E) : const Color(0xFFE05252))
-                .withOpacity(opacity),
-            size: 32)),
+    final t       = ((offset.abs() - 8) / 70).clamp(0.0, 1.0);
+    final color   = isRight ? const Color(0xFF3ECF8E) : const Color(0xFFFF6B6B);
+    final label   = isRight ? rightSlang : leftSlang;
+    final angle   = isRight ? -0.28 : 0.28;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        color: color.withOpacity(t * 0.10),
+        child: Align(
+          alignment: isRight ? Alignment.topLeft : Alignment.topRight,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Opacity(
+              opacity: t.clamp(0.0, 1.0),
+              child: Transform.rotate(
+                angle: angle,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: color, width: 2.5),
+                    borderRadius: BorderRadius.circular(6)),
+                  child: Text(label,
+                      style: TextStyle(
+                        color:        color,
+                        fontSize:     15,
+                        fontWeight:   FontWeight.w900,
+                        letterSpacing: 2,
+                      )),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-// ── Nav button ────────────────────────────────────────────────────────────────
-class _NavBtn extends StatelessWidget {
-  const _NavBtn({
-    required this.icon, required this.onTap, required this.tooltip,
-    this.size = 46, this.iconSize = 20,
-    this.color = const Color(0xFF1A1A1A),
-    this.iconColor = const Color(0xFF888888),
-    this.borderColor = const Color(0xFF333333),
-  });
-  final IconData icon;
-  final VoidCallback onTap;
-  final String tooltip;
-  final double size, iconSize;
-  final Color color, iconColor, borderColor;
-  @override
-  Widget build(_) => GestureDetector(onTap: onTap,
-    child: Container(width: size, height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle,
-          border: Border.all(color: borderColor, width: 1.5)),
-      child: Center(child: Icon(icon, size: iconSize, color: iconColor))));
-}
-
-// ── Empty deck ────────────────────────────────────────────────────────────────
+// ── Empty ─────────────────────────────────────────────────────────────────────
 class _EmptyDeck extends StatelessWidget {
+  const _EmptyDeck();
+
   @override
   Widget build(BuildContext context) => Center(
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Container(width: 64, height: 64, color: const Color(0xFF1A1A1A),
+      Container(
+        width: 56, height: 56,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C2128),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF30363D))),
         child: const Icon(Icons.people_outline_rounded,
-            color: Color(0xFF555555), size: 28)),
+            color: Color(0xFF3D444D), size: 24)),
       const SizedBox(height: 16),
-      const Text('No peers match your filters',
-          style: TextStyle(color: Color(0xFFAAAAAA),
-              fontSize: 15, fontWeight: FontWeight.w600)),
+      const Text('No peers found',
+          style: TextStyle(color: Colors.white, fontSize: 15,
+              fontWeight: FontWeight.w600)),
       const SizedBox(height: 6),
-      const Text('Try adjusting or clearing your filters',
-          style: TextStyle(color: Color(0xFF666666), fontSize: 12)),
+      Text('Try clearing your filters',
+          style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12)),
     ]),
   );
 }

@@ -4,8 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/features/HomeScreen/models/home_carousel_item.dart';
-import 'package:unisync/features/HomeScreen/repository/home_carousel_repository.dart';
+import 'package:UniSync/features/HomeScreen/models/home_carousel_item.dart';
+import 'package:UniSync/features/HomeScreen/repository/home_carousel_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 final homeCarouselRepositoryProvider = Provider<HomeCarouselRepository>((ref) {

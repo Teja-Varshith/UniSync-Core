@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/models/peer_model.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/models/peer_model.dart';
 
 // Repository Provider
 final PeerRepositoryProvider = Provider((ref) {

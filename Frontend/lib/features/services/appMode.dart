@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/models/user_model.dart';
+import 'package:UniSync/models/user_model.dart';
 
 enum AppMode { campus, career, builder }
 

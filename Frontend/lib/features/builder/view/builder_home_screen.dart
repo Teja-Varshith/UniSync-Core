@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/services/appMode.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/features/services/appMode.dart';
 
 class BuilderHomeScreen extends ConsumerStatefulWidget {
   const BuilderHomeScreen({super.key});

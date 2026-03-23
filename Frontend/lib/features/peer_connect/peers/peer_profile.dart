@@ -1,13 +1,13 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/peer_connect/peers/peer_card.dart';
-import 'package:unisync/features/peer_connect/peers/peer_controller.dart';
-import 'package:unisync/models/peer_model.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/peer_connect/peers/peer_card.dart';
+import 'package:UniSync/features/peer_connect/peers/peer_controller.dart';
+import 'package:UniSync/models/peer_model.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  PeerProfile
@@ -37,8 +37,10 @@ class _PeerProfileState extends ConsumerState<PeerProfile> {
 
   @override
   Widget build(BuildContext context) {
-    final ctrl   = ref.watch(PeerControllerProvider.notifier);
-    final userId = ref.watch(userProvider)!.id!;
+    final ctrl = ref.watch(PeerControllerProvider.notifier);
+    final user = ref.watch(userProvider)!;
+    final userId = user.id!;
+    final liveCollegeName = user.collegeName;
 
     return Scaffold(
       backgroundColor: UniSyncColors.backgroundPrimary,
@@ -91,7 +93,10 @@ class _PeerProfileState extends ConsumerState<PeerProfile> {
               }
               if (snap.hasData) {
                 return _ExistingProfile(
-                  peerModel: snap.data!,
+                  peerModel: snap.data!.copyWith(
+                    userId: snap.data!.userId ?? userId,
+                    collegeName: liveCollegeName,
+                  ),
                   onEdit: () => _openForm(existing: snap.data!, userId: userId),
                 );
               }
@@ -289,11 +294,14 @@ class _PeerCardFormSheetState extends ConsumerState<PeerCardFormSheet> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_skills.isEmpty) { _snack('Add at least one skill'); return; }
+    final user = ref.read(userProvider);
+    final collegeName = user?.collegeName ?? widget.peerModel?.collegeName;
     setState(() => _isLoading = true);
     try {
       final model = PeerModel(
         userId:      widget.userId,
         name:        _nameCtrl.text.trim(),
+        collegeName: collegeName,
         profileLink: _profileCtrl.text.trim().isEmpty ? null : _profileCtrl.text.trim(),
         skills:      _skills,
         gitHubLink:  _gitHubCtrl.text.trim().isEmpty ? null : _gitHubCtrl.text.trim(),
@@ -400,8 +408,9 @@ class _PeerCardFormSheetState extends ConsumerState<PeerCardFormSheet> {
                     validator: (v) => v!.isEmpty ? 'Required' : null),
 
                 _FormField(ctrl: _bioCtrl, label: 'BIO',
-                    hint: 'Tell others about yourself...', maxLines: 3,
-                    validator: (v) => v!.isEmpty ? 'Required' : null),
+    hint: 'Tell others about yourself...', maxLines: null,
+    validator: (v) => v!.isEmpty ? 'Required' : null),
+
 
                 _FormField(ctrl: _gitHubCtrl,
                     label: 'GITHUB (optional)',
@@ -655,11 +664,11 @@ class _SectionLabel extends StatelessWidget {
 class _FormField extends StatelessWidget {
   const _FormField({
     required this.ctrl, required this.label, required this.hint,
-    this.maxLines = 1, this.validator,
+    this.maxLines = 1, this.validator,           // keep default as 1
   });
   final TextEditingController ctrl;
   final String label, hint;
-  final int maxLines;
+  final int? maxLines;                           // int → int?
   final String? Function(String?)? validator;
 
   @override
@@ -669,12 +678,17 @@ class _FormField extends StatelessWidget {
       _SectionLabel(label: label),
       const SizedBox(height: 7),
       TextFormField(
-        controller: ctrl, maxLines: maxLines, validator: validator,
+        controller: ctrl,
+        maxLines: maxLines,                      // null = unlimited, expands naturally
+        minLines: maxLines == null ? 4 : null,   // show at least 4 rows for bio
+        keyboardType: maxLines == null
+            ? TextInputType.multiline            // enables newline key on keyboard
+            : TextInputType.text,
+        validator: validator,
         style: const TextStyle(color: UniSyncColors.textPrimary, fontSize: 13),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-              color: UniSyncColors.textMuted, fontSize: 13),
+          hintStyle: const TextStyle(color: UniSyncColors.textMuted, fontSize: 13),
           filled: true,
           fillColor: UniSyncColors.surfaceCard,
           border: OutlineInputBorder(
@@ -685,19 +699,16 @@ class _FormField extends StatelessWidget {
               borderSide: const BorderSide(color: UniSyncColors.border)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                  color: UniSyncColors.accent, width: 1.5)),
+              borderSide: const BorderSide(color: UniSyncColors.accent, width: 1.5)),
           errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFFE05252))),
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
       ),
     ]),
   );
 }
-
 class _ChipField extends StatelessWidget {
   const _ChipField({
     required this.label, required this.hint, required this.ctrl,

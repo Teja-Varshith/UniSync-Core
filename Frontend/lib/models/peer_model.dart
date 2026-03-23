@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 class PeerModel {
   final String? userId;
   final String name;
+  final String? collegeName;
   final String? profileLink;
   final List<String> skills;
   final String? gitHubLink;
@@ -19,6 +20,7 @@ class PeerModel {
     this.userId,
     this.likedBy = const [],
     required this.name,
+    this.collegeName,
     this.profileLink,
     required this.skills,
     this.gitHubLink,
@@ -34,6 +36,7 @@ class PeerModel {
     return PeerModel(
       userId: json['userId'],
       name: json['name'],
+      collegeName: json['collegeName'] as String?,
       likedBy: List<String>.from(json['likedBy'] ?? []),
       cardStyle: json['cardStyle'] as String? ?? 'minimal',
       profileLink: json['profileLink'],
@@ -51,6 +54,7 @@ class PeerModel {
     return {
       'userId': userId,
       'name': name,
+      'collegeName': collegeName,
       'cardStyle': cardStyle,
       'likedBy': likedBy,
       'skills': skills,
@@ -67,6 +71,7 @@ class PeerModel {
   PeerModel copyWith({
     required String userId,
     String? name,
+    String? collegeName,
     String? profileLink,
     List<String>? skills,
     String? gitHubLink,
@@ -81,6 +86,7 @@ class PeerModel {
     return PeerModel(
       userId: userId,
       name: name ?? this.name,
+      collegeName: collegeName ?? this.collegeName,
       likedBy: likedBy ?? this.likedBy,
       profileLink: profileLink ?? this.profileLink,
       skills: skills ?? this.skills,
@@ -98,6 +104,7 @@ class PeerModel {
     return <String, dynamic>{
       'userId': userId,
       'name': name,
+      'collegeName': collegeName,
       'skills': skills,
       'profileLink': profileLink,
       'cardStyle': cardStyle,
@@ -112,6 +119,6 @@ class PeerModel {
 
   @override
   String toString() {
-    return 'PeerModel(userId: $userId, name: $name, skills: $skills, cardStyle: $cardStyle, gitHubLink: $gitHubLink, linkedinLink: $linkedinLink, traits: $traits, bio: $bio, isPublic: $isPublic, lastActive: $lastActive)';
+    return 'PeerModel(userId: $userId, name: $name, collegeName: $collegeName, skills: $skills, cardStyle: $cardStyle, gitHubLink: $gitHubLink, linkedinLink: $linkedinLink, traits: $traits, bio: $bio, isPublic: $isPublic, lastActive: $lastActive)';
   }
 }

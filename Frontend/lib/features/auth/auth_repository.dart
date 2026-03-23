@@ -4,9 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/models/user_model.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/models/user_model.dart';
 
 final AuthRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(
@@ -75,7 +75,9 @@ class AuthRepository {
       'year': existing['year'],
       'semester': existing['semester'],
       'about': existing['about'],
-      'coins': existing['coins'] ?? 100,
+      'fcmToken': existing['fcmToken'],
+      'coins': existing['coins'] ?? 50,
+      'hasAdFreeAccess': existing['hasAdFreeAccess'] ?? false,
       'updatedAt': FieldValue.serverTimestamp(),
     };
 
@@ -136,8 +138,46 @@ class AuthRepository {
 
 
 
-  Future<UserModel?> updateProfile() async {
+  Future<UserModel?> updateProfile({
+    required String name,
+    required String collegeName,
+    required int semester,
+    required int year,
+    String? about,
+  }) async {
+    try {
+      final firebaseUser = _auth.currentUser;
+      if (firebaseUser == null) {
+        _showErrorSnackBar('Session expired. Please sign in again.');
+        return null;
+      }
 
+      final userRef = _usersCollection.doc(firebaseUser.uid);
+
+      await userRef.set({
+        'id': firebaseUser.uid,
+        'uid': firebaseUser.uid,
+        'emailId': firebaseUser.email ?? '',
+        'photoUrl': firebaseUser.photoURL,
+        'name': name.trim(),
+        'collegeName': collegeName.trim(),
+        'semester': semester,
+        'year': year,
+        'about': about?.trim().isEmpty == true ? null : about?.trim(),
+        'profileComplete': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      final updated = await userRef.get();
+      final data = updated.data();
+      if (data == null) return null;
+
+      return UserModel.fromMap(data);
+    } catch (err) {
+      _showErrorSnackBar('Unable to update profile. Please try again.');
+      print("ERROR updating profile: $err");
+      return null;
+    }
   }
 
 
@@ -149,6 +189,27 @@ class AuthRepository {
       return _upsertUserFromFirebaseUser(firebaseUser);
     } catch (e) {
       _showErrorSnackBar('Unable to restore user profile. Please try again.');
+      print(e);
+      return null;
+    }
+  }
+
+  Future<UserModel?> loadUserProfileByUid(String uid) async {
+    try {
+      final normalizedUid = uid.trim();
+      if (normalizedUid.isEmpty) return null;
+
+      final snapshot = await _usersCollection.doc(normalizedUid).get();
+      final data = snapshot.data();
+
+      if (data == null) {
+        _showErrorSnackBar('Reviewer account is not available right now.');
+        return null;
+      }
+
+      return UserModel.fromMap(data);
+    } catch (e) {
+      _showErrorSnackBar('Unable to open reviewer access right now.');
       print(e);
       return null;
     }

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/interview/controllers/carrer_controller.dart';
-import 'package:unisync/features/interview/controllers/reports_controller.dart';
-import 'package:unisync/features/interview/view/carrer_interview_screen.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/interview/controllers/carrer_controller.dart';
+import 'package:UniSync/features/interview/controllers/reports_controller.dart';
+import 'package:UniSync/features/interview/view/carrer_interview_screen.dart';
 
 class UserInterviewDetails extends ConsumerStatefulWidget {
   const UserInterviewDetails({super.key});

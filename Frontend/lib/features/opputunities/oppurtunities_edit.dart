@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/features/opputunities/oppurtunities_controller.dart';
-import 'package:unisync/features/opputunities/oppurtunity_model.dart';
+import 'package:UniSync/features/opputunities/oppurtunities_controller.dart';
+import 'package:UniSync/features/opputunities/oppurtunity_model.dart';
 
 class OpportunityFormScreen extends ConsumerStatefulWidget {
   final OpportunityModel? opportunity; // null for add, non-null for edit

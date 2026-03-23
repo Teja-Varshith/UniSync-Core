@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/features/Carrer_Mode/cards/controller/domain_controller.dart';
-import 'package:unisync/models/domain_model.dart';
+import 'package:UniSync/features/Carrer_Mode/cards/controller/domain_controller.dart';
+import 'package:UniSync/models/domain_model.dart';
 
 class CarrerCardScreen extends ConsumerStatefulWidget {
   const CarrerCardScreen({super.key});

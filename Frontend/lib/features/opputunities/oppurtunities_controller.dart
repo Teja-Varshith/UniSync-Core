@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:unisync/features/opputunities/oppurtunities_repository.dart';
-import 'package:unisync/features/opputunities/oppurtunity_model.dart';
+import 'package:UniSync/features/opputunities/oppurtunities_repository.dart';
+import 'package:UniSync/features/opputunities/oppurtunity_model.dart';
 
 final selectedFiltersProvider = StateProvider<OpportunityType>((ref) {
   return OpportunityType.internship;

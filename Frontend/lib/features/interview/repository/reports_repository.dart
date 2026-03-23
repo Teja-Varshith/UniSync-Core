@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/models/interview_report_model.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/models/interview_report_model.dart';
 
 class ReportsRepository {
   final Dio _dio = Dio(

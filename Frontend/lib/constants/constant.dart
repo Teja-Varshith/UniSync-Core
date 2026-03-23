@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // const BASE_URI  = "http://10.171.216.196:3000/api";  // https://unisync-core-2.onrender.com/
-const BASE_URI  = "https://unisync-core-2.onrender.com/api";
+const BASE_URI  =  "https://unisync-core-2.onrender.com/api";
 const BACKEND_ORIGIN = "https://unisync-core-2.onrender.com";
 const HEALTHCHECK_URI = "$BACKEND_ORIGIN/health";
+const PLAYSTORE_REVIEWER_UID = "9kT34vxEkEMyNiu66oKQ9YASktO2";
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 	GlobalKey<ScaffoldMessengerState>();

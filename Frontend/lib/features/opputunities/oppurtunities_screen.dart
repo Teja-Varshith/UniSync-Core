@@ -1,10 +1,13 @@
+import 'package:UniSync/features/opputunities/oppurtunities_edit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/opputunities/oppurtunities_controller.dart';
-import 'package:unisync/features/opputunities/oppurtunity_model.dart';
+import 'package:UniSync/ads%20Manager/add_manager.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/firebase_service.dart';
+import 'package:UniSync/features/opputunities/oppurtunities_controller.dart';
+import 'package:UniSync/features/opputunities/oppurtunity_model.dart';
 
 class OpportunitiesScreen extends ConsumerStatefulWidget {
   const OpportunitiesScreen({super.key});
@@ -17,10 +20,22 @@ class OpportunitiesScreen extends ConsumerStatefulWidget {
 class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSeedingSamples = false;
+  bool _hasLoggedScreenView = false;
   final List<OpportunityType> type = [
     OpportunityType.internship,
     OpportunityType.hackathon,
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_hasLoggedScreenView) return;
+      _hasLoggedScreenView = true;
+      FirebaseService.logScreenView(screenName: 'opportunities_screen');
+      FirebaseService.logFeatureUsage('opportunities');
+    });
+  }
 
   @override
   void dispose() {
@@ -120,7 +135,7 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
       //   heroTag: 'seedOppFab',
       //   backgroundColor: UniSyncColors.accent,
       //   foregroundColor: UniSyncColors.backgroundPrimary,
-      //   onPressed: _isSeedingSamples ? null : _seedSampleOpportunities,
+      //   onPressed: _seedSampleOpportunities,
       //   icon: _isSeedingSamples
       //       ? const SizedBox(
       //           width: 16,
@@ -231,6 +246,10 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                         }).toList(),
                         onChanged: (OpportunityType? newType) {
                           if (newType != null) {
+                            FirebaseService.logEvent(
+                              name: 'opportunity_filter_changed',
+                              parameters: {'type': newType.name},
+                            );
                             ref.read(selectedFiltersProvider.notifier).state =
                                 newType;
                           }
@@ -250,7 +269,15 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
               child: TextField(
                 controller: _searchController,
-                onChanged: (value) => controller.setSearchQuery(value),
+                onChanged: (value) {
+                  controller.setSearchQuery(value);
+                  FirebaseService.logEvent(
+                    name: 'opportunity_search_used',
+                    parameters: {
+                      'has_query': value.trim().isNotEmpty.toString(),
+                    },
+                  );
+                },
                 style: const TextStyle(
                   color: UniSyncColors.textPrimary,
                   fontSize: 13,
@@ -390,6 +417,14 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                 },
               ),
             ),
+
+            //  // ── BANNER AD below header ───────────────────────────
+            // if (!AdManager.instance.isAdFree) ...[
+            //   const SizedBox(height: 6),
+            //   Center(child: AdManager.instance.buildBannerAd()),
+            //   const SizedBox(height: 6),
+            //   Container(height: 0.8, color: UniSyncColors.divider),
+            // ],
           ],
         ),
       ),
@@ -398,6 +433,14 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
 
   void _navigateToDetails(
       BuildContext context, OpportunityModel opportunity) {
+    FirebaseService.logEvent(
+      name: 'opportunity_opened',
+      parameters: {
+        'opportunity_id': opportunity.id,
+        'type': opportunity.type.name,
+        'company': opportunity.company,
+      },
+    );
     Routemaster.of(context).push('/opportunity/${opportunity.id}');
   }
 }

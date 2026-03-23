@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/attendance/repository/live_attendance_repository2.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/attendance/repository/live_attendance_repository2.dart';
 
 final subjectAttendanceProvider =
     FutureProvider.family<Map<String, dynamic>?, int>((ref, subjectId) {
@@ -407,19 +407,22 @@ class _AppBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Back button
-          GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: UniSyncColors.surfaceCard,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: UniSyncColors.border),
-              ),
-              child: const Center(
-                child: Icon(Icons.arrow_back_ios_new_rounded,
-                    size: 15, color: UniSyncColors.textMuted),
+          NeoPopButton(
+            color: UniSyncColors.surfaceCard,
+            bottomShadowColor: UniSyncColors.border,
+            rightShadowColor: UniSyncColors.border,
+            depth: 3,
+            onTapUp: () => Navigator.of(context).pop(),
+            onTapDown: () {},
+            child: const SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 15,
+                  color: UniSyncColors.textMuted,
+                ),
               ),
             ),
           ),

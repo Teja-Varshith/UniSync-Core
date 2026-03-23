@@ -1,7 +1,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/features/peer_connect/peers/peer_repository.dart';
-import 'package:unisync/models/peer_model.dart';
+import 'package:UniSync/features/peer_connect/peers/peer_repository.dart';
+import 'package:UniSync/models/peer_model.dart';
 
 final PeerControllerProvider = StateNotifierProvider<PeerController,bool>((ref) {
   return PeerController(PeerRepository: ref.read(PeerRepositoryProvider), ref: ref);

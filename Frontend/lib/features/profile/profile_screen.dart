@@ -1,13 +1,14 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/auth/auth_controller.dart';
-import 'package:unisync/models/user_model.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/auth/auth_controller.dart';
+import 'package:UniSync/models/user_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -21,16 +22,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.read(userProvider);
-    print(user);
-    
+
     return Scaffold(
+      backgroundColor: UniSyncColors.backgroundPrimary,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
               _buildHeader(user!),
               _buildQuickActionsSection(),
-              const Divider(),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Divider(color: UniSyncColors.divider),
+              ),
               _buildFooter(),
             ],
           ),
@@ -43,7 +47,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildHeader(UserModel user) {
   return Container(
-    height: 200,
+    height: 250,
     width: double.infinity,
     clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
@@ -51,10 +55,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         bottomLeft:  Radius.circular(40),
         bottomRight: Radius.circular(40),
       ),
-      image: const DecorationImage(       
-        image: AssetImage('assets/icons/Uni7.png'),
-        fit: BoxFit.cover,
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF141414),
+          Color(0xFF0E1813),
+          Color(0xFF0B0B0D),
+        ],
       ),
+      border: Border.all(color: UniSyncColors.borderSubtle),
     ),
     child: Stack(
       children: [
@@ -62,12 +72,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end:   Alignment.bottomCenter,
+                begin: Alignment.topLeft,
+                end:   Alignment.bottomRight,
                 colors: [
-                  Colors.black.withOpacity(0.15),  // subtle dim at top
-                  Colors.black.withOpacity(0.55),  // stronger at bottom
+                  UniSyncColors.accent.withOpacity(0.07),
+                  Colors.transparent,
+                  const Color(0xFF3ECF8E).withOpacity(0.09),
                 ],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          top: -30,
+          right: -20,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: UniSyncColors.accent.withOpacity(0.08),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 18,
+          right: 20,
+          child: Container(
+            width: 78,
+            height: 78,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFF3ECF8E).withOpacity(0.25),
               ),
             ),
           ),
@@ -97,13 +134,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A),
+                        color: UniSyncColors.surfaceCard,
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: UniSyncColors.border),
                       ),
                       child: const Icon(
                         Icons.arrow_back_ios_new,
                         size: 20,
-                        color: Colors.white,
+                        color: UniSyncColors.textPrimary,
                       ),
                     ),
                   ),
@@ -111,27 +149,66 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
  Widget _buildProfileInfo(UserModel user) => Positioned(
-  bottom: 12,
+  bottom: 18,
   left:   16,
   right:  16,
   child: Column(
-    crossAxisAlignment: CrossAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        user?.name ?? 'Not Found',
-        style: const TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: UniSyncColors.accent.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: UniSyncColors.accent.withOpacity(0.22)),
+        ),
+        child: const Text(
+          '#PROFILE',
+          style: TextStyle(
+            color: UniSyncColors.accent,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.8,
+          ),
         ),
       ),
+      const SizedBox(height: 12),
       Text(
-        user?.emailId ?? '',
-        style: const TextStyle(fontSize: 16, color: Colors.white),
+        user.name.isEmpty ? 'Not Found' : user.name,
+        style: const TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.w800,
+          color: UniSyncColors.textPrimary,
+          letterSpacing: -0.6,
+        ),
       ),
-      if (user?.year != null)
-        Text('B.Tech(Sem - ${user!.year})',
-          style: const TextStyle(fontSize: 16, color: Colors.white)),
+      const SizedBox(height: 6),
+      Text(
+        user.emailId,
+        style: const TextStyle(
+          fontSize: 14,
+          color: UniSyncColors.textSecondary,
+        ),
+      ),
+      if (user.year != null) ...[
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF3ECF8E).withOpacity(0.12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFF3ECF8E).withOpacity(0.2)),
+          ),
+          child: Text(
+            'B.Tech · Sem ${user.year}',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF3ECF8E),
+            ),
+          ),
+        ),
+      ],
     ],
   ),
 );
@@ -144,6 +221,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              '#ACCOUNT',
+              style: TextStyle(
+                color: UniSyncColors.accent,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.8,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Your space',
+              style: TextStyle(
+                color: UniSyncColors.textPrimary,
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Manage support links, legal info, and your UniSync setup.',
+              style: TextStyle(
+                color: UniSyncColors.textSecondary,
+                fontSize: 12,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 16),
             _buildTilesGrid(),
 
           ],
@@ -157,9 +263,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       children: [
         _buildNoticeBoardTile(),
         const SizedBox(height: 8),
-        Divider(color: Colors.blue,indent: 65,endIndent: 65,thickness: 2,),
-                const SizedBox(height: 8),
-
+        const Divider(color: UniSyncColors.divider, thickness: 1),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionTile(
+                title: 'Settings',
+                subtitle: 'App preferences and support shortcuts',
+                icon: Icons.settings,
+                color: Colors.teal,
+                onTap: () => Routemaster.of(context).push('/settings'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
@@ -212,22 +331,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 100,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: color.withOpacity(0.1),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
+    return NeoPopButton(
+      color: UniSyncColors.surfaceCard,
+      bottomShadowColor: color,
+      rightShadowColor: color,
+      depth: 3,
+      onTapUp: onTap,
+      onTapDown: () {},
+      child: SizedBox(
+        height: 108,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: color, size: 28),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: color.withOpacity(0.28)),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -235,15 +363,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     title,
                     style: const TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      fontWeight: FontWeight.w700,
+                      color: UniSyncColors.textPrimary,
                     ),
                   ),
+                  const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.black54,
+                      color: UniSyncColors.textSecondary,
                     ),
                   ),
                 ],
@@ -257,34 +386,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   
 Widget _buildNoticeBoardTile() {
-    return GestureDetector(
-      onTap: _showNoticeBoard,
-      child: Container(
+    return NeoPopButton(
+      color: const Color(0xFF121A24),
+      bottomShadowColor: const Color(0xFF67B7FF),
+      rightShadowColor: const Color(0xFF67B7FF),
+      depth: 4,
+      onTapUp: _showNoticeBoard,
+      onTapDown: () {},
+      child: Padding(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF4A90E2).withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: const Color(0xFF67B7FF).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFF67B7FF).withOpacity(0.24)),
               ),
-              child: const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 28),
+              child: const Icon(Icons.notifications_active_rounded, color: Color(0xFF67B7FF), size: 28),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -295,24 +415,24 @@ Widget _buildNoticeBoardTile() {
                     'Notice Board',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      color: UniSyncColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  const Text(
                     'Latest announcements',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withOpacity(0.9),
+                      color: UniSyncColors.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(
+            const Icon(
               Icons.arrow_forward_ios_rounded,
-              color: Colors.white.withOpacity(0.8),
+              color: Color(0xFF67B7FF),
               size: 18,
             ),
           ],
@@ -411,25 +531,32 @@ Widget _buildNoticeBoardTile() {
   
   Widget _buildFooter() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       child: Column(
         children: [
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => _showLogoutDialog(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC143C),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 4,
+            child: NeoPopTiltedButton(
+              isFloating: true,
+              decoration: const NeoPopTiltedButtonDecoration(
+                color: Color(0xFFFF5C74),
+                plunkColor: Color(0xFFFF5C74),
+                shadowColor: Colors.black,
+                showShimmer: false,
               ),
-              child: const Text(
-                'Log Out',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              onTapUp: () => _showLogoutDialog(context),
+              child: const SizedBox(
+                height: 56,
+                child: Center(
+                  child: Text(
+                    'Log Out',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: UniSyncColors.onError,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -447,7 +574,7 @@ Widget _buildNoticeBoardTile() {
                   'Made with ',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: UniSyncColors.textMuted,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -456,7 +583,7 @@ Widget _buildNoticeBoardTile() {
                   ' by Team Aavishkaar',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: UniSyncColors.textMuted,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -486,6 +613,7 @@ Widget _buildNoticeBoardTile() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: UniSyncColors.backgroundSecondary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -496,6 +624,7 @@ Widget _buildNoticeBoardTile() {
   void _showLegalOptions() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: UniSyncColors.backgroundSecondary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -508,21 +637,28 @@ Widget _buildNoticeBoardTile() {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: UniSyncColors.surfaceCard,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text(
             'Are you sure?',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: UniSyncColors.textPrimary,
+            ),
           ),
           content: const Text(
             'Do you really want to log out? You\'ll need to log in again to access your profile.',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(
+              fontSize: 16,
+              color: UniSyncColors.textSecondary,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text(
                 'Cancel',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: UniSyncColors.textMuted),
               ),
             ),
             TextButton(
@@ -561,6 +697,7 @@ class _NoticeBoardModalState extends State<NoticeBoardModal> {
     return DraggableScrollableSheet(
       expand: false,
       builder: (context, scrollController) => Container(
+        color: UniSyncColors.backgroundSecondary,
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -569,7 +706,11 @@ class _NoticeBoardModalState extends State<NoticeBoardModal> {
             const SizedBox(height: 20),
             const Text(
               '📢 College Notice Board',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: UniSyncColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 20),
             Expanded(
@@ -577,11 +718,23 @@ class _NoticeBoardModalState extends State<NoticeBoardModal> {
                 future: getNoticesData(),
                 builder: (context,snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator()); // loading
+            return const Center(
+              child: CircularProgressIndicator(color: UniSyncColors.accent),
+            );
           } else if (snapshot.hasError) {
-            return Center(child: Text("Our Servers Busyyyyy!")); // error
+            return const Center(
+              child: Text(
+                "Our servers are busy right now.",
+                style: TextStyle(color: UniSyncColors.textSecondary),
+              ),
+            );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text("hMM need to post nowwww")); // empty
+            return const Center(
+              child: Text(
+                "No notices posted yet.",
+                style: TextStyle(color: UniSyncColors.textSecondary),
+              ),
+            );
           } else {
             final d = snapshot.data!;
             return ListView.builder(
@@ -611,7 +764,7 @@ class _NoticeBoardModalState extends State<NoticeBoardModal> {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: Colors.grey[300],
+          color: UniSyncColors.border,
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -624,9 +777,9 @@ class _NoticeBoardModalState extends State<NoticeBoardModal> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
+        color: UniSyncColors.surfaceCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.1)),
+        border: Border.all(color: const Color(0xFF67B7FF).withOpacity(0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -640,21 +793,21 @@ class _NoticeBoardModalState extends State<NoticeBoardModal> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: UniSyncColors.textPrimary,
                   ),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: const Color(0xFF67B7FF).withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   formattedDate,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11,
-                    color: Colors.blue.shade700,
+                    color: Color(0xFF67B7FF),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -666,7 +819,7 @@ class _NoticeBoardModalState extends State<NoticeBoardModal> {
             description,
             style: const TextStyle(
               fontSize: 14,
-              color: Colors.black54,
+              color: UniSyncColors.textSecondary,
               height: 1.4,
             ),
           ),
@@ -714,6 +867,7 @@ class _LegalOptionsModalState extends State<LegalOptionsModal> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      color: UniSyncColors.backgroundSecondary,
       padding: const EdgeInsets.all(20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -722,14 +876,18 @@ class _LegalOptionsModalState extends State<LegalOptionsModal> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: UniSyncColors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 20),
           const Text(
             'Legal Information',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: UniSyncColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 20),
           FutureBuilder(
@@ -737,19 +895,33 @@ class _LegalOptionsModalState extends State<LegalOptionsModal> {
             builder: (context,snapshot){
 
               if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: LinearProgressIndicator()); // loading
+            return const Center(
+              child: LinearProgressIndicator(color: UniSyncColors.accent),
+            );
           } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}")); // error
+            return Center(
+              child: Text(
+                "Error: ${snapshot.error}",
+                style: const TextStyle(color: UniSyncColors.textSecondary),
+              ),
+            );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text("No data found")); // empty
+            return const Center(
+              child: Text(
+                "No data found",
+                style: TextStyle(color: UniSyncColors.textSecondary),
+              ),
+            );
           } else {
 
             final data = snapshot.data!;
               
             return ListTile(
-              leading: const Icon(Icons.description, color: Colors.green),
-              title: const Text('Terms & Conditions'),
-              trailing: const Icon(Icons.arrow_forward_ios),
+              tileColor: UniSyncColors.surfaceCard,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              leading: const Icon(Icons.description, color: Color(0xFF3ECF8E)),
+              title: const Text('Terms & Conditions', style: TextStyle(color: UniSyncColors.textPrimary)),
+              trailing: const Icon(Icons.arrow_forward_ios, color: UniSyncColors.textMuted),
               onTap: () {
                 Navigator.pop(context);
                 _showTermsAndConditions(context,data);
@@ -763,17 +935,31 @@ class _LegalOptionsModalState extends State<LegalOptionsModal> {
             builder: (context,snapshot){
 
               if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: LinearProgressIndicator()); // loading
+            return const Center(
+              child: LinearProgressIndicator(color: UniSyncColors.accent),
+            );
           } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}")); // error
+            return Center(
+              child: Text(
+                "Error: ${snapshot.error}",
+                style: const TextStyle(color: UniSyncColors.textSecondary),
+              ),
+            );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text("No data found")); // empty
+            return const Center(
+              child: Text(
+                "No data found",
+                style: TextStyle(color: UniSyncColors.textSecondary),
+              ),
+            );
           } else {
             final data = snapshot.data!;
             return ListTile(
-              leading: const Icon(Icons.privacy_tip, color: Colors.blue),
-              title: const Text('Privacy Policy'),
-              trailing: const Icon(Icons.arrow_forward_ios),
+              tileColor: UniSyncColors.surfaceCard,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              leading: const Icon(Icons.privacy_tip, color: Color(0xFF67B7FF)),
+              title: const Text('Privacy Policy', style: TextStyle(color: UniSyncColors.textPrimary)),
+              trailing: const Icon(Icons.arrow_forward_ios, color: UniSyncColors.textMuted),
               onTap: () {
                 Navigator.pop(context);
                 _showPrivacyPolicy(context,data);
@@ -791,6 +977,7 @@ class _LegalOptionsModalState extends State<LegalOptionsModal> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: UniSyncColors.backgroundSecondary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -805,6 +992,7 @@ class _LegalOptionsModalState extends State<LegalOptionsModal> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: UniSyncColors.backgroundSecondary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -831,6 +1019,7 @@ class LegalDocumentModal extends StatelessWidget {
     return DraggableScrollableSheet(
       expand: false,
       builder: (context, scrollController) => Container(
+        color: UniSyncColors.backgroundSecondary,
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -840,7 +1029,7 @@ class LegalDocumentModal extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: UniSyncColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -848,20 +1037,24 @@ class LegalDocumentModal extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               title,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: UniSyncColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 20),
             Expanded(
               child: SingleChildScrollView(
                 controller: scrollController,
-                child: Text(
-                  content,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.5,
-                    color: Colors.black87,
+                  child: Text(
+                    content,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: UniSyncColors.textSecondary,
+                    ),
                   ),
-                ),
               ),
             ),
           ],

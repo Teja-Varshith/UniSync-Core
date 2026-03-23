@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/attendance/repository/attendance_repository.dart';
-import 'package:unisync/models/course_model.dart';
-import 'package:unisync/storage/secure_storage.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/attendance/repository/attendance_repository.dart';
+import 'package:UniSync/models/course_model.dart';
+import 'package:UniSync/storage/secure_storage.dart';
 
 final LiveAttdncRepositoryProvider = Provider((ref) {
   return LiveAttdncRepository(ref: ref);

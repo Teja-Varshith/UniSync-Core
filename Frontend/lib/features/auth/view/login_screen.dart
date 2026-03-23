@@ -2,9 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/auth/auth_controller.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/auth/auth_controller.dart';
+
+final playStoreReviewerAccessProvider = StreamProvider<bool>((ref) {
+  if (PLAYSTORE_REVIEWER_UID.trim().isEmpty) {
+    return Stream<bool>.value(false);
+  }
+
+  final firestore = ref.watch(firebaseFirestoreProvider);
+
+  return firestore
+      .collection('config')
+      .doc('reviewer_access')
+      .snapshots()
+      .map((snapshot) {
+        final data = snapshot.data();
+        if (data == null) return false;
+        return data['enabled'] == true;
+      });
+});
 
 
 class _WordCloudBackground extends StatefulWidget {
@@ -354,9 +372,8 @@ class VerticalWordColumn extends StatelessWidget {
 
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-
-
   bool isLoading = false;
+  bool isReviewerLoading = false;
   final List<String> headlineTexts = [
     'Everything college. Simplified.',
     'The only College Companion you need.',
@@ -370,6 +387,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       activeHeadlineIndex = (activeHeadlineIndex + 1) % headlineTexts.length;
     });
   }
+
+  bool get _hasReviewerAccess => PLAYSTORE_REVIEWER_UID.trim().isNotEmpty;
 
 
 
@@ -389,6 +408,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final height = size.height;
     final width = size.width;
     final textTheme = Theme.of(context).textTheme;
+    final reviewerAccessToggle = ref.watch(playStoreReviewerAccessProvider);
+    final reviewerAccessEnabled =
+        reviewerAccessToggle.maybeWhen(data: (enabled) => enabled, orElse: () => false);
 
     // Calculate responsive login card height
     final loginCardHeight = height * 0.35; // ~35% of screen
@@ -492,7 +514,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     SizedBox(height: height * 0.015),
                     // Sign in text
 Text(
-  'Sign in & dive into the future of tech.\nNo hassle, just innovation.',
+  'Sign in & dive into newer experiences.\nNo hassle, just innovation.',
   textAlign: TextAlign.center,
   style: textTheme.bodyMedium?.copyWith(
     color: UniSyncColors.textMuted,
@@ -650,6 +672,104 @@ Container(
                         ),
                       ),
                     ),
+                    if (_hasReviewerAccess && reviewerAccessEnabled) ...[
+                      SizedBox(height: height * 0.014),
+                      Text(
+                        'Use below signin option(temporary) for playstore review if you cant use google signin',
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: UniSyncColors.textMuted,
+                          fontSize: width * 0.029,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: NeoPopButton(
+                          color: UniSyncColors.surfaceElevated,
+                          bottomShadowColor: UniSyncColors.accent,
+                          rightShadowColor: UniSyncColors.accent,
+                          depth: 5,
+                          parentColor: Colors.transparent,
+                          buttonPosition: Position.fullBottom,
+                          enabled: !isLoading && !isReviewerLoading,
+                          onTapDown: () => HapticFeedback.selectionClick(),
+                          onTapUp: () async {
+                            if (isLoading || isReviewerLoading) {
+                              return;
+                            }
+                            setState(() => isReviewerLoading = true);
+                            final user = await ref
+                                .read(authControllerProvider)
+                                .signInAsReviewer(PLAYSTORE_REVIEWER_UID);
+                            if (user != null) {
+                              ref.read(userProvider.notifier).state = user;
+                            }
+                            if (mounted) {
+                              setState(() => isReviewerLoading = false);
+                            }
+                          },
+                          border: Border.all(
+                            color: UniSyncColors.border,
+                            width: 1.2,
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: height * 0.018,
+                              horizontal: 14,
+                            ),
+                            child: Center(
+                              child: isReviewerLoading
+                                  ? Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation(
+                                              UniSyncColors.accent,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Opening reviewer access...',
+                                          style: TextStyle(
+                                            fontSize: width * 0.036,
+                                            color: UniSyncColors.textPrimary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.visibility_outlined,
+                                          size: 18,
+                                          color: UniSyncColors.accent,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Reviewer Access',
+                                          style: TextStyle(
+                                            fontSize: width * 0.038,
+                                            fontWeight: FontWeight.w700,
+                                            color: UniSyncColors.textPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

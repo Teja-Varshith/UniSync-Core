@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:neopop/neopop.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/peer_connect/peers/peer_controller.dart';
-import 'package:unisync/models/peer_model.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/features/peer_connect/peers/peer_controller.dart';
+import 'package:UniSync/models/peer_model.dart';
+
+const double kCardHeight = 440.0;
+
+// Characters at which we consider bio "long" and show Read more
+// ~45 chars/line × 2 lines = ~90, use 100 as safe threshold
+const int _bioCollapseThreshold = 100;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  PeerCard
-//
-//  currentUserId — the logged-in user's id.
-//    • If null        → like button hidden (not logged in)
-//    • If == owner    → like button hidden (self-like blocked)
-//    • Otherwise      → like button shown, toggleable
-//
-//  expanded: true → full layout used in the deck
 // ─────────────────────────────────────────────────────────────────────────────
 class PeerCard extends ConsumerWidget {
   const PeerCard({
@@ -29,30 +29,23 @@ class PeerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // print(peerModel.bio);
     if (peerModel.cardStyle == 'techy') {
       return _TechyCard(
-          peerModel: peerModel,
-          currentUserId: currentUserId,
-          expanded: expanded,
-          ref: ref);
+          peerModel: peerModel, currentUserId: currentUserId,
+          expanded: expanded, ref: ref);
     }
     return _MinimalCard(
-        peerModel: peerModel,
-        currentUserId: currentUserId,
-        expanded: expanded,
-        ref: ref);
+        peerModel: peerModel, currentUserId: currentUserId,
+        expanded: expanded, ref: ref);
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  LIKE BUTTON  — stateful, handles optimistic toggle
+//  LIKE BUTTON
 // ─────────────────────────────────────────────────────────────────────────────
 class _LikeButton extends ConsumerStatefulWidget {
-  const _LikeButton({
-    required this.peerModel,
-    required this.currentUserId,
-  });
-
+  const _LikeButton({required this.peerModel, required this.currentUserId});
   final PeerModel peerModel;
   final String currentUserId;
 
@@ -60,63 +53,28 @@ class _LikeButton extends ConsumerStatefulWidget {
   ConsumerState<_LikeButton> createState() => _LikeButtonState();
 }
 
-class _LikeButtonState extends ConsumerState<_LikeButton>
-    with SingleTickerProviderStateMixin {
+class _LikeButtonState extends ConsumerState<_LikeButton> {
   late bool _liked;
   late int _count;
   bool _loading = false;
 
-  late AnimationController _bounceCtrl;
-  late Animation<double> _bounceAnim;
-
   @override
   void initState() {
     super.initState();
-    // Derive initial state from the model's likedBy list
     _liked = widget.peerModel.likedBy.contains(widget.currentUserId);
     _count = widget.peerModel.likedBy.length;
-
-    _bounceCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-      lowerBound: 0.85,
-      upperBound: 1.0,
-      value: 1.0,
-    );
-    _bounceAnim = CurvedAnimation(
-        parent: _bounceCtrl, curve: Curves.easeOut);
-  }
-
-  @override
-  void dispose() {
-    _bounceCtrl.dispose();
-    super.dispose();
   }
 
   Future<void> _toggle() async {
     if (_loading) return;
-
-    // Optimistic update
-    setState(() {
-      _liked  = !_liked;
-      _count += _liked ? 1 : -1;
-      _loading = true;
-    });
-
-    // Bounce animation
-    _bounceCtrl.reverse().then((_) => _bounceCtrl.forward());
-
+    setState(() { _liked = !_liked; _count += _liked ? 1 : -1; _loading = true; });
     try {
       await ref.read(PeerControllerProvider.notifier).toggleLike(
-        cardOwnerId:   widget.peerModel.userId!,
-        currentUserId: widget.currentUserId,
-      );
+            cardOwnerId: widget.peerModel.userId!,
+            currentUserId: widget.currentUserId,
+          );
     } catch (_) {
-      // Revert on failure
-      setState(() {
-        _liked  = !_liked;
-        _count += _liked ? 1 : -1;
-      });
+      setState(() { _liked = !_liked; _count += _liked ? 1 : -1; });
     } finally {
       setState(() => _loading = false);
     }
@@ -124,241 +82,211 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _toggle,
-      child: ScaleTransition(
-        scale: _bounceAnim,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          decoration: BoxDecoration(
-            color: _liked
-                ? const Color(0xFFE05252).withOpacity(0.12)
-                : UniSyncColors.surfaceCard.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: _liked
-                  ? const Color(0xFFE05252).withOpacity(0.4)
-                  : UniSyncColors.border,
-              width: _liked ? 1.5 : 1,
-            ),
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(
-              _liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              size: 15,
-              color: _liked
-                  ? const Color(0xFFE05252)
-                  : UniSyncColors.textMuted,
-            ),
-            if (_count > 0) ...[
-              const SizedBox(width: 5),
-              Text(
-                '$_count',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: _liked
-                      ? const Color(0xFFE05252)
-                      : UniSyncColors.textMuted,
-                ),
-              ),
-            ],
-          ]),
-        ),
+    final bgColor     = _liked ? const Color(0xFF2A1212) : const Color(0xFF161B22);
+    final shadowColor = _liked ? const Color(0xFF180808) : const Color(0xFF090C12);
+    final iconColor   = _liked ? const Color(0xFFFF6B6B) : const Color(0xFF555F6D);
+
+    return NeoPopButton(
+      color: bgColor, bottomShadowColor: shadowColor,
+      rightShadowColor: shadowColor, depth: 4,
+      onTapUp: _toggle, onTapDown: () {},
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          _loading
+              ? SizedBox(width: 13, height: 13,
+                  child: CircularProgressIndicator(strokeWidth: 1.5, color: iconColor))
+              : Icon(_liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                  size: 14, color: iconColor),
+          if (_count > 0) ...[
+            const SizedBox(width: 5),
+            Text('$_count', style: TextStyle(fontSize: 12,
+                fontWeight: FontWeight.w700, color: iconColor, letterSpacing: 0.2)),
+          ],
+        ]),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Whether to show the like button for this viewer
-// ─────────────────────────────────────────────────────────────────────────────
-bool _canLike(PeerModel peer, String? currentUserId) {
-  if (currentUserId == null) return false;
-  if (currentUserId == peer.userId) return false; // self-like blocked
-  return true;
-}
+bool _canLike(PeerModel peer, String? uid) =>
+    uid != null && uid.isNotEmpty && uid != peer.userId;
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  MINIMAL CARD  — dark mode
+//  MINIMAL CARD
 // ─────────────────────────────────────────────────────────────────────────────
 class _MinimalCard extends StatelessWidget {
   const _MinimalCard({
-    required this.peerModel,
-    required this.currentUserId,
-    required this.expanded,
-    required this.ref,
+    required this.peerModel, required this.currentUserId,
+    required this.expanded, required this.ref,
   });
-
   final PeerModel peerModel;
   final String? currentUserId;
   final bool expanded;
   final WidgetRef ref;
 
-  static const List<_MinTheme> _themes = [
-    _MinTheme(stripe: Color(0xFF1E3A5F), accent: Color(0xFF4A90E2), avatarBg: Color(0xFF1A2F4A)),
-    _MinTheme(stripe: Color(0xFF0D2B1A), accent: Color(0xFF3ECF8E), avatarBg: Color(0xFF0D2218)),
-    _MinTheme(stripe: Color(0xFF2B1A00), accent: Color(0xFFE8A838), avatarBg: Color(0xFF241500)),
-    _MinTheme(stripe: Color(0xFF1E0B2E), accent: Color(0xFFB06FD8), avatarBg: Color(0xFF190825)),
-    _MinTheme(stripe: Color(0xFF2B0D0D), accent: Color(0xFFE05252), avatarBg: Color(0xFF220A0A)),
-    _MinTheme(stripe: Color(0xFF0B1E2B), accent: Color(0xFF38BDF8), avatarBg: Color(0xFF081929)),
+  static const List<_Palette> _palettes = [
+    _Palette(glow: Color(0xFF4A90E2), ring: Color(0xFF2D5F9E)),
+    _Palette(glow: Color(0xFF3ECF8E), ring: Color(0xFF27916A)),
+    _Palette(glow: Color(0xFFF5A623), ring: Color(0xFFB87A1A)),
+    _Palette(glow: Color(0xFFB06FD8), ring: Color(0xFF7A4A9E)),
+    _Palette(glow: Color(0xFFFF6B6B), ring: Color(0xFFB84A4A)),
+    _Palette(glow: Color(0xFF38BDF8), ring: Color(0xFF2080B0)),
   ];
 
-  _MinTheme _theme() {
+  _Palette _palette() {
     final n = peerModel.name;
-    final idx = n.isEmpty ? 0 : n.codeUnitAt(0) % _themes.length;
-    return _themes[idx];
+    return _palettes[n.isEmpty ? 0 : n.codeUnitAt(0) % _palettes.length];
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = _theme();
+    final p        = _palette();
     final initials = peerModel.name.trim().split(' ')
         .take(2).map((w) => w.isEmpty ? '' : w[0].toUpperCase()).join();
     final showLike = _canLike(peerModel, currentUserId);
+    final bio      = peerModel.bio.trim();
 
-    final Widget? topLikeWidget = showLike
-        ? _LikeButton(
-            peerModel: peerModel,
-            currentUserId: currentUserId!,
-          )
-        : (currentUserId == peerModel.userId && peerModel.likedBy.isNotEmpty)
-            ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE05252).withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE05252).withOpacity(0.2)),
-                ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.favorite_rounded, size: 14, color: Color(0xFFE05252)),
-                  const SizedBox(width: 5),
-                  Text(
-                    '${peerModel.likedBy.length}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFE05252),
-                    ),
-                  ),
-                ]),
-              )
-            : null;
+    Widget? likeWidget;
+    if (showLike) {
+      likeWidget = _LikeButton(peerModel: peerModel, currentUserId: currentUserId!);
+    } else if (currentUserId == peerModel.userId && peerModel.likedBy.isNotEmpty) {
+      likeWidget = _LikeCountPill(count: peerModel.likedBy.length);
+    }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: UniSyncColors.surfaceCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: UniSyncColors.borderSubtle),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-        // ── Header stripe ────────────────────────────────────────
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-          color: t.stripe,
-          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            Container(
-              width: expanded ? 58 : 48,
-              height: expanded ? 58 : 48,
-              decoration: BoxDecoration(
-                color: t.avatarBg,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: t.accent.withOpacity(0.4), width: 1.5),
-              ),
-              child: Center(child: Text(initials, style: TextStyle(
-                color: t.accent,
-                fontSize: expanded ? 22 : 17,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-              ))),
-            ),
-            const SizedBox(width: 14),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Expanded(child: Text(peerModel.name,
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16, fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                      ))),
-                  if (topLikeWidget != null) ...[
-                    const SizedBox(width: 8),
-                    topLikeWidget,
-                  ],
-                  if (!peerModel.isPublic)
-                    _Badge(label: 'PRIVATE', color: const Color(0xFFE8A838)),
-                ]),
-                const SizedBox(height: 5),
-                if (peerModel.skills.isNotEmpty)
-                  _Badge(label: peerModel.skills.first, color: t.accent),
-              ],
-            )),
-          ]),
+    return SizedBox(
+      height: kCardHeight,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF0E1118),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          boxShadow: [
+            BoxShadow(color: p.glow.withOpacity(0.08),
+                blurRadius: 24, offset: const Offset(0, 8)),
+          ],
         ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(children: [
 
-        // ── Body ────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Accent top line
+          Container(height: 2, color: p.glow.withOpacity(0.7)),
 
-            if (peerModel.bio.isNotEmpty) ...[
-              _ExpandableBio(
-                bio: peerModel.bio,
-                style: const TextStyle(
-                  color: UniSyncColors.textSecondary, fontSize: 13, height: 1.5),
-                maxLines: expanded ? 6 : 3,
-                readMoreColor: t.accent,
+          // ── Header ─────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _Avatar(initials: initials, glow: p.glow, ring: p.ring, size: 48),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Row(children: [
+                    Expanded(
+                      child: Text(peerModel.name,
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white, fontSize: 16,
+                            fontWeight: FontWeight.w700, letterSpacing: -0.3)),
+                    ),
+                    if (likeWidget != null) ...[const SizedBox(width: 8), likeWidget],
+                  ]),
+                  // College — only here
+                  if ((peerModel.collegeName ?? '').trim().isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      Icon(Icons.school_outlined, size: 11,
+                          color: p.glow.withOpacity(0.75)),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(peerModel.collegeName!.trim(),
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: p.glow.withOpacity(0.8),
+                              fontSize: 11, fontWeight: FontWeight.w500)),
+                      ),
+                    ]),
+                  ],
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    if (peerModel.skills.isNotEmpty)
+                      _SkillPill(label: peerModel.skills.first, color: p.glow),
+                    if (!peerModel.isPublic) ...[
+                      const SizedBox(width: 6), _PrivatePill(),
+                    ],
+                  ]),
+                ]),
               ),
-              const SizedBox(height: 14),
-            ],
+            ]),
+          ),
 
-            if (peerModel.skills.isNotEmpty) ...[
-              _Section(label: 'SKILLS', labelColor: t.accent,
-                children: peerModel.skills.take(expanded ? 999 : 5)
-                    .map((s) => _Chip(label: s, accent: t.accent, filled: true))
-                    .toList()),
-              const SizedBox(height: 12),
-            ],
+          Container(height: 1, color: Colors.white.withOpacity(0.06)),
 
-            if (peerModel.traits.isNotEmpty) ...[
-              _Section(label: 'INTERESTS', labelColor: UniSyncColors.textMuted,
-                children: peerModel.traits.take(expanded ? 999 : 4)
-                    .map((t2) => _Chip(label: t2, accent: t.accent, filled: false))
-                    .toList()),
-              const SizedBox(height: 14),
-            ] else
-              const SizedBox(height: 4),
+          // ── Scrollable body ────────────────────────────────────
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
-            // ── Action row: links + like ────────────────────────
-            if (peerModel.linkedinLink != null ||
-                peerModel.gitHubLink != null) ...[
-              Divider(color: UniSyncColors.divider.withOpacity(0.5), height: 1),
-              const SizedBox(height: 12),
-              Row(children: [
-                if (peerModel.linkedinLink != null) ...[
-                  Expanded(child: _LinkBtn(
-                    label: 'LinkedIn', icon: Icons.work_outline_rounded,
-                    accent: const Color(0xFF4A90E2),
-                    onTap: () => _launch(peerModel.linkedinLink!))),
-                  if (peerModel.gitHubLink != null)
-                    const SizedBox(width: 8),
+                    // Text(peerModel.bio),
+
+                // Bio — always rendered if non-empty, read more via char threshold
+                if (bio.isNotEmpty) ...[
+                  _ReadMoreBio(bio: bio, accentColor: p.glow),
+                  const SizedBox(height: 16),
                 ],
-                if (peerModel.gitHubLink != null) ...[
-                  Expanded(child: _LinkBtn(
-                    label: 'GitHub', icon: Icons.code_rounded,
-                    accent: UniSyncColors.textSecondary,
-                    onTap: () => _launch(peerModel.gitHubLink!))),
+
+                // Skills (skip first — already in header pill)
+                if (peerModel.skills.length > 1) ...[
+                  _SectionLabel(text: 'SKILLS'),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 6, runSpacing: 6,
+                    children: peerModel.skills.skip(1)
+                        .map((s) => _OutlineChip(label: s, color: p.glow))
+                        .toList()),
+                  const SizedBox(height: 14),
+                ],
+
+                if (peerModel.traits.isNotEmpty) ...[
+                  _SectionLabel(text: 'INTERESTS'),
+                  const SizedBox(height: 8),
+                  Wrap(spacing: 6, runSpacing: 6,
+                    children: peerModel.traits
+                        .map((t) => _GhostChip(label: t))
+                        .toList()),
+                  const SizedBox(height: 14),
+                ],
+
+                // Social CTAs
+                if (peerModel.linkedinLink != null ||
+                    peerModel.gitHubLink != null) ...[
+                  Container(height: 1, color: Colors.white.withOpacity(0.06)),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    if (peerModel.linkedinLink != null) ...[
+                      Expanded(child: _NeoLink(
+                        label: 'LinkedIn', icon: Icons.work_outline_rounded,
+                        color: const Color(0xFF1A2A4A),
+                        shadow: const Color(0xFF0D1929),
+                        textColor: const Color(0xFF4A90E2),
+                        onTap: () => _launch(peerModel.linkedinLink!),
+                      )),
+                      if (peerModel.gitHubLink != null) const SizedBox(width: 8),
+                    ],
+                    if (peerModel.gitHubLink != null)
+                      Expanded(child: _NeoLink(
+                        label: 'GitHub', icon: Icons.code_rounded,
+                        color: const Color(0xFF161B22),
+                        shadow: const Color(0xFF090C12),
+                        textColor: const Color(0xFF8B949E),
+                        onTap: () => _launch(peerModel.gitHubLink!),
+                      )),
+                  ]),
                 ],
               ]),
-            ],
-          ]),
-        ),
-      ]),
+            ),
+          ),
+        ]),
+      ),
     );
   }
 
@@ -368,372 +296,512 @@ class _MinimalCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  TECHY CARD  — dark terminal style
+//  TECHY CARD
 // ─────────────────────────────────────────────────────────────────────────────
 class _TechyCard extends StatelessWidget {
   const _TechyCard({
-    required this.peerModel,
-    required this.currentUserId,
-    required this.expanded,
-    required this.ref,
+    required this.peerModel, required this.currentUserId,
+    required this.expanded, required this.ref,
   });
-
   final PeerModel peerModel;
   final String? currentUserId;
   final bool expanded;
   final WidgetRef ref;
 
-  static const _bg      = Color(0xFF0D1117);
-  static const _surface = Color(0xFF161B22);
-  static const _border  = Color(0xFF30363D);
-  static const _green   = Color(0xFF3FB950);
-  static const _blue    = Color(0xFF58A6FF);
-  static const _purple  = Color(0xFFD2A8FF);
-  static const _orange  = Color(0xFFFFA657);
-  static const _comment = Color(0xFF8B949E);
-  static const _string  = Color(0xFFA5D6FF);
+  static const _bg       = Color(0xFF0D1117);
+  static const _surface  = Color(0xFF161B22);
+  static const _surface2 = Color(0xFF1C2128);
+  static const _border   = Color(0xFF30363D);
+  static const _lineNum  = Color(0xFF3D444D);
+  static const _green    = Color(0xFF3FB950);
+  static const _blue     = Color(0xFF79C0FF);
+  static const _purple   = Color(0xFFD2A8FF);
+  static const _orange   = Color(0xFFFFA657);
+  static const _comment  = Color(0xFF8B949E);
+  static const _string   = Color(0xFFA5D6FF);
+  static const _white    = Color(0xFFE6EDF3);
 
-  String get _slug =>
-      peerModel.name.toLowerCase().replaceAll(' ', '_');
+  String get _slug => peerModel.name.toLowerCase().replaceAll(' ', '_');
 
   @override
   Widget build(BuildContext context) {
     final initials = peerModel.name.trim().split(' ')
         .take(2).map((w) => w.isEmpty ? '' : w[0].toUpperCase()).join();
     final showLike = _canLike(peerModel, currentUserId);
+    final bio      = peerModel.bio.trim();
+    final college  = (peerModel.collegeName ?? '').trim();
 
-    final Widget? topLikeWidget = showLike
-        ? _LikeButton(
-            peerModel: peerModel,
-            currentUserId: currentUserId!,
-          )
-        : (currentUserId == peerModel.userId && peerModel.likedBy.isNotEmpty)
-            ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE05252).withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE05252).withOpacity(0.2)),
+    Widget? likeWidget;
+    if (showLike) {
+      likeWidget = _LikeButton(peerModel: peerModel, currentUserId: currentUserId!);
+    } else if (currentUserId == peerModel.userId && peerModel.likedBy.isNotEmpty) {
+      likeWidget = _LikeCountPill(count: peerModel.likedBy.length);
+    }
+
+    // Code lines — NO name/college here, those live in the footer
+    final lines = <_Line>[];
+    int n = 1;
+    lines.add(_Line(n++, [_ts('export const ', _purple), _ts('dev', _blue), _ts(' = {', _white)]));
+
+    if (!peerModel.isPublic) {
+      lines.add(_Line(n++, [_ts('  visibility', _orange), _ts(': ', _white), _ts('"private"', _string), _ts(',', _white)]));
+    }
+    
+
+   
+
+    if (peerModel.skills.isNotEmpty) {
+      lines.add(_Line(n++, [_ts('  skills', _orange), _ts(': [', _white)]));
+      for (final s in peerModel.skills) {
+        lines.add(_Line(n++, [_ts('    ', _white), _ts('"$s"', _green), _ts(',', _white)]));
+      }
+      lines.add(_Line(n++, [_ts('  ],', _white)]));
+    }
+
+    if (peerModel.traits.isNotEmpty) {
+      lines.add(_Line(n++, [_ts('  interests', _orange), _ts(': [', _white)]));
+      for (final t in peerModel.traits) {
+        lines.add(_Line(n++, [_ts('    ', _white), _ts('"$t"', _purple), _ts(',', _white)]));
+      }
+      lines.add(_Line(n++, [_ts('  ],', _white)]));
+    }
+
+    lines.add(_Line(n++, [_ts('}', _white)]));
+
+     // Bio as comment block — shown in code, NOT duplicated
+   if (bio.isNotEmpty) {
+  
+  
+  // Split on explicit newlines first, then wrap each paragraph at 50 chars
+  final paragraphs = bio.split('\n');
+  for (final paragraph in paragraphs) {
+    if (paragraph.trim().isEmpty) {
+      // Blank line — emit an empty comment to preserve spacing
+      lines.add(_Line(n++, [_ts('  //', _comment)]));
+      continue;
+    }
+    final words = paragraph.split(' ');
+    final commentLines = <String>[];
+    var current = '';
+    for (final word in words) {
+      if (word.isEmpty) continue;
+      if ((current + word).length > 50) {
+        if (current.isNotEmpty) commentLines.add(current.trim());
+        current = '$word ';
+      } else {
+        current += '$word ';
+      }
+    }
+    if (current.trim().isNotEmpty) commentLines.add(current.trim());
+    for (final cl in commentLines) {
+      lines.add(_Line(n++, [_ts('  // $cl', _comment)]));
+    }
+  }
+}
+
+    return SizedBox(
+      height: kCardHeight,
+      child: Container(
+        decoration: BoxDecoration(
+          color: _bg, border: Border.all(color: _border),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(color: _green.withOpacity(0.05),
+                blurRadius: 20, offset: const Offset(0, 6)),
+          ],
+        ),
+        child: Column(children: [
+
+          // ── Tab bar ──────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: const BoxDecoration(
+              color: _surface,
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+              border: Border(bottom: BorderSide(color: _border)),
+            ),
+            child: Row(children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(12, 9, 12, 8),
+                decoration: const BoxDecoration(
+                  color: _bg,
+                  border: Border(
+                    top:   BorderSide(color: _green, width: 1.5),
+                    left:  BorderSide(color: _border),
+                    right: BorderSide(color: _border),
+                  ),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.favorite_rounded, size: 14, color: Color(0xFFE05252)),
+                  const Icon(Icons.description_outlined, size: 11, color: _comment),
                   const SizedBox(width: 5),
-                  Text(
-                    '${peerModel.likedBy.length}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFE05252),
-                    ),
-                  ),
+                  Text('$_slug.uni', style: const TextStyle(
+                      color: _comment, fontSize: 11, fontFamily: 'monospace')),
                 ]),
-              )
-            : null;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: _bg,
-        border: Border.all(color: _border),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Window chrome
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          decoration: const BoxDecoration(
-            color: _surface,
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(6), topRight: Radius.circular(6)),
-            border: Border(bottom: BorderSide(color: _border)),
+              ),
+              const Spacer(),
+              _Dot(color: const Color(0xFFFF5F57)),
+              const SizedBox(width: 5),
+              _Dot(color: const Color(0xFFFFBD2E)),
+              const SizedBox(width: 5),
+              _Dot(color: const Color(0xFF28C840)),
+            ]),
           ),
-          child: Row(children: [
-            _Dot(color: const Color(0xFFFF5F57)),
-            const SizedBox(width: 6),
-            _Dot(color: const Color(0xFFFFBD2E)),
-            const SizedBox(width: 6),
-            _Dot(color: const Color(0xFF28C840)),
-            const Spacer(),
-            Text('$_slug.json', style: const TextStyle(
-                color: _comment, fontSize: 12, fontFamily: 'monospace')),
-          ]),
-        ),
 
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _CodeLine(children: [_kw('const '), _sym('_dev '), _plain('= {')]),
-            const SizedBox(height: 10),
+          // ── Code editor (scrollable) ──────────────────────────
+          Expanded(
+            child: SingleChildScrollView(
+              child: IntrinsicHeight(
+                child: Row(crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                  // Gutter
+                  Container(
+                    color: _surface2, width: 38,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Column(
+                      children: lines.map((l) => SizedBox(
+                        height: 22,
+                        child: Center(child: Text('${l.num}',
+                            style: const TextStyle(color: _lineNum,
+                                fontSize: 11, fontFamily: 'monospace'))),
+                      )).toList()),
+                  ),
+                  // Code
+                  Expanded(child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: lines.map((l) => SizedBox(
+                        height: 22,
+                        child: RichText(text: TextSpan(children: l.spans)),
+                      )).toList()),
+                  )),
+                ]),
+              ),
+            ),
+          ),
 
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // ── Footer: name, college, like, links ──────────────
+          Container(
+            decoration: const BoxDecoration(
+              color: _surface,
+              border: Border(top: BorderSide(color: _border)),
+              borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(8),
+                  bottomRight: Radius.circular(8)),
+            ),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+            child: Row(children: [
+              // Avatar
               Container(
-                width: expanded ? 56 : 46, height: expanded ? 56 : 46,
+                width: 34, height: 34,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [_blue.withOpacity(0.6), _purple.withOpacity(0.6)],
+                    colors: [_blue.withOpacity(0.5), _purple.withOpacity(0.5)],
                     begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: _border),
                 ),
-                child: Center(child: Text(initials, style: TextStyle(
-                    color: Colors.white,
-                    fontSize: expanded ? 20 : 16,
-                    fontWeight: FontWeight.w700, fontFamily: 'monospace'))),
+                child: Center(child: Text(initials,
+                    style: const TextStyle(color: Colors.white, fontSize: 12,
+                        fontWeight: FontWeight.w700, fontFamily: 'monospace'))),
               ),
-              const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(width: 10),
+              // Name + college
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _CodeLine(children: [_prop('  name'), _plain(': "'),
-                    _str(peerModel.name), _plain('",')]),
-                  if (!peerModel.isPublic) ...[
-                    const SizedBox(height: 4),
-                    _CodeLine(children: [_prop('  visibility'), _plain(': "'),
-                      _str('private'), _plain('",')]),
+                  Text(peerModel.name,
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: _white, fontSize: 13,
+                          fontWeight: FontWeight.w600, fontFamily: 'monospace')),
+                  if (college.isNotEmpty) ...[
+                    const SizedBox(height: 1),
+                    Text(college,
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: _comment, fontSize: 10,
+                            fontFamily: 'monospace')),
                   ],
-                ])),
-              if (topLikeWidget != null) ...[
-                const SizedBox(width: 8),
-                topLikeWidget,
-              ],
-            ]),
-
-            const SizedBox(height: 10),
-
-            if (peerModel.bio.isNotEmpty) ...[
-              _ExpandableBio(
-                bio: peerModel.bio,
-                style: const TextStyle(
-                    color: _comment, fontSize: 12, fontFamily: 'monospace'),
-                maxLines: expanded ? 6 : 2,
-                readMoreColor: _blue,
-              ),
-              const SizedBox(height: 10),
-            ],
-
-            if (peerModel.skills.isNotEmpty) ...[
-              _CodeLine(children: [_prop('  skills'), _plain(': [')]),
-              const SizedBox(height: 6),
-              Padding(padding: const EdgeInsets.only(left: 16),
-                child: Wrap(spacing: 6, runSpacing: 6,
-                  children: peerModel.skills.take(expanded ? 999 : 5)
-                      .map((s) => _CodeChip(label: '"$s"', color: _green)).toList())),
-              const SizedBox(height: 4),
-              _CodeLine(children: [_plain('  ],')]),
-              const SizedBox(height: 10),
-            ],
-
-            if (peerModel.traits.isNotEmpty) ...[
-              _CodeLine(children: [_prop('  interests'), _plain(': [')]),
-              const SizedBox(height: 6),
-              Padding(padding: const EdgeInsets.only(left: 16),
-                child: Wrap(spacing: 6, runSpacing: 6,
-                  children: peerModel.traits.take(expanded ? 999 : 3)
-                      .map((t) => _CodeChip(label: '"$t"', color: _purple)).toList())),
-              const SizedBox(height: 4),
-              _CodeLine(children: [_plain('  ],')]),
-              const SizedBox(height: 10),
-            ],
-
-            _CodeLine(children: [_plain('}')]),
-            const SizedBox(height: 14),
-            const Divider(color: _border, height: 1),
-            const SizedBox(height: 12),
-
-            Row(children: [
+                ],
+              )),
+              // Like
+              if (likeWidget != null) ...[likeWidget, const SizedBox(width: 8)],
+              // Links
               if (peerModel.linkedinLink != null) ...[
-                Expanded(child: _TechBtn(
-                  label: 'LinkedIn', icon: Icons.work_outline_rounded,
-                  color: _blue, onTap: () => _launch(peerModel.linkedinLink!))),
-                if (peerModel.gitHubLink != null)
-                  const SizedBox(width: 10),
+                _TechIconBtn(icon: Icons.work_outline_rounded,
+                    color: _blue, onTap: () => _launch(peerModel.linkedinLink!)),
+                const SizedBox(width: 6),
               ],
-              if (peerModel.gitHubLink != null) ...[
-                Expanded(child: _TechBtn(
-                  label: 'GitHub', icon: Icons.code_rounded,
-                  color: _comment, onTap: () => _launch(peerModel.gitHubLink!))),
-              ],
+              if (peerModel.gitHubLink != null)
+                _TechIconBtn(icon: Icons.code_rounded,
+                    color: _comment, onTap: () => _launch(peerModel.gitHubLink!)),
             ]),
-          ]),
-        ),
-      ]),
+          ),
+        ]),
+      ),
     );
   }
 
-  static TextSpan _kw(String t)    => TextSpan(text: t, style: const TextStyle(color: _purple,  fontFamily: 'monospace', fontSize: 13));
-  static TextSpan _sym(String t)   => TextSpan(text: t, style: const TextStyle(color: _blue,    fontFamily: 'monospace', fontSize: 13));
-  static TextSpan _plain(String t) => TextSpan(text: t, style: const TextStyle(color: Color(0xFFE6EDF3), fontFamily: 'monospace', fontSize: 13));
-  static TextSpan _prop(String t)  => TextSpan(text: t, style: const TextStyle(color: _orange,  fontFamily: 'monospace', fontSize: 13));
-  static TextSpan _str(String t)   => TextSpan(text: t, style: const TextStyle(color: _string,  fontFamily: 'monospace', fontSize: 13));
+  static TextSpan _ts(String t, Color c) => TextSpan(
+      text: t,
+      style: TextStyle(color: c, fontFamily: 'monospace', fontSize: 12.5, height: 1.7));
 
   static Future<void> _launch(String url) async {
     if (!await launchUrl(Uri.parse(url))) throw Exception('Could not launch');
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  SHARED HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _MinTheme {
-  const _MinTheme({required this.stripe, required this.accent, required this.avatarBg});
-  final Color stripe, accent, avatarBg;
+class _Line {
+  const _Line(this.num, this.spans);
+  final int num;
+  final List<TextSpan> spans;
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label, required this.color});
+// ─────────────────────────────────────────────────────────────────────────────
+//  Read-more bio — character threshold, no LayoutBuilder
+// ─────────────────────────────────────────────────────────────────────────────
+// Lines at which we collapse — much more reliable than char count
+const int _bioCollapseLines = 5;
+
+
+
+class _ReadMoreBio extends StatefulWidget {
+  const _ReadMoreBio({required this.bio, required this.accentColor});
+  final String bio;
+  final Color accentColor;
+
+  @override
+  State<_ReadMoreBio> createState() => _ReadMoreBioState();
+}
+
+class _ReadMoreBioState extends State<_ReadMoreBio> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final style = TextStyle(
+          color: Colors.white.withOpacity(0.55),
+          fontSize: 13,
+          height: 1.65,
+          letterSpacing: 0.1,
+        );
+
+        // Count explicit newline-based lines first
+        final explicitLines = '\n'.allMatches(widget.bio).length + 1;
+
+        // Then check if text wraps beyond our threshold
+        final tp = TextPainter(
+          text: TextSpan(text: widget.bio, style: style),
+          maxLines: _bioCollapseLines,
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: constraints.maxWidth);
+
+        // Overflow if either explicit newlines OR wrapped text exceeds limit
+        final didExceed = tp.didExceedMaxLines || explicitLines > _bioCollapseLines;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.bio,
+              maxLines: _expanded ? null : _bioCollapseLines,
+              overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+              style: style,
+            ),
+            if (didExceed) ...[
+              const SizedBox(height: 5),
+              GestureDetector(
+                onTap: () => setState(() => _expanded = !_expanded),
+                child: Text(
+                  _expanded ? 'Read less ↑' : 'Read more ↓',
+                  style: TextStyle(
+                    color: widget.accentColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  SHARED WIDGETS
+// ─────────────────────────────────────────────────────────────────────────────
+class _Palette {
+  const _Palette({required this.glow, required this.ring});
+  final Color glow, ring;
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.initials, required this.glow,
+      required this.ring, required this.size});
+  final String initials;
+  final Color glow, ring;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size, height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: RadialGradient(
+          colors: [ring.withOpacity(0.45), const Color(0xFF0A0D14)],
+          stops: const [0.35, 1.0]),
+      border: Border.all(color: glow.withOpacity(0.4), width: 1.5),
+      boxShadow: [BoxShadow(color: glow.withOpacity(0.12), blurRadius: 10)],
+    ),
+    child: Center(child: Text(initials,
+        style: TextStyle(color: glow, fontSize: size * 0.33,
+            fontWeight: FontWeight.w800, letterSpacing: -0.5))),
+  );
+}
+
+class _SkillPill extends StatelessWidget {
+  const _SkillPill({required this.label, required this.color});
   final String label;
   final Color color;
+
   @override
-  Widget build(_) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: color.withOpacity(0.15),
-      borderRadius: BorderRadius.circular(4),
-      border: Border.all(color: color.withOpacity(0.35)),
-    ),
-    child: Text(label, style: TextStyle(
-        fontSize: 9, fontWeight: FontWeight.w800, color: color, letterSpacing: 0.8)),
+      color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: color.withOpacity(0.3))),
+    child: Text(label, style: TextStyle(color: color, fontSize: 10,
+        fontWeight: FontWeight.w600, letterSpacing: 0.3)),
   );
 }
 
-class _Section extends StatelessWidget {
-  const _Section({required this.label, required this.labelColor, required this.children});
-  final String label;
-  final Color labelColor;
-  final List<Widget> children;
+class _PrivatePill extends StatelessWidget {
   @override
-  Widget build(_) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text(label, style: TextStyle(
-      color: labelColor.withOpacity(0.7), fontSize: 9,
-      fontWeight: FontWeight.w700, letterSpacing: 1.4)),
-    const SizedBox(height: 7),
-    Wrap(spacing: 6, runSpacing: 6, children: children),
-  ]);
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF5A623).withOpacity(0.1),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: const Color(0xFFF5A623).withOpacity(0.25))),
+    child: const Text('PRIVATE', style: TextStyle(color: Color(0xFFF5A623),
+        fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
+  );
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.accent, required this.filled});
-  final String label;
-  final Color accent;
-  final bool filled;
+class _LikeCountPill extends StatelessWidget {
+  const _LikeCountPill({required this.count});
+  final int count;
+
   @override
-  Widget build(_) => Container(
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: const Color(0xFF2A1212), borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: const Color(0xFFFF6B6B).withOpacity(0.25))),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      const Icon(Icons.favorite_rounded, size: 12, color: Color(0xFFFF6B6B)),
+      const SizedBox(width: 4),
+      Text('$count', style: const TextStyle(fontSize: 11,
+          fontWeight: FontWeight.w700, color: Color(0xFFFF6B6B))),
+    ]),
+  );
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(text,
+      style: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 9,
+          fontWeight: FontWeight.w700, letterSpacing: 1.5));
+}
+
+class _OutlineChip extends StatelessWidget {
+  const _OutlineChip({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
     decoration: BoxDecoration(
-      color: filled ? accent.withOpacity(0.12) : Colors.transparent,
-      borderRadius: BorderRadius.circular(5),
-      border: Border.all(color: filled ? accent.withOpacity(0.3) : UniSyncColors.border)),
-    child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500,
-        color: filled ? accent : UniSyncColors.textSecondary)),
+      color: color.withOpacity(0.07), borderRadius: BorderRadius.circular(5),
+      border: Border.all(color: color.withOpacity(0.2))),
+    child: Text(label, style: TextStyle(color: color.withOpacity(0.85),
+        fontSize: 11, fontWeight: FontWeight.w500)),
   );
 }
 
-class _LinkBtn extends StatelessWidget {
-  const _LinkBtn({required this.label, required this.icon, required this.accent, required this.onTap});
+class _GhostChip extends StatelessWidget {
+  const _GhostChip({required this.label});
   final String label;
-  final IconData icon;
-  final Color accent;
-  final VoidCallback onTap;
+
   @override
-  Widget build(_) => GestureDetector(onTap: onTap,
-    child: Container(height: 38,
-      decoration: BoxDecoration(color: accent.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: accent.withOpacity(0.25))),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(icon, size: 14, color: accent),
-        const SizedBox(width: 6),
-        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: accent)),
-      ])));
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(5),
+      border: Border.all(color: Colors.white.withOpacity(0.1))),
+    child: Text(label, style: TextStyle(color: Colors.white.withOpacity(0.42),
+        fontSize: 11, fontWeight: FontWeight.w400)),
+  );
 }
 
-// Techy-specific helpers
+class _NeoLink extends StatelessWidget {
+  const _NeoLink({required this.label, required this.icon,
+      required this.color, required this.shadow,
+      required this.textColor, required this.onTap});
+  final String label;
+  final IconData icon;
+  final Color color, shadow, textColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => NeoPopButton(
+    color: color, bottomShadowColor: shadow, rightShadowColor: shadow,
+    depth: 4, onTapUp: onTap, onTapDown: () {},
+    child: SizedBox(height: 38,
+      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(icon, size: 13, color: textColor),
+        const SizedBox(width: 6),
+        Text(label, style: TextStyle(color: textColor, fontSize: 12,
+            fontWeight: FontWeight.w600)),
+      ])),
+  );
+}
+
+class _TechIconBtn extends StatelessWidget {
+  const _TechIconBtn({required this.icon, required this.color, required this.onTap});
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      width: 32, height: 32,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: color.withOpacity(0.25))),
+      child: Center(child: Icon(icon, size: 14, color: color)),
+    ),
+  );
+}
+
 class _Dot extends StatelessWidget {
   const _Dot({required this.color});
   final Color color;
-  @override
-  Widget build(_) => Container(width: 12, height: 12,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle));
-}
 
-class _CodeLine extends StatelessWidget {
-  const _CodeLine({required this.children});
-  final List<TextSpan> children;
   @override
-  Widget build(_) => RichText(text: TextSpan(children: children));
-}
-
-class _CodeChip extends StatelessWidget {
-  const _CodeChip({required this.label, required this.color});
-  final String label;
-  final Color color;
-  @override
-  Widget build(_) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(4)),
-    child: Text(label, style: TextStyle(color: color, fontSize: 11,
-        fontFamily: 'monospace', fontWeight: FontWeight.w500)));
-}
-
-class _TechBtn extends StatelessWidget {
-  const _TechBtn({required this.label, required this.icon, required this.color, required this.onTap});
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-  @override
-  Widget build(_) => GestureDetector(onTap: onTap,
-    child: Container(height: 38,
-      decoration: BoxDecoration(color: color.withOpacity(0.08),
-          border: Border.all(color: color.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(4)),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 6),
-        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500,
-            color: color, fontFamily: 'monospace')),
-      ])));
-}
-
-// ── Expandable bio ───────────────────────────────────────────────────────────
-class _ExpandableBio extends StatefulWidget {
-  const _ExpandableBio({
-    required this.bio, required this.style,
-    required this.maxLines, required this.readMoreColor,
-  });
-  final String bio;
-  final TextStyle style;
-  final int maxLines;
-  final Color readMoreColor;
-  @override
-  State<_ExpandableBio> createState() => _ExpandableBioState();
-}
-
-class _ExpandableBioState extends State<_ExpandableBio> {
-  bool _expanded = false;
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (ctx, constraints) {
-      final tp = TextPainter(
-        text: TextSpan(text: widget.bio, style: widget.style),
-        maxLines: widget.maxLines,
-        textDirection: TextDirection.ltr,
-      )..layout(maxWidth: constraints.maxWidth);
-      final overflow = tp.didExceedMaxLines;
-      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(widget.bio, style: widget.style,
-          maxLines: _expanded ? null : widget.maxLines,
-          overflow: _expanded ? null : TextOverflow.ellipsis),
-        if (overflow || _expanded) ...[
-          const SizedBox(height: 4),
-          GestureDetector(
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Text(_expanded ? 'Read less' : 'Read more',
-              style: TextStyle(color: widget.readMoreColor,
-                  fontSize: 12, fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ]);
-    });
-  }
+  Widget build(BuildContext context) => Container(
+    width: 10, height: 10,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle));
 }

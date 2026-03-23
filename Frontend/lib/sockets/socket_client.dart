@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:unisync/constants/constant.dart';
+import 'package:UniSync/constants/constant.dart';
 
 class SocketClient {
   IO.Socket? socket;

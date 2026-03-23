@@ -1,14 +1,15 @@
-import 'dart:math';
-
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/app/routes.dart';
-import 'package:unisync/features/auth/auth_controller.dart';
-import 'package:unisync/features/auth/view/login_screen.dart';
+import 'package:UniSync/ads%20Manager/add_manager.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/app/routes.dart';
+import 'package:UniSync/firebase_options.dart';
+import 'package:UniSync/firebase_service.dart';
+import 'package:UniSync/app/startup_splash_screen.dart';
 
 class App extends ConsumerStatefulWidget{
   const App({super.key});
@@ -18,68 +19,274 @@ class App extends ConsumerStatefulWidget{
 }
 
 class _AppState extends ConsumerState<App> {
+  String? _lastAnalyticsUserId;
+  late Future<void> _startupFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _startupFuture = _runStartup();
+  }
+
+  Future<void> _runStartup() async {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await FirebaseService.initialize();
+    MobileAds.instance.updateRequestConfiguration(
+      RequestConfiguration(
+        testDeviceIds: ['9B8177D6C6E3041DE65DAA63A5EB6456'],
+      ),
+    );
+    await AdManager.initialize();
+    AdManager.instance.loadInterstitialAd();
+    AdManager.instance.loadAppOpenAd();
+    ref.invalidate(appInitProvider);
+    await ref.read(appInitProvider.future);
+  }
+
+  void _retryStartup() {
+    setState(() {
+      _startupFuture = _runStartup();
+    });
+  }
+
+  
+
   @override
   Widget build(BuildContext context) {
-    final init = ref.watch(appInitProvider);
     final userState = ref.watch(userProvider);
     final theme = buildUniSyncDarkTheme();
 
-    return init.when(
-      loading: () =>  MaterialApp(
-        debugShowCheckedModeBanner: false,
-        scaffoldMessengerKey: rootScaffoldMessengerKey,
-        theme: theme,
-        home: Scaffold(body: Center(
-          child: Lottie.asset('assets/animations/loading.json'),
-        ),),
-      ),
-      error: (e, _) => MaterialApp(
-        scaffoldMessengerKey: rootScaffoldMessengerKey,
-        theme: theme,
-        home: Scaffold(body: Center(child: Text(e.toString()))),
-      ),
-      data: (_) {
-         if(userState == null){
+    final analyticsUserId = userState?.id;
+    if (_lastAnalyticsUserId != analyticsUserId) {
+      _lastAnalyticsUserId = analyticsUserId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        FirebaseService.setUserId(analyticsUserId);
+        if (userState != null) {
+          FirebaseService.setUserProperty(
+            name: 'profile_complete',
+            value: userState.profileComplete.toString(),
+          );
+          FirebaseService.setUserProperty(
+            name: 'has_ad_free_access',
+            value: userState.hasAdFreeAccess.toString(),
+          );
+          if ((userState.collegeName ?? '').trim().isNotEmpty) {
+            FirebaseService.setUserProperty(
+              name: 'college_name',
+              value: userState.collegeName!.trim(),
+            );
+          }
+          if (userState.semester != null) {
+            FirebaseService.setUserProperty(
+              name: 'semester',
+              value: userState.semester.toString(),
+            );
+          }
+        }
+      });
+    }
+
+    return FutureBuilder<void>(
+      future: _startupFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return MaterialApp(
+            title: 'UniSync - AI College Companion',
+            debugShowCheckedModeBanner: false,
+            scaffoldMessengerKey: rootScaffoldMessengerKey,
+            theme: theme,
+            home: const StartupSplashScreen(
+              statusText: 'Initializing UniSync...',
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return MaterialApp(
+            title: 'UniSync - AI College Companion',
+            debugShowCheckedModeBanner: false,
+            scaffoldMessengerKey: rootScaffoldMessengerKey,
+            theme: theme,
+            home: StartupSplashScreen(
+              statusText: 'Something\'s Wrong...',
+              errorText: 'Startup failed. Please try again.',
+              onRetry: _retryStartup,
+            ),
+          );
+        }
+
+        if(userState == null){
       return MaterialApp.router(
+          title: 'UniSync - AI College Companion',
           debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       theme: theme,
       routerDelegate: RoutemasterDelegate(
         routesBuilder: (_) {
           return loggedOutRoutes;
-        }
+        },
+        observers: [FirebaseService.getAnalyticsObserver()],
       ),
       routeInformationParser: const RoutemasterParser(),
         ); 
     }
     else if(userState.profileComplete == false){
       return MaterialApp.router(
+        title: 'UniSync - AI College Companion',
           debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       theme: theme,
       routerDelegate: RoutemasterDelegate(
         routesBuilder: (_) {
           return completeProfileRoutes;
-        }
+        },
+        observers: [FirebaseService.getAnalyticsObserver()],
       ),
       routeInformationParser: const RoutemasterParser(),
         ); 
     }
     else{
-      return MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-      scaffoldMessengerKey: rootScaffoldMessengerKey,
-      theme: theme,
-      routerDelegate: RoutemasterDelegate(
-        routesBuilder: (_) {
-          return loggedInRoutes;
-        }
-      ),
-      routeInformationParser: const RoutemasterParser(),
-        ); 
-    }
-      }
-    );
+      final flagState = ref.watch(flagStateProvider);
+      final globalBanState = ref.watch(globalBanMessageProvider);
 
+      return globalBanState.when(
+        skipLoadingOnRefresh: false,
+        data: (globalBanMessage) {
+          if (globalBanMessage != null && globalBanMessage.trim().isNotEmpty) {
+            return MaterialApp(
+              title: 'UniSync - AI College Companion',
+              debugShowCheckedModeBanner: false,
+              scaffoldMessengerKey: rootScaffoldMessengerKey,
+              theme: theme,
+              home: StartupSplashScreen(
+                statusText: 'Service Unavailable',
+                errorText: globalBanMessage.trim(),
+                retryButtonText: 'Refresh Status',
+                onRetry: () {
+                  ref.invalidate(globalBanMessageProvider);
+                  ref.invalidate(flagStateProvider);
+                },
+              ),
+            );
+          }
+
+          return flagState.when(
+            data: (flags) {
+              final userId = (userState.id ?? '').trim();
+              final emailId = userState.emailId.trim();
+              String? flagValue;
+
+              if (userId.isNotEmpty) {
+                flagValue = flags[userId];
+              }
+
+              if (flagValue == null && emailId.isNotEmpty) {
+                flagValue = flags[emailId] ?? flags[emailId.toLowerCase()];
+                if (flagValue == null) {
+                  for (final entry in flags.entries) {
+                    if (entry.key.trim().toLowerCase() == emailId.toLowerCase()) {
+                      flagValue = entry.value;
+                      break;
+                    }
+                  }
+                }
+              }
+
+              final normalizedFlag = flagValue?.trim().toLowerCase();
+              final isFlagged = normalizedFlag != null &&
+                  normalizedFlag.isNotEmpty &&
+                  normalizedFlag != 'false' &&
+                  normalizedFlag != '0' &&
+                  normalizedFlag != 'no' &&
+                  normalizedFlag != 'none' &&
+                  normalizedFlag != 'inactive';
+
+              if (isFlagged) {
+                final message = (normalizedFlag == 'true' ||
+                        normalizedFlag == '1')
+                    ? 'Your account has been restricted. Please contact support.'
+                    : flagValue!;
+                return MaterialApp(
+                  title: 'UniSync - AI College Companion',
+                  debugShowCheckedModeBanner: false,
+                  scaffoldMessengerKey: rootScaffoldMessengerKey,
+                  theme: theme,
+                  home: StartupSplashScreen(
+                    statusText: 'Account Restricted',
+                    errorText: message,
+                    retryButtonText: 'Refresh Status',
+                    onRetry: () {
+                      ref.invalidate(globalBanMessageProvider);
+                      ref.invalidate(flagStateProvider);
+                    },
+                  ),
+                );
+              }
+
+              return MaterialApp.router(
+                title: 'UniSync - AI College Companion',
+                debugShowCheckedModeBanner: false,
+                scaffoldMessengerKey: rootScaffoldMessengerKey,
+                theme: theme,
+                routerDelegate: RoutemasterDelegate(
+                  routesBuilder: (_) {
+                    return loggedInRoutes;
+                  },
+                  observers: [FirebaseService.getAnalyticsObserver()],
+                ),
+                routeInformationParser: const RoutemasterParser(),
+              );
+            },
+            loading: () => MaterialApp(
+              title: 'UniSync - AI College Companion',
+              debugShowCheckedModeBanner: false,
+              scaffoldMessengerKey: rootScaffoldMessengerKey,
+              theme: theme,
+              home: const StartupSplashScreen(
+                statusText: 'Checking account status...',
+              ),
+            ),
+            error: (_, __) => MaterialApp(
+              title: 'UniSync - AI College Companion',
+              debugShowCheckedModeBanner: false,
+              scaffoldMessengerKey: rootScaffoldMessengerKey,
+              theme: theme,
+              home: StartupSplashScreen(
+                statusText: 'Something\'s Wrong...',
+                errorText: 'Could not verify account status. Please try again.',
+                onRetry: () => ref.invalidate(flagStateProvider),
+              ),
+            ),
+          );
+        },
+        loading: () => MaterialApp(
+          title: 'UniSync - AI College Companion',
+          debugShowCheckedModeBanner: false,
+          scaffoldMessengerKey: rootScaffoldMessengerKey,
+          theme: theme,
+          home: const StartupSplashScreen(
+            statusText: 'Checking account status...',
+          ),
+        ),
+        error: (_, __) => MaterialApp(
+          title: 'UniSync - AI College Companion',
+          debugShowCheckedModeBanner: false,
+          scaffoldMessengerKey: rootScaffoldMessengerKey,
+          theme: theme,
+          home: StartupSplashScreen(
+            statusText: 'Something\'s Wrong...',
+            errorText: 'Could not verify account status. Please try again.',
+            onRetry: () {
+              ref.invalidate(globalBanMessageProvider);
+              ref.invalidate(flagStateProvider);
+            },
+          ),
+        ),
+      );
+    }
+      },
+    );
   }
 }

@@ -4,6 +4,16 @@ import { ai } from "../services/ai.js";
 import { spendUserCoins } from "../services/firebaseAdmin.js";
 import { exchangeStore } from "../storre/exchangestore.js";
 
+const DEFAULT_QUESTION_LIMIT = 6;
+
+function normalizeQuestionLimit(rawLimit) {
+  const parsed = Number(rawLimit);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_QUESTION_LIMIT;
+  }
+  return Math.floor(parsed);
+}
+
 function rebuildExchangeFromSession(session, template) {
   console.log("Rebuilding exchange method called now rebuit in progress from session and template");
   return {
@@ -27,24 +37,31 @@ function rebuildExchangeFromSession(session, template) {
     questions: session.questions || [],
     answers: session.answers || [],
 
-    limits: 4,
+    limits: DEFAULT_QUESTION_LIMIT,
 
     systemPrompt: "",
   };
 }
 
-export async function StartInterview(socket, io, { templateId, userId }) {
+export async function StartInterview(
+  socket,
+  io,
+  { templateId, userId, questionLimit } = {}
+) {
   try {
     const normalizedUserId = String(userId ?? "").trim();
     if (!normalizedUserId) {
       return socket.emit("error", { message: "Missing userId" });
     }
+    const resolvedQuestionLimit = normalizeQuestionLimit(questionLimit);
 
     console.log(
       "Starting interview for user:",
       normalizedUserId,
       "with template:",
-      templateId
+      templateId,
+      "limit:",
+      resolvedQuestionLimit
     );
 
     const template = await Template.findById(templateId);
@@ -72,6 +89,8 @@ export async function StartInterview(socket, io, { templateId, userId }) {
         exchange = rebuildExchangeFromSession(session, template);
         exchangeStore.set(session._id.toString(), exchange);
       }
+
+      exchange.limits = resolvedQuestionLimit;
     } else {
       const interviewCoinPrice = Number(template.coinPrice ?? 0);
       try {
@@ -127,7 +146,7 @@ export async function StartInterview(socket, io, { templateId, userId }) {
         questions: session.questions || [],
         answers: session.answers || [],
 
-        limits: 4,
+        limits: resolvedQuestionLimit,
 
         systemPrompt: "",
       };

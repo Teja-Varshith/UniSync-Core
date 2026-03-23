@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/features/interview/services/voice_service.dart';
-import 'package:unisync/models/interview_state.dart';
-import 'package:unisync/sockets/socket_methods.dart';
+import 'package:UniSync/features/interview/services/voice_service.dart';
+import 'package:UniSync/models/interview_state.dart';
+import 'package:UniSync/sockets/socket_methods.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 

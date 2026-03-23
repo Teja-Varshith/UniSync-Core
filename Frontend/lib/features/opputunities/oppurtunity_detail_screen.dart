@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:UniSync/ads%20Manager/add_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/features/opputunities/oppurtunities_controller.dart';
-import 'package:unisync/features/opputunities/oppurtunity_model.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/firebase_service.dart';
+import 'package:UniSync/features/opputunities/oppurtunities_controller.dart';
+import 'package:UniSync/features/opputunities/oppurtunity_model.dart';
 
-class OpportunityDetailsScreen extends ConsumerWidget {
+// ── Apply tap counter (persists for the lifetime of the screen) ───────────────
+int _applyTapCount = 0;
+
+class OpportunityDetailsScreen extends ConsumerStatefulWidget {
   final String opportunityId;
 
   const OpportunityDetailsScreen({
@@ -16,13 +22,28 @@ class OpportunityDetailsScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OpportunityDetailsScreen> createState() =>
+      _OpportunityDetailsScreenState();
+}
+
+class _OpportunityDetailsScreenState
+    extends ConsumerState<OpportunityDetailsScreen> {
+  late final Future<OpportunityModel?> _opportunityFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _opportunityFuture = ref
+        .read(opportunityControllerProvider.notifier)
+        .getOpportunityById(widget.opportunityId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: UniSyncColors.backgroundPrimary,
       body: FutureBuilder<OpportunityModel?>(
-        future: ref
-            .read(opportunityControllerProvider.notifier)
-            .getOpportunityById(opportunityId),
+        future: _opportunityFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -41,7 +62,6 @@ class OpportunityDetailsScreen extends ConsumerWidget {
             return SafeArea(
               child: Column(
                 children: [
-                  // Header
                   Container(
                     color: UniSyncColors.backgroundSecondary,
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -96,13 +116,38 @@ class OpportunityDetailsScreen extends ConsumerWidget {
 //  DETAILS VIEW
 // ─────────────────────────────────────────────────────────────────────────────
 
-class OpportunityDetailsView extends StatelessWidget {
+class OpportunityDetailsView extends StatefulWidget {
   final OpportunityModel opportunity;
 
   const OpportunityDetailsView({super.key, required this.opportunity});
 
+  @override
+  State<OpportunityDetailsView> createState() => _OpportunityDetailsViewState();
+}
+
+class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
+  bool _hasLoggedScreenView = false;
+
+  OpportunityModel get opportunity => widget.opportunity;
+
   bool get _isExpired => opportunity.deadline.isBefore(DateTime.now());
   bool get _isInternship => opportunity.type == OpportunityType.internship;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hasLoggedScreenView) return;
+    _hasLoggedScreenView = true;
+    FirebaseService.logScreenView(screenName: 'opportunity_details_screen');
+    FirebaseService.logEvent(
+      name: 'opportunity_details_viewed',
+      parameters: {
+        'opportunity_id': opportunity.id,
+        'type': opportunity.type.name,
+        'company': opportunity.company,
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +160,8 @@ class OpportunityDetailsView extends StatelessWidget {
             _buildHeader(context),
             Container(height: 0.8, color: UniSyncColors.divider),
 
+          
+
             // ── Scrollable body ──────────────────────────────────
             Expanded(
               child: SingleChildScrollView(
@@ -122,6 +169,14 @@ class OpportunityDetailsView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+
+                      // ── BANNER AD below header ───────────────────────────
+            if (!AdManager.instance.isAdFree) ...[
+              const SizedBox(height: 6),
+              Center(child: AdManager.instance.buildBannerAd()),
+              const SizedBox(height: 6),
+              Container(height: 0.8, color: UniSyncColors.divider),
+            ],
 
                     // ── Hero card ──────────────────────────────
                     _HeroCard(opportunity: opportunity),
@@ -148,6 +203,12 @@ class OpportunityDetailsView extends StatelessWidget {
                         ),
                       ),
                     ),
+
+                    // ── NATIVE AD between description and requirements ──
+                    if (!AdManager.instance.isAdFree) ...[
+                      const SizedBox(height: 20),
+                      const _NativeAdCard(),
+                    ],
 
                     // ── Requirements ───────────────────────────
                     if (opportunity.requirements.isNotEmpty) ...[
@@ -197,9 +258,30 @@ class OpportunityDetailsView extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _ApplyButton(
         isExpired: _isExpired,
-        onTap: () => _launchApplicationUrl(context),
+        onTap: () => _handleApplyTap(context),
       ),
     );
+  }
+
+  // ── 1-in-5 interstitial on Apply tap ──────────────────────────
+  void _handleApplyTap(BuildContext context) {
+    FirebaseService.logEvent(
+      name: 'opportunity_apply_tapped',
+      parameters: {
+        'opportunity_id': opportunity.id,
+        'type': opportunity.type.name,
+        'is_expired': _isExpired.toString(),
+      },
+    );
+    _launchApplicationUrl(context);
+    // _applyTapCount++;
+    // if (!AdManager.instance.isAdFree && _applyTapCount % 5 == 0) {
+    //   AdManager.instance.showInterstitialAd(
+    //     onDismissed: () => _launchApplicationUrl(context),
+    //   );
+    // } else {
+    //   _launchApplicationUrl(context);
+    // }
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -238,7 +320,6 @@ class OpportunityDetailsView extends StatelessWidget {
               ],
             ),
           ),
-          // Expired / Active badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
@@ -289,6 +370,13 @@ class OpportunityDetailsView extends StatelessWidget {
 
   Future<void> _launchApplicationUrl(BuildContext context) async {
     final Uri uri = Uri.parse(opportunity.applicationLink);
+    FirebaseService.logEvent(
+      name: 'opportunity_application_opened',
+      parameters: {
+        'opportunity_id': opportunity.id,
+        'type': opportunity.type.name,
+      },
+    );
     if (!await launchUrl(uri)) {
       throw Exception('Could not launch $uri');
     }
@@ -306,7 +394,74 @@ class OpportunityDetailsView extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  HERO CARD — logo + title + badges
+//  NATIVE AD CARD — inline between sections
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _NativeAdCard extends StatefulWidget {
+  const _NativeAdCard();
+  @override
+  State<_NativeAdCard> createState() => _NativeAdCardState();
+}
+
+class _NativeAdCardState extends State<_NativeAdCard> {
+  // ⚠️ Replace with your real native ad unit ID
+  // Test ID: 'ca-app-pub-3940256099942544/2247696110'
+  static const _nativeAdUnitId = 'ca-app-pub-6840112928410718/4205263143';
+
+  NativeAd? _nativeAd;
+  bool _isLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNativeAd();
+  }
+
+  void _loadNativeAd() {
+    _nativeAd = NativeAd(
+      adUnitId: _nativeAdUnitId,
+      factoryId: 'small', // registered in MainActivity.kt
+      listener: NativeAdListener(
+        onAdLoaded: (_) {
+          if (!mounted) return;
+          setState(() => _isLoaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('[Ads] NativeAd failed: $error');
+          ad.dispose();
+        },
+      ),
+      request: const AdRequest(),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _nativeAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isLoaded || _nativeAd == null) return const SizedBox.shrink();
+
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        color: UniSyncColors.surfaceCard,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: UniSyncColors.borderSubtle),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: AdWidget(ad: _nativeAd!),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ALL WIDGETS BELOW UNCHANGED
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _HeroCard extends StatelessWidget {
@@ -345,7 +500,6 @@ class _HeroCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Logo
                 Container(
                   width: 56,
                   height: 56,
@@ -371,9 +525,7 @@ class _HeroCard extends StatelessWidget {
                       : const Icon(Icons.business_rounded,
                           color: UniSyncColors.textMuted, size: 22),
                 ),
-
                 const SizedBox(width: 14),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,12 +554,9 @@ class _HeroCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 14),
             Container(height: 0.8, color: UniSyncColors.divider),
             const SizedBox(height: 12),
-
-            // Badges
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -436,10 +585,6 @@ class _HeroCard extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  QUICK INFO CARD
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _QuickInfoCard extends StatelessWidget {
   const _QuickInfoCard({required this.opportunity});
@@ -476,10 +621,6 @@ class _QuickInfoCard extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  ADDITIONAL DETAILS CARD
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _AdditionalDetailsCard extends StatelessWidget {
   const _AdditionalDetailsCard({required this.opportunity});
@@ -525,10 +666,6 @@ class _AdditionalDetailsCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  APPLY BUTTON
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _ApplyButton extends StatelessWidget {
   const _ApplyButton({required this.isExpired, required this.onTap});
   final bool isExpired;
@@ -537,45 +674,50 @@ class _ApplyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: NeoPopButton(
-        color: isExpired ? UniSyncColors.surfaceCard : UniSyncColors.accent,
-        bottomShadowColor: UniSyncColors.backgroundPrimary,
-        rightShadowColor: UniSyncColors.backgroundPrimary,
-        depth: isExpired ? 2 : 5,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: NeoPopTiltedButton(
+        isFloating: true,
+        decoration: NeoPopTiltedButtonDecoration(
+          color: isExpired ? UniSyncColors.textDisabled : UniSyncColors.accent,
+          plunkColor:
+              isExpired ? UniSyncColors.textDisabled : UniSyncColors.accent,
+          shadowColor: Colors.black.withOpacity(0.5),
+          showShimmer: !isExpired,
+        ),
         onTapUp: isExpired ? () {} : onTap,
-        onTapDown: () {},
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (!isExpired)
-                const Icon(Icons.rocket_launch_rounded,
-                    color: UniSyncColors.backgroundPrimary, size: 18),
-              if (!isExpired) const SizedBox(width: 10),
-              Text(
-                isExpired ? 'Application Closed' : 'Apply Now',
-                style: TextStyle(
-                  color: isExpired
-                      ? UniSyncColors.textMuted
-                      : UniSyncColors.backgroundPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.3,
+        child: SizedBox(
+          height: 56,
+          width: double.maxFinite,
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isExpired)
+                  const Icon(
+                    Icons.rocket_launch_rounded,
+                    color: UniSyncColors.buttonPrimaryFg,
+                    size: 18,
+                  ),
+                if (!isExpired) const SizedBox(width: 10),
+                Text(
+                  isExpired ? 'Application Closed' : 'Apply Now',
+                  style: TextStyle(
+                    color: isExpired
+                        ? UniSyncColors.backgroundPrimary
+                        : UniSyncColors.buttonPrimaryFg,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  SHARED SMALL WIDGETS
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _ContentCard extends StatelessWidget {
   const _ContentCard({required this.child});
@@ -741,19 +883,22 @@ class _BackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: UniSyncColors.surfaceCard,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: UniSyncColors.border),
-        ),
-        child: const Center(
-          child: Icon(Icons.arrow_back_ios_new_rounded,
-              size: 15, color: UniSyncColors.textMuted),
+    return NeoPopButton(
+      color: UniSyncColors.surfaceCard,
+      bottomShadowColor: UniSyncColors.border,
+      rightShadowColor: UniSyncColors.border,
+      depth: 3,
+      onTapUp: onTap,
+      onTapDown: () {},
+      child: const SizedBox(
+        width: 40,
+        height: 40,
+        child: Center(
+          child: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 15,
+            color: UniSyncColors.textMuted,
+          ),
         ),
       ),
     );

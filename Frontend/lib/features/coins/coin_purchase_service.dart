@@ -8,8 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/constants/constant.dart';
+import 'package:UniSync/ads%20Manager/add_manager.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/firebase_service.dart';
 
 final coinPurchaseServiceProvider = Provider<CoinPurchaseService>((ref) {
   final service = CoinPurchaseService(
@@ -31,6 +33,8 @@ class CoinPurchaseService {
         _ref = ref;
 
   static const String productIdCoins100 = 'coins_100_inr9';
+  // Replace this with your exact Google Play product ID if it differs.
+  static const String productIdAdFreeLifetime = 'ad_free_purchase';
   static const int coinsPerPack = 100;
 
   final FirebaseFirestore _firestore;
@@ -54,7 +58,9 @@ class CoinPurchaseService {
       _log('initialize skipped (already initialized).');
       return;
     }
-    _log('initialize started. productId=$productIdCoins100');
+    _log(
+      'initialize started. products=$productIdCoins100,$productIdAdFreeLifetime',
+    );
     try {
       _purchaseSub = _iap.purchaseStream.listen(
         _onPurchaseUpdate,
@@ -63,7 +69,7 @@ class CoinPurchaseService {
           _log('purchaseStream error: $err');
           _showMessage(
             title: 'Purchase error',
-            message: 'Something went wrong while listening to purchases.',
+            message: 'Something went wrong. Dont worry your money will be refunded if deducted.',
             type: ContentType.failure,
           );
         },
@@ -96,6 +102,10 @@ class CoinPurchaseService {
 
   Future<String?> buy100CoinsPack() async {
     _log('buy100CoinsPack triggered.');
+    await FirebaseService.logEvent(
+      name: 'coin_purchase_started',
+      parameters: {'product_id': productIdCoins100},
+    );
     await initialize();
 
     if (!_billingReady) {
@@ -128,10 +138,18 @@ class CoinPurchaseService {
         'error=${response.error?.code}:${response.error?.message}');
 
     if (response.error != null) {
+      await FirebaseService.logEvent(
+        name: 'coin_purchase_product_query_failed',
+        parameters: {'product_id': productIdCoins100},
+      );
       return 'Could not load product details. Please try again later.';
     }
 
     if (response.productDetails.isEmpty) {
+      await FirebaseService.logEvent(
+        name: 'coin_purchase_product_missing',
+        parameters: {'product_id': productIdCoins100},
+      );
       return 'Coin pack is not ready yet. Check Play Console product ID.';
     }
 
@@ -145,6 +163,90 @@ class CoinPurchaseService {
     _log('buyConsumable started=$started for product=${product.id}');
 
     if (!started) {
+      await FirebaseService.logEvent(
+        name: 'coin_purchase_launch_failed',
+        parameters: {'product_id': product.id},
+      );
+      return 'Unable to start purchase flow. Please retry.';
+    }
+
+    return null;
+  }
+
+  Future<String?> buyAdFreeAccess() async {
+    _log('buyAdFreeAccess triggered.');
+    await FirebaseService.logEvent(
+      name: 'ad_free_purchase_started',
+      parameters: {'product_id': productIdAdFreeLifetime},
+    );
+    await initialize();
+
+    if (!_billingReady) {
+      _log('ad-free buy blocked: billingReady=false, initError=$_initErrorMessage');
+      return _initErrorMessage ??
+          'Billing is currently unavailable. Please restart the app and retry.';
+    }
+
+    final currentUser = _ref.read(userProvider);
+    if (currentUser?.hasAdFreeAccess == true || AdManager.instance.isAdFree) {
+      _log('ad-free buy skipped: user already has access.');
+      await FirebaseService.logEvent(
+        name: 'ad_free_purchase_already_owned',
+        parameters: {'product_id': productIdAdFreeLifetime},
+      );
+      return 'You already have ad-free access on this account.';
+    }
+
+    bool isAvailable;
+    try {
+      isAvailable = await _iap.isAvailable();
+      _log('ad-free runtime billing availability: $isAvailable');
+    } on PlatformException catch (e) {
+      _log('ad-free isAvailable PlatformException code=${e.code} message=${e.message}');
+      return 'Billing connection failed. Restart the app and try again.';
+    } on MissingPluginException {
+      _log('ad-free isAvailable MissingPluginException');
+      return 'Billing plugin is missing in this run. Please relaunch the app.';
+    }
+
+    if (!isAvailable) {
+      _log('ad-free buy blocked: billing unavailable on device.');
+      return 'Google Play Billing is unavailable on this device right now.';
+    }
+
+    final response = await _iap.queryProductDetails({productIdAdFreeLifetime});
+    _log('ad-free queryProductDetails completed. '
+        'found=${response.productDetails.length} '
+        'notFound=${response.notFoundIDs.join(',')} '
+        'error=${response.error?.code}:${response.error?.message}');
+
+    if (response.error != null) {
+      await FirebaseService.logEvent(
+        name: 'ad_free_product_query_failed',
+        parameters: {'product_id': productIdAdFreeLifetime},
+      );
+      return 'Could not load ad-free product details. Please try again later.';
+    }
+
+    if (response.productDetails.isEmpty) {
+      await FirebaseService.logEvent(
+        name: 'ad_free_product_missing',
+        parameters: {'product_id': productIdAdFreeLifetime},
+      );
+      return 'Ad-free product is not ready yet. Check Play Console product ID.';
+    }
+
+    final product = response.productDetails.first;
+    _log('ad-free product selected: id=${product.id}, title=${product.title}, price=${product.price}');
+    final purchaseParam = PurchaseParam(productDetails: product);
+    final started = await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    _log('buyNonConsumable started=$started for product=${product.id}');
+
+    if (!started) {
+      await FirebaseService.logEvent(
+        name: 'ad_free_purchase_launch_failed',
+        parameters: {'product_id': product.id},
+      );
       return 'Unable to start purchase flow. Please retry.';
     }
 
@@ -162,6 +264,10 @@ class CoinPurchaseService {
       try {
         switch (purchase.status) {
           case PurchaseStatus.pending:
+            await FirebaseService.logEvent(
+              name: 'purchase_pending',
+              parameters: {'product_id': purchase.productID},
+            );
             _showMessage(
               title: 'Purchase pending',
               message: 'Waiting for Play Store confirmation...',
@@ -170,9 +276,22 @@ class CoinPurchaseService {
             break;
           case PurchaseStatus.purchased:
           case PurchaseStatus.restored:
-            await _grantCoinsIfNeeded(purchase);
+            if (purchase.productID == productIdCoins100) {
+              await _grantCoinsIfNeeded(purchase);
+            } else if (purchase.productID == productIdAdFreeLifetime) {
+              await _grantAdFreeIfNeeded(purchase);
+            } else {
+              _log('purchase ignored: unsupported productId=${purchase.productID}');
+            }
             break;
           case PurchaseStatus.error:
+            await FirebaseService.logEvent(
+              name: 'purchase_failed',
+              parameters: {
+                'product_id': purchase.productID,
+                'status': purchase.status.name,
+              },
+            );
             _showMessage(
               title: 'Purchase failed',
               message: purchase.error?.message ??
@@ -181,9 +300,13 @@ class CoinPurchaseService {
             );
             break;
           case PurchaseStatus.canceled:
+            await FirebaseService.logEvent(
+              name: 'purchase_canceled',
+              parameters: {'product_id': purchase.productID},
+            );
             _showMessage(
               title: 'Purchase cancelled',
-              message: 'No worries. You can buy coins anytime.',
+              message: 'No worries. You can come back anytime and purchase again.',
               type: ContentType.warning,
             );
             break;
@@ -276,12 +399,122 @@ class CoinPurchaseService {
     }
 
     _log('grant success: coins credited in Firestore for purchaseId=$purchaseId');
+    await FirebaseService.logEvent(
+      name: 'coin_purchase_completed',
+      parameters: {
+        'product_id': purchase.productID,
+        'coins': coinsPerPack,
+      },
+    );
 
     _showMessage(
       title: 'Coins added',
       message: '$coinsPerPack coins are now in your wallet.',
       type: ContentType.success,
     );
+  }
+
+  Future<void> _grantAdFreeIfNeeded(PurchaseDetails purchase) async {
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) {
+      _log('ad-free grant skipped: no signed-in Firebase user.');
+      _showMessage(
+        title: 'Sign in required',
+        message: 'Please sign in before buying ad-free access.',
+        type: ContentType.failure,
+      );
+      return;
+    }
+
+    if (purchase.productID != productIdAdFreeLifetime) {
+      _log('ad-free grant skipped: unexpected productId=${purchase.productID}.');
+      return;
+    }
+
+    final purchaseId = purchase.purchaseID ??
+        '${purchase.productID}_${purchase.transactionDate ?? DateTime.now().millisecondsSinceEpoch}';
+
+    if (_processedPurchaseIds.contains(purchaseId)) {
+      _log('ad-free grant skipped: purchase already processed in-memory purchaseId=$purchaseId');
+      _syncLocalAdFreeAccess(firebaseUser.uid);
+      return;
+    }
+
+    _log('ad-free grant transaction start: uid=${firebaseUser.uid}, purchaseId=$purchaseId');
+
+    final userRef = _firestore.collection('users').doc(firebaseUser.uid);
+    final purchaseRef = userRef.collection('premiumPurchases').doc(purchaseId);
+
+    final granted = await _firestore.runTransaction<bool>((tx) async {
+      final purchaseSnap = await tx.get(purchaseRef);
+      if (purchaseSnap.exists) {
+        _log('ad-free grant transaction: duplicate found in Firestore purchaseId=$purchaseId');
+        tx.set(
+          userRef,
+          {
+            'hasAdFreeAccess': true,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+        return false;
+      }
+
+      tx.set(
+        purchaseRef,
+        {
+          'purchaseId': purchaseId,
+          'productId': purchase.productID,
+          'source': 'play_billing_frontend_only',
+          'status': purchase.status.name,
+          'transactionDate': purchase.transactionDate,
+          'verificationSource': purchase.verificationData.source,
+          'verificationPayload': purchase.verificationData.serverVerificationData,
+          'createdAt': FieldValue.serverTimestamp(),
+        },
+      );
+
+      tx.set(
+        userRef,
+        {
+          'hasAdFreeAccess': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      return true;
+    });
+
+    _processedPurchaseIds.add(purchaseId);
+    _syncLocalAdFreeAccess(firebaseUser.uid);
+
+    if (!granted) {
+      _log('ad-free grant result: not granted (already processed previously).');
+      return;
+    }
+
+    _log('ad-free grant success: access enabled in Firestore for purchaseId=$purchaseId');
+    await FirebaseService.logEvent(
+      name: 'ad_free_purchase_completed',
+      parameters: {'product_id': purchase.productID},
+    );
+
+    _showMessage(
+      title: 'Ad-free unlocked',
+      message: 'Ads are now turned off for this account.',
+      type: ContentType.success,
+    );
+  }
+
+  void _syncLocalAdFreeAccess(String uid) {
+    final currentUser = _ref.read(userProvider);
+    if (currentUser != null && currentUser.id == uid && !currentUser.hasAdFreeAccess) {
+      _ref.read(userProvider.notifier).state =
+          currentUser.copyWith(hasAdFreeAccess: true);
+      _log('local userProvider ad-free access updated.');
+    }
+    AdManager.instance.setAdFree(true);
   }
 
   void _showMessage({

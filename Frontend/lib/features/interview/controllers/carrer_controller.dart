@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/interview/repository/carrer_repository.dart';
-import 'package:unisync/models/template_model.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/features/interview/repository/carrer_repository.dart';
+import 'package:UniSync/models/template_model.dart';
 
 final carrerRepositoryProvider = Provider<CarrerRepository>((ref) {
   return CarrerRepository();
@@ -12,11 +12,10 @@ final carrerControllerProvider =
   CarrerController.new,
 );
 
-final getAllUserTemplate = FutureProvider<List<TemplateModel>>((ref) async{
-   final _repo = ref.read(carrerRepositoryProvider);
-   return _repo.getTemplatesByUserId(ref.read(userProvider)!.id!);
+final getAllUserTemplate = FutureProvider<List<TemplateModel>>((ref) async {
+  final _repo = ref.read(carrerRepositoryProvider);
+  return _repo.getTemplatesByUserId(ref.read(userProvider)!.id!);
 });
-
 
 class CarrerController extends AsyncNotifier<List<TemplateModel>> {
   late final CarrerRepository _repo;
@@ -27,29 +26,28 @@ class CarrerController extends AsyncNotifier<List<TemplateModel>> {
   @override
   Future<List<TemplateModel>> build() async {
     _repo = ref.read(carrerRepositoryProvider);
-    _allTemplates = await _repo.getTemplates(); 
+    _allTemplates = await _repo.getTemplates();
     return _allTemplates;
   }
 
-  List<String> get AvailableDomains{
+  List<String> get AvailableDomains {
     final domains = _allTemplates
-    .map((e) => e.domain)
-    .where((d) => d.isNotEmpty)
-    .toList();
+        .map((e) => e.domain)
+        .where((d) => d.isNotEmpty)
+        .toSet()
+        .toList();
     domains.sort();
     return domains;
   }
 
   void filterByDomain(String domain) {
-    if(domain == "All"){
+    if (domain == "All") {
       state = AsyncData(_allTemplates);
       return;
     }
     final filtered = _allTemplates.where((t) => t.domain == domain).toList();
     state = AsyncData(filtered);
   }
-
-
 
   Future<void> refresh() async {
     state = const AsyncLoading();

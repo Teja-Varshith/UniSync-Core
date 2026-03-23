@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:unisync/features/HomeScreen/models/home_carousel_item.dart';
+import 'package:UniSync/features/HomeScreen/models/home_carousel_item.dart';
 
 class HomeCarouselRepository {
   HomeCarouselRepository(this._firestore);
