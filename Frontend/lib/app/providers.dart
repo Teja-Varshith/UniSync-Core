@@ -19,6 +19,67 @@ final userProvider = StateProvider<UserModel?>((ref) {
   return null;
 });
 
+class GlobalBanConfig {
+  const GlobalBanConfig({
+    required this.message,
+    required this.allowedUsers,
+  });
+
+  final String? message;
+  final Set<String> allowedUsers;
+}
+
+bool _isTruthyValue(dynamic value) {
+  if (value == true) return true;
+  if (value is num) return value != 0;
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    return normalized == 'true' ||
+        normalized == '1' ||
+        normalized == 'yes' ||
+        normalized == 'active' ||
+        normalized == 'enabled';
+  }
+  return false;
+}
+
+Set<String> _parseAllowedUsers(dynamic raw) {
+  final allowedUsers = <String>{};
+
+  void addCandidate(dynamic candidate) {
+    final normalized = candidate?.toString().trim().toLowerCase();
+    if (normalized != null && normalized.isNotEmpty) {
+      allowedUsers.add(normalized);
+    }
+  }
+
+  if (raw is List) {
+    for (final entry in raw) {
+      addCandidate(entry);
+    }
+    return allowedUsers;
+  }
+
+  if (raw is String) {
+    final normalized = raw.trim();
+    if (normalized.isEmpty) return allowedUsers;
+    for (final entry in normalized.split(',')) {
+      addCandidate(entry);
+    }
+    return allowedUsers;
+  }
+
+  if (raw is Map) {
+    raw.forEach((key, value) {
+      if (_isTruthyValue(value)) {
+        addCandidate(key);
+      }
+    });
+  }
+
+  return allowedUsers;
+}
+
 final flagStateProvider = FutureProvider<Map<String, String>>((ref) async {
   final firestore = ref.watch(firebaseFirestoreProvider);
   final snapshot = await firestore
@@ -61,49 +122,75 @@ final flagStateProvider = FutureProvider<Map<String, String>>((ref) async {
   return parsedFlags;
 });
 
-final globalBanMessageProvider = FutureProvider<String?>((ref) async {
+final globalBanConfigProvider = FutureProvider<GlobalBanConfig>((ref) async {
   final firestore = ref.watch(firebaseFirestoreProvider);
   final snapshot = await firestore
       .collection('config')
       .doc('user_flags')
       .get();
   final data = snapshot.data();
-  if (data == null) return null;
+  if (data == null) {
+    return const GlobalBanConfig(
+      message: null,
+      allowedUsers: <String>{},
+    );
+  }
 
   final dynamic banAll = data['banAll'] ?? data['banall'];
-  if (banAll == null) return null;
-
-  if (banAll is String) {
-    final message = banAll.trim();
-    return message.isEmpty ? null : message;
-  }
-
-  if (banAll is bool) {
-    if (!banAll) return null;
-    final message = (data['banAllMessage'] ?? data['banallMessage'])
-        ?.toString()
-        .trim();
-    if (message == null || message.isEmpty) {
-      return 'Service is temporarily unavailable. Please try again later.';
-    }
-    return message;
-  }
+  final allowedUsers = <String>{
+    ..._parseAllowedUsers(
+      data['allowedUsers'] ?? data['allowUsers'] ?? data['whitelistedUsers'],
+    ),
+  };
 
   if (banAll is Map) {
-    final enabled = banAll['enabled'] == true || banAll['active'] == true;
-    if (!enabled) return null;
-
-    final message =
-        (banAll['message'] ?? banAll['reason'] ?? banAll['text'])
-            ?.toString()
-            .trim();
-    if (message == null || message.isEmpty) {
-      return 'Service is temporarily unavailable. Please try again later.';
-    }
-    return message;
+    allowedUsers.addAll(
+      _parseAllowedUsers(
+        banAll['allowedUsers'] ??
+            banAll['allowUsers'] ??
+            banAll['whitelistedUsers'],
+      ),
+    );
   }
 
-  return null;
+  if (banAll == null) {
+    return GlobalBanConfig(
+      message: null,
+      allowedUsers: allowedUsers,
+    );
+  }
+
+  String? message;
+
+  if (banAll is String) {
+    final parsedMessage = banAll.trim();
+    message = parsedMessage.isEmpty ? null : parsedMessage;
+  } else if (banAll is bool) {
+    if (banAll) {
+      final parsedMessage = (data['banAllMessage'] ?? data['banallMessage'])
+          ?.toString()
+          .trim();
+      message = (parsedMessage == null || parsedMessage.isEmpty)
+          ? 'Service is temporarily unavailable. Please try again later.'
+          : parsedMessage;
+    }
+  } else if (banAll is Map) {
+    final enabled = banAll['enabled'] == true || banAll['active'] == true;
+    if (enabled) {
+      final parsedMessage =
+          (banAll['message'] ?? banAll['reason'] ?? banAll['text'])
+              ?.toString()
+              .trim();
+      message = (parsedMessage == null || parsedMessage.isEmpty)
+          ? 'Service is temporarily unavailable. Please try again later.'
+          : parsedMessage;
+    }
+  }
+
+  return GlobalBanConfig(
+    message: message,
+    allowedUsers: allowedUsers,
+  );
 });
 
 final dioProvider = Provider<Dio>((ref) {

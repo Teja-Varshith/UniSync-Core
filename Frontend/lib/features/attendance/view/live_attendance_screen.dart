@@ -26,6 +26,7 @@ class LiveAttendence extends ConsumerStatefulWidget {
 
 class _LiveAttendenceState extends ConsumerState<LiveAttendence>
     with SingleTickerProviderStateMixin {
+  static const double _stickyBannerHeight = 50;
 
 Future<void> _openInfoQueryPageHere() async {
 
@@ -159,24 +160,12 @@ Future<void> _openInfoQueryPageHere() async {
     return _floorToDecimals(value, decimals).toStringAsFixed(decimals);
   }
 
-  String _getRandomHeaderTagline() {
-    final lines = [
-      '75% maintain cheyyakapothe life lo chaos bro 💀',
-      'Proxy class ki pettu skills ki kadu 😏',
-      'Attendance is temporary, backlog is permanent 🧠',
-      'One bunk = happiness, five bunks = panic 🥲',
-      'Class ki velte manishi, skip chesthe legend 🔥',
-      'Classes Skip Kottu parle, Skills skip kottaku okay? 🤓',
-    ];
-    return lines[Math.Random().nextInt(lines.length)];
-  }
-
   String _getSavageMessage(AttendanceCalculation calc, bool isGood) {
     if (isGood) {
       return [
         'Chill bro, inka konchem bunk safe 😎',
         'Professor ki favourite student vibes 👀',
-        "You're surviving... somehow.",
+        "Attendance overloaded with extra credits 💯",
       ][Math.Random().nextInt(3)];
     } else {
       return [
@@ -193,7 +182,7 @@ Future<void> _openInfoQueryPageHere() async {
   }
 
   String _getDangerStatus() {
-    final list = ['Red Alert 🚨', 'Ela Ila..... 💀', 'Sem Danger 😭'];
+    final list = ['Red Alert 🚨', 'Ela Ila..... 💀', 'Sem Danger 😭', 'kastamee 🚨'];
     return list[Math.Random().nextInt(list.length)];
   }
 
@@ -470,8 +459,9 @@ Future<void> _openInfoQueryPageHere() async {
     final attedanceAsync = ref.watch(attendanceProvider);
     final hasAdFreeAccess =
         ref.watch(userProvider)?.hasAdFreeAccess ?? AdManager.instance.isAdFree;
+    final stickyBannerOverlayHeight =
+        _stickyBannerHeight + MediaQuery.of(context).padding.bottom;
 
-    // ── Checking session ────────────────────────────────────────────────────
     if (_checkingSession) {
       return const Scaffold(
         backgroundColor: UniSyncColors.backgroundPrimary,
@@ -480,48 +470,82 @@ Future<void> _openInfoQueryPageHere() async {
             width: 28,
             height: 28,
             child: CircularProgressIndicator(
-                strokeWidth: 2.5, color: UniSyncColors.accent),
+              strokeWidth: 2.5,
+              color: UniSyncColors.accent,
+            ),
           ),
         ),
       );
     }
 
-    // ── Not connected ───────────────────────────────────────────────────────
     if (!_campxConnected) {
       return _buildNotConnectedScreen();
     }
 
-    // ── Main screen ─────────────────────────────────────────────────────────
     return Scaffold(
       backgroundColor: UniSyncColors.backgroundPrimary,
       body: SafeArea(
-        child: Column(children: [
-          _appBar(),
-          Container(height: 1, color: UniSyncColors.divider),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(children: [
-                // ── Banner ad ────────────────────────────────────
-                if (!hasAdFreeAccess) ...[
-                  const SizedBox(height: 8),
-                  Center(child: AdManager.instance.buildBannerAd()),
-                  const SizedBox(height: 8),
-                ],
-                if (!hasAdFreeAccess && !_promoCardDismissed)
-                  _buildAdFreePromoCard(),
-                _buildTargetSection(attedanceAsync),
-                _buildSubjectwiseAttendance(attedanceAsync),
-                const SizedBox(height: 40),
-              ]),
+        bottom: false,
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _appBar(),
+                Container(height: 1, color: UniSyncColors.divider),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        if (!hasAdFreeAccess) ...[
+                          const SizedBox(height: 8),
+                          Center(child: AdManager.instance.buildBannerAd()),
+                          const SizedBox(height: 8),
+                        ],
+                        if (!hasAdFreeAccess && !_promoCardDismissed)
+                          _buildAdFreePromoCard(),
+                        _buildTargetSection(attedanceAsync),
+                        _buildSubjectwiseAttendance(attedanceAsync),
+                        SizedBox(
+                          height: 40 +
+                              (hasAdFreeAccess ? 0 : stickyBannerOverlayHeight),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ]),
+            if (!hasAdFreeAccess)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: UniSyncColors.backgroundPrimary,
+                    border: Border(
+                      top: BorderSide(color: UniSyncColors.divider, width: 0.8),
+                    ),
+                  ),
+                  padding: EdgeInsets.fromLTRB(
+                    0,
+                    0,
+                    0,
+                    MediaQuery.of(context).padding.bottom,
+                  ),
+                  child: SizedBox(
+                    height: _stickyBannerHeight,
+                    child: Center(child: AdManager.instance.buildBannerAd()),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  // ── Not Connected Screen ────────────────────────────────────────────────
   Widget _buildNotConnectedScreen() {
     return Scaffold(
       backgroundColor: UniSyncColors.backgroundPrimary,
@@ -771,37 +795,28 @@ Future<void> _openInfoQueryPageHere() async {
       color: UniSyncColors.backgroundSecondary,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('#ATTENDANCE', style: TextStyle(
-                  color: UniSyncColors.accent, fontSize: 9,
-                  fontWeight: FontWeight.w700, letterSpacing: 1.8,
-                )),
-                const SizedBox(height: 4),
-                RichText(text: const TextSpan(children: [
-                  TextSpan(text: 'Smart ',
-                      style: TextStyle(
-                        color: UniSyncColors.textPrimary, fontSize: 24,
-                        fontWeight: FontWeight.w800, letterSpacing: -0.5,
-                      )),
-                  TextSpan(text: 'attendance',
-                      style: TextStyle(
-                        color: UniSyncColors.accent, fontSize: 24,
-                        fontWeight: FontWeight.w800, letterSpacing: -0.5,
-                      )),
-                ])),
-                const SizedBox(height: 2),
-                Text(_getRandomHeaderTagline(), style: const TextStyle(
-                  color: UniSyncColors.textMuted, fontSize: 12,
-                )),
-              ],
+          NeoPopButton(
+            color: UniSyncColors.surfaceCard,
+            bottomShadowColor: UniSyncColors.border,
+            rightShadowColor: UniSyncColors.border,
+            depth: 3,
+            onTapUp: () => Navigator.of(context).pop(),
+            onTapDown: () {},
+            child: const SizedBox(
+              width: 42,
+              height: 42,
+              child: Center(
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  size: 18,
+                  color: UniSyncColors.textSecondary,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const Spacer(),
           // Disconnect button
           NeoPopButton(
             color: const Color(0xFF1C0808),
@@ -829,7 +844,7 @@ Future<void> _openInfoQueryPageHere() async {
             onTapUp: () {
               FirebaseService.logEvent(name: 'attendance_refresh_tapped');
               if (!_hasAdFreeAccess &&
-                  Math.Random().nextInt(5) == 0) {
+                  Math.Random().nextInt(3) == 0) {
                 AdManager.instance.showInterstitialAd();
               }
               ref.invalidate(attendanceProvider);
@@ -1155,28 +1170,28 @@ Future<void> _openInfoQueryPageHere() async {
                           ),
                         ),
                       ]),
-                      const SizedBox(height: 8),
-                      Row(children: [
-                        Icon(
-                          isGood
-                              ? Icons.mood_rounded
-                              : Icons.warning_amber_rounded,
-                          size: 13,
-                          color: statusColor.withOpacity(0.85),
-                        ),
-                        const SizedBox(width: 7),
-                        Expanded(
-                          child: Text(
-                            _getSavageMessage(calc, isGood),
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w500,
-                              color: statusColor.withOpacity(0.85),
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ]),
+                      // const SizedBox(height: 8),
+                      // Row(children: [
+                      //   Icon(
+                      //     isGood
+                      //         ? Icons.mood_rounded
+                      //         : Icons.warning_amber_rounded,
+                      //     size: 13,
+                      //     color: statusColor.withOpacity(0.85),
+                      //   ),
+                      //   const SizedBox(width: 7),
+                      //   Expanded(
+                      //     child: Text(
+                      //       _getSavageMessage(calc, isGood),
+                      //       style: TextStyle(
+                      //         fontSize: 11.5,
+                      //         fontWeight: FontWeight.w500,
+                      //         color: statusColor.withOpacity(0.85),
+                      //         height: 1.4,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ]),
                     ],
                   );
                 },
@@ -1405,7 +1420,7 @@ Future<void> _openInfoQueryPageHere() async {
           'subject_name': course.subjectName,
         },
       );
-      if (!_hasAdFreeAccess && Math.Random().nextInt(5) == 0) {
+      if (!_hasAdFreeAccess && Math.Random().nextInt(3) == 0) {
         AdManager.instance.showInterstitialAd(onDismissed: () {
           if (!mounted) return;
           Navigator.push(context, MaterialPageRoute(
@@ -1670,6 +1685,20 @@ Future<void> _openInfoQueryPageHere() async {
                 ]),
               ],
 
+              SizedBox(height: 3,),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                Text('Tap for details >',
+                    style: TextStyle(
+                      color: UniSyncColors.textMuted,
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w500,
+                    )),
+              ],)
+
             ],
           ),
         ),
@@ -1860,7 +1889,7 @@ Future<void> _openInfoQueryPageHere() async {
           canBunk: true,
           classesCount: canBunk,
           message:
-              'You cannot skip more than $canBunk class${canBunk > 1 ? 'es' : ''}.',
+              'You can skip  $canBunk more class${canBunk > 1 ? 'es' : ''}.',
         );
       } else {
         return AttendanceCalculation(
@@ -1962,3 +1991,4 @@ class _NativeAdCardState extends State<_NativeAdCard> {
     );
   }
 }
+

@@ -29,7 +29,6 @@ class NewHomeScreen extends ConsumerStatefulWidget {
 
 class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
   int _currentPageIndex = 3;
-  Widget? _attendancePage;
   StreamSubscription<RemoteMessage>? _foregroundMessageSub;
   bool _updateCheckStarted = false;
   bool _hasLoggedHomeOpen = false;
@@ -92,13 +91,11 @@ class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
     setState(() => _currentPageIndex = targetPageIndex);
   }
 
-  void _activateAttendanceEdge() {
-    if (_currentPageIndex == 0) return;
-    setState(() {
-      _attendancePage ??= const LiveAttendence();
-      _pages[0] = _attendancePage!;
-      _currentPageIndex = 0;
-    });
+  Future<void> _openAttendanceScreen() async {
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const LiveAttendence()),
+    );
   }
 
   void _handleHomeRouteTap(String route) {
@@ -113,7 +110,7 @@ class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
     }
 
     if (route == '/campXLogin' || route == '/liveAttendence' || route == '/liveAttendance') {
-      _activateAttendanceEdge();
+      unawaited(_openAttendanceScreen());
       return;
     }
 
@@ -155,7 +152,7 @@ class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
         onIndexChanged: _onNavIndexChanged,
         leftEdgeWidget: _NavAttendanceWidget(
           isActive: _currentPageIndex == 0,
-          onTap: _activateAttendanceEdge,
+          onTap: () => unawaited(_openAttendanceScreen()),
         ),
         rightEdgeWidget: const _NavFollowWidget(),
       ),

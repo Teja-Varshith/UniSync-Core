@@ -10,6 +10,7 @@ import 'package:UniSync/app/routes.dart';
 import 'package:UniSync/firebase_options.dart';
 import 'package:UniSync/firebase_service.dart';
 import 'package:UniSync/app/startup_splash_screen.dart';
+import 'package:UniSync/models/user_model.dart';
 
 class App extends ConsumerStatefulWidget{
   const App({super.key});
@@ -49,6 +50,17 @@ class _AppState extends ConsumerState<App> {
     setState(() {
       _startupFuture = _runStartup();
     });
+  }
+
+  bool _isGlobalBanAllowed(UserModel user, Set<String> allowedUsers) {
+    if (allowedUsers.isEmpty) return false;
+
+    final candidates = <String>{
+      (user.id ?? '').trim().toLowerCase(),
+      user.emailId.trim().toLowerCase(),
+    }..removeWhere((value) => value.isEmpty);
+
+    return candidates.any(allowedUsers.contains);
   }
 
   
@@ -149,12 +161,20 @@ class _AppState extends ConsumerState<App> {
     }
     else{
       final flagState = ref.watch(flagStateProvider);
-      final globalBanState = ref.watch(globalBanMessageProvider);
+      final globalBanState = ref.watch(globalBanConfigProvider);
 
       return globalBanState.when(
         skipLoadingOnRefresh: false,
-        data: (globalBanMessage) {
-          if (globalBanMessage != null && globalBanMessage.trim().isNotEmpty) {
+        data: (globalBanConfig) {
+          final globalBanMessage = globalBanConfig.message;
+          final isAllowedDuringGlobalBan = _isGlobalBanAllowed(
+            userState,
+            globalBanConfig.allowedUsers,
+          );
+
+          if (globalBanMessage != null &&
+              globalBanMessage.trim().isNotEmpty &&
+              !isAllowedDuringGlobalBan) {
             return MaterialApp(
               title: 'UniSync - AI College Companion',
               debugShowCheckedModeBanner: false,
@@ -165,7 +185,7 @@ class _AppState extends ConsumerState<App> {
                 errorText: globalBanMessage.trim(),
                 retryButtonText: 'Refresh Status',
                 onRetry: () {
-                  ref.invalidate(globalBanMessageProvider);
+                  ref.invalidate(globalBanConfigProvider);
                   ref.invalidate(flagStateProvider);
                 },
               ),
@@ -218,7 +238,7 @@ class _AppState extends ConsumerState<App> {
                     errorText: message,
                     retryButtonText: 'Refresh Status',
                     onRetry: () {
-                      ref.invalidate(globalBanMessageProvider);
+                      ref.invalidate(globalBanConfigProvider);
                       ref.invalidate(flagStateProvider);
                     },
                   ),
@@ -279,7 +299,7 @@ class _AppState extends ConsumerState<App> {
             statusText: 'Something\'s Wrong...',
             errorText: 'Could not verify account status. Please try again.',
             onRetry: () {
-              ref.invalidate(globalBanMessageProvider);
+              ref.invalidate(globalBanConfigProvider);
               ref.invalidate(flagStateProvider);
             },
           ),

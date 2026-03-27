@@ -563,14 +563,6 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('#INTERVIEWS',
-                          style: TextStyle(
-                            color: UniSyncColors.accent,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.8,
-                          )),
-                      const SizedBox(height: 4),
                       RichText(
                           text: const TextSpan(children: [
                         TextSpan(

@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
+import 'package:UniSync/ads%20Manager/add_manager.dart';
+import 'package:UniSync/app/providers.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/attendance/repository/live_attendance_repository2.dart';
 
@@ -35,6 +37,8 @@ class SubjectDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final attendanceAsync = ref.watch(subjectAttendanceProvider(subjectId));
+    final hasAdFreeAccess =
+        ref.watch(userProvider)?.hasAdFreeAccess ?? AdManager.instance.isAdFree;
 
     return Scaffold(
       backgroundColor: UniSyncColors.backgroundPrimary,
@@ -44,6 +48,12 @@ class SubjectDetailsScreen extends ConsumerWidget {
             _AppBar(subjectName: subjectName),
             Container(height: 0.8, color: UniSyncColors.divider),
             Expanded(child: _buildBody(attendanceAsync, ref)),
+            if (!hasAdFreeAccess) ...[
+              Container(height: 0.8, color: UniSyncColors.divider),
+              const SizedBox(height: 8),
+              Center(child: AdManager.instance.buildBannerAd()),
+              const SizedBox(height: 8),
+            ],
           ],
         ),
       ),

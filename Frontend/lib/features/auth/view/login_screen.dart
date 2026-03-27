@@ -20,7 +20,7 @@ final playStoreReviewerAccessProvider = StreamProvider<bool>((ref) {
       .map((snapshot) {
         final data = snapshot.data();
         if (data == null) return false;
-        return data['enabled'] == true;
+        return data['enabled2'] == true;
       });
 });
 

@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -395,7 +395,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   const SizedBox(height: 4),
                   Center(
-                    child: Text('Version(2.10.16) · Thunder',
+                    child: Text('Version(2.10.18) · Thunder',
                         style: TextStyle(
                           fontSize: 10,
                           color: UniSyncColors.textMuted.withOpacity(0.4),
@@ -954,6 +954,7 @@ class _ProfileAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 1/0,
       color: UniSyncColors.backgroundSecondary,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Column(
