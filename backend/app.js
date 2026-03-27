@@ -22,10 +22,27 @@ import { portfolioRouter } from "./routes/portifolioRoutes.js";
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
 app.use(express.json());
 app.use(cookieParser());
+
+const healthHandler = (_req, res) => {
+  res.status(200).json({
+    ok: true,
+    service: "backend",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+};
+
+app.get("/health", healthHandler);
+app.get("/api/health", healthHandler);
 
 app.use(
   "/portfolio",

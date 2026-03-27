@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/services/appMode.dart';
-import 'package:unisync/models/user_model.dart';
-import 'package:unisync/utils/badge.dart';
-import 'package:unisync/utils/tile.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/features/services/appMode.dart';
+import 'package:UniSync/models/user_model.dart';
+import 'package:UniSync/utils/badge.dart';
+import 'package:UniSync/utils/tile.dart';
 
 
 

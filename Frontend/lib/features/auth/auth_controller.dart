@@ -1,8 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unisync/app/providers.dart';
-import 'package:unisync/features/auth/auth_repository.dart';
-import 'package:unisync/models/user_model.dart';
+import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/features/attendance/repository/attendance_repository.dart';
+import 'package:UniSync/features/auth/auth_repository.dart';
+import 'package:UniSync/models/user_model.dart';
 
 
 
@@ -31,7 +32,21 @@ class AuthController {
     return null;
   }
 
+  Future<UserModel?> signInAsReviewer(String uid) async {
+    final user = await repo.loadUserProfileByUid(uid);
+    if (user != null) {
+      ref.read(userProvider.notifier).state = user;
+      return user;
+    }
+    return null;
+  }
+
   Future<void> signOut() async {
+    try {
+      await ref.read(AttendanceRepositoryProvider).disconnectCampX();
+    } catch (_) {
+      // CampX cleanup is best-effort; sign out should still continue.
+    }
     await repo.logOut();
     ref.read(userProvider.notifier).state = null;
   }

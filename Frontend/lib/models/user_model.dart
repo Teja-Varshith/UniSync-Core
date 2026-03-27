@@ -16,6 +16,9 @@ class UserModel {
   final int? year;
   final int? semester;
   final String? about;
+  final String? fcmToken;
+  final int coins;
+  final bool hasAdFreeAccess;
 
   UserModel({
     this.institutionCode,
@@ -32,6 +35,9 @@ class UserModel {
     this.year,
     this.semester,
     this.about,
+    this.fcmToken,
+    this.coins = 0,
+    this.hasAdFreeAccess = false,
   });
 
   UserModel copyWith({
@@ -49,6 +55,9 @@ class UserModel {
     int? year,
     int? semester,
     String? about,
+    String? fcmToken,
+    int? coins,
+    bool? hasAdFreeAccess,
   }) {
     return UserModel(
       institutionCode: institutionCode ?? this.institutionCode,
@@ -65,13 +74,16 @@ class UserModel {
       year: year ?? this.year,
       semester: semester ?? this.semester,
       about: about ?? this.about,
+      fcmToken: fcmToken ?? this.fcmToken,
+      coins: coins ?? this.coins,
+      hasAdFreeAccess: hasAdFreeAccess ?? this.hasAdFreeAccess,
     );
   }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'institutionCode': institutionCode,
-      'cookie' : cookie,
+      'cookie': cookie,
       'id': id,
       'name': name,
       'profileComplete': profileComplete,
@@ -84,36 +96,41 @@ class UserModel {
       'year': year,
       'semester': semester,
       'about': about,
+      'fcmToken': fcmToken,
+      'coins': coins,
+      'hasAdFreeAccess': hasAdFreeAccess,
     };
   }
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
-  return UserModel(
-    id: map['_id'] as String?,
-    name: map['name'] ?? '',
-    profileComplete: map['profileComplete'] ?? false,
-    photoUrl: map['photoUrl'] as String?,
-    emailId: map['emailId'] ?? '',
-    collegeName: map['collegeName'] as String?,
-    tenantId: map['tenantId'] as String?,
-    institutionCode: map['institutionCode'] as String?,
-    cookie: map['accessToken'] as String?,
-    campXPassword: map['password'] as String?,
-    campXUsername: map['campXUsername'] as String?,
-    year: map['year'] as int?,
-    semester: map['semester'] as int?,
-    about: map['about'] as String?,
-  );
-}
-
+    return UserModel(
+      id: (map['id'] ?? map['_id'] ?? map['uid']) as String?,
+      name: map['name'] ?? '',
+      profileComplete: map['profileComplete'] ?? false,
+      photoUrl: map['photoUrl'] as String?,
+      emailId: map['emailId'] ?? '',
+      collegeName: map['collegeName'] as String?,
+      tenantId: map['tenantId'] as String?,
+      institutionCode: map['institutionCode'] as String?,
+      cookie: (map['cookie'] ?? map['accessToken']) as String?,
+      campXPassword: map['password'] as String?,
+      campXUsername: map['campXUsername'] as String?,
+      year: map['year'] as int?,
+      semester: map['semester'] as int?,
+      about: map['about'] as String?,
+      fcmToken: map['fcmToken'] as String?,
+      coins: (map['coins'] as num?)?.toInt() ?? 0,
+      hasAdFreeAccess: map['hasAdFreeAccess'] as bool? ?? false,
+    );
+  }
 
   String toJson() => json.encode(toMap());
 
-  factory UserModel.fromJson(String source) => UserModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory UserModel.fromJson(String source) =>
+      UserModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'UserModel(id: $id, name: $name,  cookie: $cookie profileComplete: $profileComplete, photoUrl: $photoUrl, emailId: $emailId, collegeName: $collegeName, tenantId: $tenantId, campXPassword: $campXPassword, campXUsername: $campXUsername, year: $year, semester: $semester, about: $about, institutionCode: $institutionCode)';
+    return 'UserModel(id: $id, name: $name,  cookie: $cookie profileComplete: $profileComplete, photoUrl: $photoUrl, emailId: $emailId, collegeName: $collegeName, tenantId: $tenantId, campXPassword: $campXPassword, campXUsername: $campXUsername, year: $year, semester: $semester, about: $about, fcmToken: $fcmToken, coins: $coins, institutionCode: $institutionCode, hasAdFreeAccess: $hasAdFreeAccess)';
   }
-
 }

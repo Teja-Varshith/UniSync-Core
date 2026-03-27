@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:unisync/constants/constant.dart';
-import 'package:unisync/models/domain_model.dart';
+import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/models/domain_model.dart';
 
 class DomainRepository {
   Future<List<DomainModel>> getAllDomains() async{
