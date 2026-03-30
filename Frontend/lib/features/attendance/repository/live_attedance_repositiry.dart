@@ -42,7 +42,7 @@ class LiveAttdncRepository {
         Uri.parse(totoUrl),
         headers: {
           'accept': 'application/json',
-          'user-agent': 'ANDROID',
+          'user-agent': 'BROWSER',
           'x-tenant-id': tenant ?? '',
           'x-institution-code': institutionCode ?? '',
           'cookie': 'campx_session_key=$token',

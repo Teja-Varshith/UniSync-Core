@@ -34,14 +34,7 @@ class _AppState extends ConsumerState<App> {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     await FirebaseService.initialize();
-    MobileAds.instance.updateRequestConfiguration(
-      RequestConfiguration(
-        testDeviceIds: ['9B8177D6C6E3041DE65DAA63A5EB6456'],
-      ),
-    );
-    await AdManager.initialize();
-    AdManager.instance.loadInterstitialAd();
-    AdManager.instance.loadAppOpenAd();
+  
     ref.invalidate(appInitProvider);
     await ref.read(appInitProvider.future);
   }

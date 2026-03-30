@@ -4,16 +4,16 @@ export const loginUserController = async (req, res) => {
   try {
     console.log("login request started");
     const { emailId, name, photoUrl } = req.body;
-    console.log(photoUrl);
+    // console.log(photoUrl);
     if (!emailId || !name) {
       return res.status(404).json({
         success: false,
         message:
-          "user email or user name is not provoded,please provide the email and user name ",
+          "user email or user name is not provided,please provide the email and user name ",
       });
     }
 
-    //  check i user is existed or not
+    //  check if user is existed or not
     const isUserExised = await User.findOne({
       emailId: emailId,
     });
@@ -22,7 +22,7 @@ export const loginUserController = async (req, res) => {
       if (isUserExised.profileComplete == false) {
         res.status(200).json({
           success: true,
-          message: "Loggedin but incomplete pro",
+          message: "Loggedin but incomplete profile",
           user: isUserExised,
           profileStatus: isUserExised.profileComplete
             ? "user profile is completed"
