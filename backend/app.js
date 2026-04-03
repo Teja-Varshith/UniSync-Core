@@ -45,7 +45,7 @@ app.get("/health", healthHandler);
 app.get("/api/health", healthHandler);
 
 app.use(
-  "/portfolio",
+  "/me",
   express.static(path.join(process.cwd(), "portfolios"))
 );
 app.use("/user", portfolioPublicRouter);

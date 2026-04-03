@@ -1,49 +1,137 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:UniSync/app/providers.dart';
-import 'package:UniSync/features/services/appMode.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CareerHomeScreen extends ConsumerStatefulWidget {
-  const CareerHomeScreen({super.key});
+  final Function(int)? onTabChanged;
+  
+  const CareerHomeScreen({super.key, this.onTabChanged});
 
   @override
   ConsumerState<CareerHomeScreen> createState() => _CareerHomeScreenState();
 }
 
 class _CareerHomeScreenState extends ConsumerState<CareerHomeScreen> {
-final topics = [
+final roadmapData = [
   {
     "title": "Programming Languages",
     "subtitle": "Master the building blocks of software development",
+    "subItems": [
+      {"name": "C++", "url": "https://roadmap.sh/pdfs/roadmaps/cpp.pdf"},
+      {"name": "Java", "url": "https://roadmap.sh/pdfs/roadmaps/java.pdf"},
+      {"name": "Python", "url": "https://roadmap.sh/pdfs/roadmaps/python.pdf"},
+      {"name": "JavaScript", "url": "https://roadmap.sh/pdfs/roadmaps/javascript.pdf"},
+      {"name": "Go", "url": "https://roadmap.sh/pdfs/roadmaps/golang.pdf"},
+    ]
   },
   {
     "title": "Frontend Development",
     "subtitle": "Create stunning, responsive interfaces",
+    "subItems": [
+      {"name": "Frontend Roadmap", "url": "https://roadmap.sh/pdfs/roadmaps/frontend.pdf"},
+      {"name": "React", "url": "https://roadmap.sh/pdfs/roadmaps/react.pdf"},
+      {"name": "Vue", "url": "https://roadmap.sh/pdfs/roadmaps/vue.pdf"},
+      {"name": "Angular", "url": "https://roadmap.sh/pdfs/roadmaps/angular.pdf"},
+    ]
   },
   {
     "title": "Backend Development",
     "subtitle": "Build scalable server-side systems",
-  },
-  
-  {
-    "title": "Data Structures & Algorithms",
-    "subtitle": "Crack interviews with solid fundamentals",
-  },
-  {
-    "title": "Data Structures & Algorithms",
-    "subtitle": "Crack interviews with solid fundamentals",
+    "subItems": [
+      {"name": "Backend Roadmap", "url": "https://roadmap.sh/pdfs/roadmaps/backend.pdf"},
+      {"name": "Node.js", "url": "https://roadmap.sh/pdfs/roadmaps/nodejs.pdf"},
+      {"name": "Spring Boot", "url": "https://roadmap.sh/pdfs/roadmaps/spring-boot.pdf"},
+      {"name": "ASP.NET Core", "url": "https://roadmap.sh/pdfs/roadmaps/aspnet-core.pdf"},
+    ]
   },
   {
     "title": "Data Structures & Algorithms",
     "subtitle": "Crack interviews with solid fundamentals",
+    "subItems": [
+      {"name": "Computer Science", "url": "https://roadmap.sh/pdfs/roadmaps/computer-science.pdf"},
+      {"name": "Data Structures", "url": "https://roadmap.sh/pdfs/roadmaps/data-structures-and-algorithms.pdf"},
+    ]
   },
   {
-    "title": "Data Structures & Algorithms",
-    "subtitle": "Crack interviews with solid fundamentals",
+    "title": "DevOps & Cloud",
+    "subtitle": "Deploy and manage scalable applications",
+    "subItems": [
+      {"name": "DevOps Roadmap", "url": "https://roadmap.sh/pdfs/roadmaps/devops.pdf"},
+      {"name": "Docker", "url": "https://roadmap.sh/pdfs/roadmaps/docker.pdf"},
+      {"name": "Kubernetes", "url": "https://roadmap.sh/pdfs/roadmaps/kubernetes.pdf"},
+      {"name": "AWS", "url": "https://roadmap.sh/pdfs/roadmaps/aws.pdf"},
+    ]
   },
 ];
+
+
+  void _showSubRoadmaps(Map<String, dynamic> category) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF111111),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final List<Map<String, String>> subItems = List<Map<String, String>>.from(category["subItems"]);
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                category["title"],
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...subItems.map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: InkWell(
+                  onTap: () async {
+                    final uri = Uri.parse(item["url"]!);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[850]!),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.picture_as_pdf, color: Colors.orangeAccent, size: 20),
+                        const SizedBox(width: 12),
+                        Text(
+                          item["name"]!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 14),
+                      ],
+                    ),
+                  ),
+                ),
+              )),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
 
   @override
@@ -56,7 +144,7 @@ final topics = [
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
              Padding(
-              padding: const EdgeInsets.fromLTRB(0, 16, 0, 20),
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 5),
               child: Row(
                 children: [
                    Column(
@@ -80,62 +168,45 @@ final topics = [
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
+
                      ],
                    ),
-
-                  Spacer(),
-
-                  AvatarSlideToggle(
-                    currentMode: ref.read(AppModeProvider),
-                     user: ref.read(userProvider)!,
-                      menu: [AppMode.career, AppMode.campus,AppMode.builder],
-
-                      onModeChanged: (mode) {
-    if(mode == AppMode.campus) {Routemaster.of(context).replace("/");
-      // mode = ref.watch(AppModeProvider);
-      ref.read(AppModeProvider.notifier).state = AppMode.campus; 
-    }
-
-     if(mode == AppMode.builder) {Routemaster.of(context).replace("/builderHomeScreen");
-      // mode = ref.watch(AppModeProvider);
-      ref.read(AppModeProvider.notifier).state = AppMode.builder; 
-    }
-
-    
-
-
-    // YOU control this
-    // trigger AnimatedSwitcher / PageTransition
-    debugPrint("Switched to $mode");
-  },
-                    )
                                     
                   
                 ],
               ),
             ),
+
+             Divider(
+                   color: Colors.white,
+                       ),
+
             _interviewCard(context),
             SizedBox(height: 10,),
             softActionCard(
-  title: 'Resume review with Arya',
-  subtitle: 'Receive in real-time, in-depth resume feedback',
-  bgColor: const Color(0xFFF2EEFF),
-  titleColor: const Color(0xFF4B3F72),
-  subtitleColor: const Color(0xFF6E6A86),
-  arrowBg: const Color(0xFFE6DEFF),
-  arrowColor: const Color(0xFF4B3F72),
-  onTap: () {},
-),
-softActionCard(
-  title: 'Rapid practice flash cards',
-  subtitle: 'Brush through every aspect of any skill or tool',
-  bgColor: const Color(0xFFFFE8E5),
-  titleColor: const Color(0xFF7A3E3E),
-  subtitleColor: const Color(0xFF9A5A5A),
-  arrowBg: const Color(0xFFFFD6CF),
-  arrowColor: const Color(0xFF7A3E3E),
-  onTap: () {},
-),
+              title: 'Build your Portfolio',
+              subtitle: 'Upload resume and auto-generate a beautiful website',
+              bgColor: const Color(0xFFE3F2FD),
+              titleColor: const Color(0xFF0D47A1),
+              subtitleColor: const Color(0xFF1565C0),
+              arrowBg: const Color(0xFFBBDEFB),
+              arrowColor: const Color(0xFF0D47A1),
+              onTap: () {
+                widget.onTabChanged?.call(2);
+              },
+            ),
+            softActionCard(
+              title: 'Resume review with Arya',
+              subtitle: 'Receive in real-time, in-depth resume feedback',
+              bgColor: const Color(0xFFF2EEFF),
+              titleColor: const Color(0xFF4B3F72),
+              subtitleColor: const Color(0xFF6E6A86),
+              arrowBg: const Color(0xFFE6DEFF),
+              arrowColor: const Color(0xFF4B3F72),
+              onTap: () {
+                Routemaster.of(context).push('/resume-analyzer');
+              },
+            ),
 
             SizedBox(height: 10,),
             Text(
@@ -152,7 +223,7 @@ SizedBox(
   height: 400,
   child: ListView.builder(
     scrollDirection: Axis.horizontal,
-    itemCount: (topics.length / 2).ceil(),
+    itemCount: (roadmapData.length / 2).ceil(),
     itemBuilder: (context, columnIndex) {
       final int firstIndex = columnIndex * 2;
       final int secondIndex = firstIndex + 1;
@@ -163,21 +234,21 @@ SizedBox(
           children: [
             // TOP CARD
             topicCard(
-              title: topics[firstIndex]["title"]!,
-              subtitle: topics[firstIndex]["subtitle"]!,
+              title: roadmapData[firstIndex]["title"] as String,
+              subtitle: roadmapData[firstIndex]["subtitle"] as String,
               index: firstIndex,
-              onTap: () {},
+              onTap: () => _showSubRoadmaps(roadmapData[firstIndex]),
             ),
 
             const SizedBox(height: 12),
 
             // BOTTOM CARD (only if exists)
-            if (secondIndex < topics.length)
+            if (secondIndex < roadmapData.length)
               topicCard(
-                title: topics[secondIndex]["title"]!,
-                subtitle: topics[secondIndex]["subtitle"]!,
+                title: roadmapData[secondIndex]["title"] as String,
+                subtitle: roadmapData[secondIndex]["subtitle"] as String,
                 index: secondIndex,
-                onTap: () {},
+                onTap: () => _showSubRoadmaps(roadmapData[secondIndex]),
               ),
           ],
         ),
@@ -200,46 +271,58 @@ Widget topicCard({
   required int index,
   required VoidCallback onTap,
 }) {
-  final List<Color> topicCardColors = [
-  Color(0xFFFACC15), // yellow
-  Color(0xFF22C55E), // green
-  Color(0xFF60A5FA), // blue
-  Color(0xFFF472B6), // pink
-  Color(0xFFA78BFA), // purple
-  Color(0xFFFB7185), // rose
-];
+  final List<List<Color>> topicGradients = [
+    [const Color(0xFFFBBF24), const Color(0xFFF59E0B)], // yellow-orange
+    [const Color(0xFF34D399), const Color(0xFF10B981)], // green-emerald
+    [const Color(0xFF60A5FA), const Color(0xFF3B82F6)], // blue
+    [const Color(0xFFF472B6), const Color(0xFFEC4899)], // pink
+    [const Color(0xFFA78BFA), const Color(0xFF8B5CF6)], // purple
+    [const Color(0xFFFB7185), const Color(0xFFF43F5E)], // rose
+  ];
 
-  final bgColor = topicCardColors[index % topicCardColors.length];
+  final gradient = topicGradients[index % topicGradients.length];
 
   return Padding(
     padding: const EdgeInsets.only(right: 12),
     child: InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(22),
       onTap: onTap,
       child: Container(
-         width: 300,
-  height: 150,
-        padding: const EdgeInsets.all(12),
+        width: 280,
+        height: 160,
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(18),
+          gradient: LinearGradient(
+            colors: gradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: gradient[1].withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Stack(
           children: [
-            // Arrow icon
+            // Glassmorphism arrow icon
             Positioned(
               top: 0,
               right: 0,
               child: Container(
-                width: 36,
-                height: 36,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
                 ),
                 child: const Icon(
                   Icons.arrow_outward_rounded,
-                  size: 18,
+                  size: 20,
                   color: Colors.white,
                 ),
               ),
@@ -255,17 +338,21 @@ Widget topicCard({
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white70,
+                      color: Colors.white.withOpacity(0.9),
+                      height: 1.3,
                     ),
                   ),
                 ],
@@ -290,16 +377,16 @@ Widget softActionCard({
   VoidCallback? onTap,
 }) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
+    padding: const EdgeInsets.symmetric(vertical: 8),
     child: InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
           children: [
@@ -311,16 +398,16 @@ Widget softActionCard({
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
                       color: titleColor,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13.5,
                       height: 1.4,
                       color: subtitleColor,
                     ),
@@ -329,19 +416,19 @@ Widget softActionCard({
               ),
             ),
 
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
 
             // ARROW
             Container(
-              width: 36,
-              height: 36,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: arrowBg,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 16,
+                size: 18,
                 color: arrowColor,
               ),
             ),

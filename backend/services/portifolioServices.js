@@ -3,9 +3,45 @@ export class PortfolioService {
     this.llm = llmClient;
   }
 
+  /**
+   * Generate a single, complete HTML page with inline CSS and JS
+   * from the given resume text.
+   */
+  async generateSinglePagePortfolio(resumeContent) {
+    const prompt = `
+You are a world-class frontend engineer. Generate a SINGLE, COMPLETE HTML file for a modern, responsive portfolio website.
+
+Rules:
+- Output ONLY the raw HTML file content. Nothing else.
+- Embed ALL CSS inside a <style> tag in <head>.
+- Embed ALL JavaScript inside a <script> tag at the end of <body>.
+- Use a modern, dark-themed design with clean typography.
+- Make it fully responsive for mobile and desktop.
+- Include sections: Hero/Header, About, Skills, Projects, Experience, Achievements, Certifications, Contact.
+- Only include sections that have data in the resume.
+- Use smooth scrolling and subtle animations.
+- Do NOT use any external CDN links or frameworks.
+- Do NOT explain anything.
+- Do NOT wrap in markdown code fences.
+
+RESUME CONTENT:
+<<<
+${resumeContent}
+>>>
+`;
+
+    const html = (await this.llm.generate(prompt)).trim();
+
+    // Strip markdown fences if the LLM wraps them
+    return html
+      .replace(/^```html?\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .trim();
+  }
+
+  // Legacy: separate HTML/CSS/JS files (kept for backward compat)
   async generatePortfolio(resumeContent) {
     try {
-      // 1️⃣ Generate HTML
       const htmlPrompt = `
 You are a senior frontend engineer.
 
@@ -28,7 +64,6 @@ ${resumeContent}
 
       const html = (await this.llm.generate(htmlPrompt)).trim();
 
-      // 2️⃣ Generate CSS with HTML context
       const cssPrompt = `
 You are a senior frontend engineer.
 
@@ -50,7 +85,6 @@ ${html}
 
       const css = (await this.llm.generate(cssPrompt)).trim();
 
-      // 3️⃣ Generate JS with HTML + CSS context
       const jsPrompt = `
 You are a senior frontend engineer.
 
@@ -76,7 +110,6 @@ ${css}
 
       const javascript = (await this.llm.generate(jsPrompt)).trim();
 
-      // 4️⃣ Final deterministic output
       return {
         html,
         css,

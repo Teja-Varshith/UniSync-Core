@@ -1163,34 +1163,34 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
           bgColorHex: '#1A1207',
           accentColorHex: '#E8A838',
         ),
-        HomeQuickActionConfig(
-          key: 'aptitude',
-          title: 'Aptitude\nPractice',
-          chipLabel: 'Daily challenge',
-          ctaLabel: 'Start',
-          route: '/nextUpdatePromo',
-          iconKey: 'bolt',
-          graphicKey: 'spark',
-          section: 'core',
-          sortOrder: 3,
-          visible: true,
-          bgColorHex: '#0D1A10',
-          accentColorHex: '#3ECF8E',
-        ),
-        HomeQuickActionConfig(
-          key: 'uni_cards',
-          title: 'Uni\nCards',
-          chipLabel: 'Bite-sized prep',
-          ctaLabel: 'Open',
-          route: '/nextUpdatePromo',
-          iconKey: 'style',
-          graphicKey: 'wave',
-          section: 'core',
-          sortOrder: 4,
-          visible: true,
-          bgColorHex: '#240C1F',
-          accentColorHex: '#FF6BCB',
-        ),
+        // HomeQuickActionConfig(
+        //   key: 'carrer',
+        //   title: 'Carrer Tools',
+        //   chipLabel: 'Start Grinding',
+        //   ctaLabel: 'Start',
+        //   route: '/CareerScreen',
+        //   iconKey: 'bolt',
+        //   graphicKey: 'spark',
+        //   section: 'core',
+        //   sortOrder: 3,
+        //   visible: true,
+        //   bgColorHex: '#0D1A10',
+        //   accentColorHex: '#3ECF8E',
+        // ),
+        // HomeQuickActionConfig(
+        //   key: 'uni_cards',
+        //   title: 'Uni\nCards',
+        //   chipLabel: 'Bite-sized prep',
+        //   ctaLabel: 'Open',
+        //   route: '/nextUpdatePromo',
+        //   iconKey: 'style',
+        //   graphicKey: 'wave',
+        //   section: 'core',
+        //   sortOrder: 4,
+        //   visible: true,
+        //   bgColorHex: '#240C1F',
+        //   accentColorHex: '#FF6BCB',
+        // ),
       ];
 
   List<FeaturedProjectConfig> _defaultFeaturedProjects() => const [
@@ -1445,7 +1445,11 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
 
   String _resolvedRoute(HomeQuickActionConfig config) {
     final key = config.key.toLowerCase();
-    if (key == 'aptitude' || key == 'uni_cards') {
+    if (key == 'Carrer') {
+      return '/carrer';
+    }
+
+     if (key == 'uni_cards') {
       return '/nextUpdatePromo';
     }
     return config.route;

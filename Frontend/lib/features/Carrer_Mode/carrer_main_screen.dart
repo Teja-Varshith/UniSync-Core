@@ -1,19 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:UniSync/features/Carrer_Mode/portifolio_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:icons_flutter/icons_flutter.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:UniSync/app/providers.dart';
-import 'package:UniSync/features/Campus_Mode/view/home_screen.dart';
 import 'package:UniSync/features/Carrer_Mode/home/career_home_screen.dart';
-import 'package:UniSync/features/interview/view/interview_results_screen.dart';
 import 'package:UniSync/features/interview/view/user_interview_details.dart';
-import 'package:UniSync/features/Carrer_Mode/cards/view/carrer_card_screen.dart';
-import 'package:UniSync/features/interview/view/carrer_interview_screen.dart';
-import 'package:UniSync/features/Carrer_Mode/portifolio/view/pdf_upload.dart';
-import 'package:UniSync/features/Carrer_Mode/sub_views/carrer_resume_screen.dart';
-import 'package:UniSync/features/services/appMode.dart';
 
 class CareerScreen extends ConsumerStatefulWidget {
   const CareerScreen({super.key});
@@ -27,15 +17,19 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
           children: [
             // Scrollable Content
-           Expanded(child: screens[_page]),
+           Expanded(
+             child: Container(
+               color: Colors.black,
+               child: screens[_page],
+             ),
+           ),
           ],
         ),
       ),
@@ -43,7 +37,7 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
   top: false,
   child: Container(
     height: 72,
-    color: Colors.white,
+    color: const Color(0xFF111111),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
@@ -60,14 +54,9 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
             index: 1,
           ),
           _buildNavItem(
-            icon: Icons.layers_outlined,
-            label: "Cards",
+            icon: Icons.work_outline,
+            label: "Portfolio",
             index: 2,
-          ),
-          _buildNavItem(
-            icon: Icons.description_outlined,
-            label: "Resumes",
-            index: 3,
           ),
         ],
       ),
@@ -78,13 +67,17 @@ class _CareerScreenState extends ConsumerState<CareerScreen> {
      );
   }
 
-  List<Widget> screens = [
-     CareerHomeScreen(),
+  late final List<Widget> screens = [
+     CareerHomeScreen(
+       onTabChanged: (index) {
+         setState(() {
+           _page = index;
+         });
+       },
+     ),
     //  CarrerInterviewScreen(),
     UserInterviewDetails(),
-         CarrerCardScreen(),
-
-     PdfUpload(),
+    PortfolioBuilder(),
   ];
 
 
@@ -116,8 +109,8 @@ Widget _buildNavItem({
           icon,
           size: 26,
           color: isActive
-              ? const Color(0xFF6C5CE7)
-              : Colors.grey.shade400,
+            ? Colors.white
+            : Colors.grey.shade600,
         ),
         const SizedBox(height: 6),
         Text(
@@ -128,8 +121,8 @@ Widget _buildNavItem({
                 ? FontWeight.w600
                 : FontWeight.w400,
             color: isActive
-                ? const Color(0xFF6C5CE7)
-                : Colors.grey.shade400,
+              ? Colors.white
+              : Colors.grey.shade600,
             letterSpacing: 0.2,
           ),
         ),

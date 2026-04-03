@@ -1,0 +1,7 @@
+﻿Analyzing resume_analyzer_screen.dart, resume_service.dart...
+
+  error - lib\features\Carrer_Mode\home\resume_analyzer_screen.dart:56:38 - The getter 'surfaceBackground' isn't defined for the type 'UniSyncColors'. Try importing the library that defines 'surfaceBackground', correcting the name to the name of an existing getter, or defining a getter or field named 'surfaceBackground'. - undefined_getter
+  error - lib\features\Carrer_Mode\home\resume_analyzer_screen.dart:58:40 - The getter 'surfaceBackground' isn't defined for the type 'UniSyncColors'. Try importing the library that defines 'surfaceBackground', correcting the name to the name of an existing getter, or defining a getter or field named 'surfaceBackground'. - undefined_getter
+   info - lib\features\Carrer_Mode\home\resume_analyzer_screen.dart:96:51 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+
+3 issues found.

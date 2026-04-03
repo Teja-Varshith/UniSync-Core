@@ -10,6 +10,7 @@ import 'package:UniSync/features/interview/view/start_interview_screen.dart';
 import 'package:UniSync/features/Carrer_Mode/portifolio/view/pdf_upload.dart';
 import 'package:UniSync/features/HomeScreen/homescreen.dart';
 import 'package:UniSync/features/HomeScreen/next_update_promo.dart';
+import 'package:UniSync/features/Carrer_Mode/home/resume_analyzer_screen.dart';
 import 'package:UniSync/features/auth/view/fill_tank.dart';
 import 'package:UniSync/features/auth/view/login_screen.dart';
 import 'package:UniSync/features/Carrer_Mode/carrer_main_screen.dart';
@@ -56,6 +57,7 @@ final loggedInRoutes = RouteMap(routes: {
   "/liveAttendance": (_) => MaterialPage(child: LiveAttendence()),
   "/campXLogin": (_) => MaterialPage(child: CampxLoginScreen()),
   "/portifolio": (_) => MaterialPage(child: PdfUpload()),
+  "/resume-analyzer": (_) => MaterialPage(child: ResumeAnalyzerScreen()),
   "/nextUpdatePromo": (_) => MaterialPage(child: NextUpdatePromoScreen()),
   "/userInterviewDetails": (_) => MaterialPage(child: UserInterviewDetails()),
   "/opportunities": (_) => MaterialPage(child: OpportunitiesScreen()),

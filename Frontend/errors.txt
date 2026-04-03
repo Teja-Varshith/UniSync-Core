@@ -1,0 +1,18 @@
+﻿Analyzing career_home_screen.dart, carrer_main_screen.dart...
+
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:2:8 - Unused import: 'package:cached_network_image/cached_network_image.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:5:8 - Unused import: 'package:google_fonts/google_fonts.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:6:8 - Unused import: 'package:icons_flutter/icons_flutter.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:9:8 - Unused import: 'package:UniSync/features/Campus_Mode/view/home_screen.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:11:8 - Unused import: 'package:UniSync/features/interview/view/interview_results_screen.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:13:8 - Unused import: 'package:UniSync/features/interview/view/carrer_interview_screen.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:14:8 - Unused import: 'package:UniSync/features/Carrer_Mode/portifolio/view/pdf_upload.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:15:8 - Unused import: 'package:UniSync/features/Carrer_Mode/sub_views/carrer_resume_screen.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:16:8 - Unused import: 'package:UniSync/features/services/appMode.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\carrer_main_screen.dart:30:11 - The value of the local variable 'user' isn't used. Try removing the variable or using it. - unused_local_variable
+warning - lib\features\Carrer_Mode\home\career_home_screen.dart:3:8 - Unused import: 'package:google_fonts/google_fonts.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\home\career_home_screen.dart:5:8 - Unused import: 'package:UniSync/app/providers.dart'. Try removing the import directive. - unused_import
+warning - lib\features\Carrer_Mode\home\career_home_screen.dart:6:8 - Unused import: 'package:UniSync/features/services/appMode.dart'. Try removing the import directive. - unused_import
+   info - lib\features\Carrer_Mode\home\career_home_screen.dart:220:39 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+
+14 issues found.

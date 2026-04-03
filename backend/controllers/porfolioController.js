@@ -1,33 +1,31 @@
-import { Document } from "../models/document.js";
 import { portAi } from "../services/ai.js";
 import { savePortfolioFiles } from "../utils/savePortifolio.js";
 
-export const generatePortfolioController = async (req, res) => {
+export const generatePortfolioFromTextController = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, resumeText, slug } = req.body;
 
-    const document = await Document.findOne({ UserId: userId });
-    if (!document) {
-      return res.status(404).json({
+    if (!userId || !resumeText || !slug) {
+      return res.status(400).json({
         success: false,
-        message: "document not found",
+        message: "userId, resumeText, and slug are required",
       });
     }
 
-    // 1️⃣ Generate JSON (html, css, js)
-    const files = await portAi.generatePortfolio(document.extractedText);
+    // 1️⃣ Generate a single complete HTML page
+    const html = await portAi.generateSinglePagePortfolio(resumeText);
 
-    // 2️⃣ Save files to disk
-    await savePortfolioFiles(userId, files);
+    // 2️⃣ Save to disk at portfolios/{slug}/index.html
+    await savePortfolioFiles(slug, { html });
 
-    // 3️⃣ Respond with portfolio URL
+    // 3️⃣ Respond
     return res.status(200).json({
       success: true,
       message: "Portfolio generated successfully",
-      url: `/portfolio/${userId}`,
+      url: `/me/${slug}`,
     });
   } catch (error) {
-    console.error("error generating portfolio:", error);
+    console.error("error generating portfolio from text:", error);
     return res.status(500).json({
       success: false,
       message: "error while generating portfolio",
