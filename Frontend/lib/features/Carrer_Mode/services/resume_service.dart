@@ -7,10 +7,6 @@ import 'package:UniSync/models/portifolo_model.dart';
 
 /// Handles resume PDF picking, text extraction, and Groq-based auto-fill.
 class ResumeService {
-  // ⚠️  Replace with your own key or move to a secure config / env variable.
-  static const _groqApiKey =
-      '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';
-  static const _groqUrl = 'https://api.groq.com/openai/v1/chat/completions';
   static const _model = 'llama-3.3-70b-versatile';
 
   /// Pick a PDF file and extract its raw text.
