@@ -18,12 +18,11 @@ final playStoreReviewerAccessProvider = StreamProvider<bool>((ref) {
       .doc('reviewer_access')
       .snapshots()
       .map((snapshot) {
-        final data = snapshot.data();
-        if (data == null) return false;
-        return data['enabled3'] == true;
-      });
+    final data = snapshot.data();
+    if (data == null) return false;
+    return data['enabled4'] == true;
+  });
 });
-
 
 class _WordCloudBackground extends StatefulWidget {
   const _WordCloudBackground();
@@ -38,67 +37,99 @@ class _WordCloudBackgroundState extends State<_WordCloudBackground>
 
   // ── CONFIGURE YOUR HIGHLIGHTS HERE ──────────────────────────────────
   static const List<_WordDef> _highlightWords = [
-_WordDef('INNOVATE', xFrac: 0.10, yFrac: 0.04, size: 22, angleDeg: -4.0, color: const Color(0xFFFFD72F)),
-_WordDef('LAUNCH',   xFrac: 0.62, yFrac: 0.08, size: 20, angleDeg:  3.5, color: Colors.white),
+    _WordDef('INNOVATE',
+        xFrac: 0.10,
+        yFrac: 0.04,
+        size: 22,
+        angleDeg: -4.0,
+        color: const Color(0xFFFFD72F)),
+    _WordDef('LAUNCH',
+        xFrac: 0.62, yFrac: 0.08, size: 20, angleDeg: 3.5, color: Colors.white),
 
 // brand anchor
-_WordDef('UNISYNC',  xFrac: 0.30, yFrac: 0.20, size: 30, angleDeg: -2.5, color: Colors.white),
+    _WordDef('UNISYNC',
+        xFrac: 0.30,
+        yFrac: 0.20,
+        size: 30,
+        angleDeg: -2.5,
+        color: Colors.white),
 
 // main highlights
-_WordDef('CREATE',   xFrac: 0.08, yFrac: 0.38, size: 30, angleDeg: -2.5, color: const Color(0xFFFFD72F)),
-_WordDef('CONNECT',  xFrac: 0.68, yFrac: 0.35, size: 28, angleDeg:  3.0, color: const Color(0xFFFFD72F)),
-_WordDef('BUILD',    xFrac: 0.35, yFrac: 0.55, size: 26, angleDeg: -1.5, color: const Color(0xFFFFD72F)),
+    _WordDef('CREATE',
+        xFrac: 0.08,
+        yFrac: 0.38,
+        size: 30,
+        angleDeg: -2.5,
+        color: const Color(0xFFFFD72F)),
+    _WordDef('CONNECT',
+        xFrac: 0.68,
+        yFrac: 0.35,
+        size: 28,
+        angleDeg: 3.0,
+        color: const Color(0xFFFFD72F)),
+    _WordDef('BUILD',
+        xFrac: 0.35,
+        yFrac: 0.55,
+        size: 26,
+        angleDeg: -1.5,
+        color: const Color(0xFFFFD72F)),
 
 // secondary highlight
-_WordDef('EXPLORE',  xFrac: 0.54, yFrac: 0.44, size: 24, angleDeg:  2.0, color: Colors.white),
+    _WordDef('EXPLORE',
+        xFrac: 0.54, yFrac: 0.44, size: 24, angleDeg: 2.0, color: Colors.white),
 
 // closing highlight
-_WordDef('GROW',     xFrac: 0.40, yFrac: 0.70, size: 26, angleDeg: -3.0, color: const Color(0xFFFFD72F)),
+    _WordDef('GROW',
+        xFrac: 0.40,
+        yFrac: 0.70,
+        size: 26,
+        angleDeg: -3.0,
+        color: const Color(0xFFFFD72F)),
   ];
   // ─────────────────────────────────────────────────────────────────────
 
   static const List<_WordDef> _noiseWords = [
     // — top zone (was empty before)
-    _WordDef('HACKATHON',   xFrac: 0.04, yFrac: 0.02, size: 11, angleDeg:  2.0),
-    _WordDef('STARTUP',     xFrac: 0.28, yFrac: 0.00, size: 10, angleDeg: -3.0),
-    _WordDef('OPENSOURCE',  xFrac: 0.50, yFrac: 0.03, size:  9, angleDeg:  1.5),
-    _WordDef('DEVS',        xFrac: 0.76, yFrac: 0.01, size: 11, angleDeg: -2.5),
-    _WordDef('COLLAB',      xFrac: 0.88, yFrac: 0.05, size: 10, angleDeg:  3.0),
-    _WordDef('ITERATE',     xFrac: 0.38, yFrac: 0.12, size: 10, angleDeg: -1.5),
-    _WordDef('PITCH',       xFrac: 0.82, yFrac: 0.10, size: 11, angleDeg:  2.5),
+    _WordDef('HACKATHON', xFrac: 0.04, yFrac: 0.02, size: 11, angleDeg: 2.0),
+    _WordDef('STARTUP', xFrac: 0.28, yFrac: 0.00, size: 10, angleDeg: -3.0),
+    _WordDef('OPENSOURCE', xFrac: 0.50, yFrac: 0.03, size: 9, angleDeg: 1.5),
+    _WordDef('DEVS', xFrac: 0.76, yFrac: 0.01, size: 11, angleDeg: -2.5),
+    _WordDef('COLLAB', xFrac: 0.88, yFrac: 0.05, size: 10, angleDeg: 3.0),
+    _WordDef('ITERATE', xFrac: 0.38, yFrac: 0.12, size: 10, angleDeg: -1.5),
+    _WordDef('PITCH', xFrac: 0.82, yFrac: 0.10, size: 11, angleDeg: 2.5),
     // — mid / bottom (unchanged words, now with tilt)
-    _WordDef('PROJECTS',    xFrac: 0.62, yFrac: 0.04, size: 10, angleDeg:  1.0),
-    _WordDef('IDEAS',       xFrac: 0.78, yFrac: 0.08, size: 13, angleDeg: -2.0),
-    _WordDef('COMMUNITY',   xFrac: 0.88, yFrac: 0.02, size: 11, angleDeg:  3.5),
-    _WordDef('CREATORS',    xFrac: 0.02, yFrac: 0.16, size: 11, angleDeg: -1.0),
-    _WordDef('TECH',        xFrac: 0.14, yFrac: 0.20, size: 12, angleDeg:  2.0),
-    _WordDef('DEV',         xFrac: 0.24, yFrac: 0.14, size: 10, angleDeg: -3.5),
-    _WordDef('COLLAB',      xFrac: 0.45, yFrac: 0.17, size: 11, angleDeg:  1.5),
-    _WordDef('NETWORK',     xFrac: 0.58, yFrac: 0.13, size: 13, angleDeg: -2.0),
-    _WordDef('SHIP',        xFrac: 0.70, yFrac: 0.19, size: 10, angleDeg:  3.0),
-    _WordDef('MENTORS',     xFrac: 0.91, yFrac: 0.22, size: 11, angleDeg: -1.5),
-    _WordDef('INTERNS',     xFrac: 0.06, yFrac: 0.30, size: 12, angleDeg:  2.5),
-    _WordDef('PORTFOLIO',   xFrac: 0.22, yFrac: 0.27, size: 10, angleDeg: -2.0),
-    _WordDef('SKILLS',      xFrac: 0.48, yFrac: 0.29, size: 11, angleDeg:  1.0),
-    _WordDef('LEARN',       xFrac: 0.68, yFrac: 0.31, size: 10, angleDeg: -3.0),
-    _WordDef('BUILDERS',    xFrac: 0.85, yFrac: 0.26, size: 12, angleDeg:  2.0),
-    _WordDef('EVENTS',      xFrac: 0.03, yFrac: 0.50, size: 11, angleDeg: -1.5),
-    _WordDef('CLUBS',       xFrac: 0.18, yFrac: 0.53, size: 10, angleDeg:  3.0),
-    _WordDef('FRIENDS',     xFrac: 0.29, yFrac: 0.47, size: 12, angleDeg: -2.5),
-    _WordDef('CREATIVE',    xFrac: 0.82, yFrac: 0.50, size: 11, angleDeg:  1.5),
-    _WordDef('FOCUS',       xFrac: 0.91, yFrac: 0.55, size: 10, angleDeg: -2.0),
-    _WordDef('GOALS',       xFrac: 0.05, yFrac: 0.62, size: 10, angleDeg:  2.5),
-    _WordDef('NETWORKING',  xFrac: 0.20, yFrac: 0.67, size: 12, angleDeg: -1.0),
-    _WordDef('ASSIGNMENTS', xFrac: 0.44, yFrac: 0.68, size: 11, angleDeg:  3.0),
-    _WordDef('SCHEDULE',    xFrac: 0.65, yFrac: 0.63, size: 10, angleDeg: -2.0),
-    _WordDef('PEERS',       xFrac: 0.80, yFrac: 0.68, size: 12, angleDeg:  1.5),
-    _WordDef('WORKSHOPS',   xFrac: 0.25, yFrac: 0.79, size: 10, angleDeg: -3.0),
-    _WordDef('COMMUNITY',   xFrac: 0.50, yFrac: 0.77, size: 12, angleDeg:  2.0),
-    _WordDef('PORTFOLIO',   xFrac: 0.72, yFrac: 0.80, size: 11, angleDeg: -1.5),
-    _WordDef('CAREER',      xFrac: 0.18, yFrac: 0.91, size: 12, angleDeg:  3.5),
-    _WordDef('FUTURE',      xFrac: 0.40, yFrac: 0.89, size: 11, angleDeg: -2.0),
-    _WordDef('CREATORS',    xFrac: 0.62, yFrac: 0.92, size: 10, angleDeg:  1.0),
-    _WordDef('SKILLS',      xFrac: 0.80, yFrac: 0.87, size: 12, angleDeg: -3.5),
+    _WordDef('PROJECTS', xFrac: 0.62, yFrac: 0.04, size: 10, angleDeg: 1.0),
+    _WordDef('IDEAS', xFrac: 0.78, yFrac: 0.08, size: 13, angleDeg: -2.0),
+    _WordDef('COMMUNITY', xFrac: 0.88, yFrac: 0.02, size: 11, angleDeg: 3.5),
+    _WordDef('CREATORS', xFrac: 0.02, yFrac: 0.16, size: 11, angleDeg: -1.0),
+    _WordDef('TECH', xFrac: 0.14, yFrac: 0.20, size: 12, angleDeg: 2.0),
+    _WordDef('DEV', xFrac: 0.24, yFrac: 0.14, size: 10, angleDeg: -3.5),
+    _WordDef('COLLAB', xFrac: 0.45, yFrac: 0.17, size: 11, angleDeg: 1.5),
+    _WordDef('NETWORK', xFrac: 0.58, yFrac: 0.13, size: 13, angleDeg: -2.0),
+    _WordDef('SHIP', xFrac: 0.70, yFrac: 0.19, size: 10, angleDeg: 3.0),
+    _WordDef('MENTORS', xFrac: 0.91, yFrac: 0.22, size: 11, angleDeg: -1.5),
+    _WordDef('INTERNS', xFrac: 0.06, yFrac: 0.30, size: 12, angleDeg: 2.5),
+    _WordDef('PORTFOLIO', xFrac: 0.22, yFrac: 0.27, size: 10, angleDeg: -2.0),
+    _WordDef('SKILLS', xFrac: 0.48, yFrac: 0.29, size: 11, angleDeg: 1.0),
+    _WordDef('LEARN', xFrac: 0.68, yFrac: 0.31, size: 10, angleDeg: -3.0),
+    _WordDef('BUILDERS', xFrac: 0.85, yFrac: 0.26, size: 12, angleDeg: 2.0),
+    _WordDef('EVENTS', xFrac: 0.03, yFrac: 0.50, size: 11, angleDeg: -1.5),
+    _WordDef('CLUBS', xFrac: 0.18, yFrac: 0.53, size: 10, angleDeg: 3.0),
+    _WordDef('FRIENDS', xFrac: 0.29, yFrac: 0.47, size: 12, angleDeg: -2.5),
+    _WordDef('CREATIVE', xFrac: 0.82, yFrac: 0.50, size: 11, angleDeg: 1.5),
+    _WordDef('FOCUS', xFrac: 0.91, yFrac: 0.55, size: 10, angleDeg: -2.0),
+    _WordDef('GOALS', xFrac: 0.05, yFrac: 0.62, size: 10, angleDeg: 2.5),
+    _WordDef('NETWORKING', xFrac: 0.20, yFrac: 0.67, size: 12, angleDeg: -1.0),
+    _WordDef('ASSIGNMENTS', xFrac: 0.44, yFrac: 0.68, size: 11, angleDeg: 3.0),
+    _WordDef('SCHEDULE', xFrac: 0.65, yFrac: 0.63, size: 10, angleDeg: -2.0),
+    _WordDef('PEERS', xFrac: 0.80, yFrac: 0.68, size: 12, angleDeg: 1.5),
+    _WordDef('WORKSHOPS', xFrac: 0.25, yFrac: 0.79, size: 10, angleDeg: -3.0),
+    _WordDef('COMMUNITY', xFrac: 0.50, yFrac: 0.77, size: 12, angleDeg: 2.0),
+    _WordDef('PORTFOLIO', xFrac: 0.72, yFrac: 0.80, size: 11, angleDeg: -1.5),
+    _WordDef('CAREER', xFrac: 0.18, yFrac: 0.91, size: 12, angleDeg: 3.5),
+    _WordDef('FUTURE', xFrac: 0.40, yFrac: 0.89, size: 11, angleDeg: -2.0),
+    _WordDef('CREATORS', xFrac: 0.62, yFrac: 0.92, size: 10, angleDeg: 1.0),
+    _WordDef('SKILLS', xFrac: 0.80, yFrac: 0.87, size: 12, angleDeg: -3.5),
   ];
 
   // radians conversion done once at use-site to keep consts clean
@@ -169,10 +200,14 @@ _WordDef('GROW',     xFrac: 0.40, yFrac: 0.70, size: 26, angleDeg: -3.0, color: 
               child: AnimatedBuilder(
                 animation: _pulse,
                 builder: (_, __) {
-                  final t = ((_pulse.value + i * (1.0 / _highlightWords.length)) % 1.0);
-                  final opacity = 0.6 + 0.4 * Curves.easeInOut.transform(
-                    t < 0.5 ? t * 2 : (1.0 - t) * 2,
-                  );
+                  final t =
+                      ((_pulse.value + i * (1.0 / _highlightWords.length)) %
+                          1.0);
+                  final opacity = 0.6 +
+                      0.4 *
+                          Curves.easeInOut.transform(
+                            t < 0.5 ? t * 2 : (1.0 - t) * 2,
+                          );
                   return Opacity(
                     opacity: opacity,
                     child: Transform.rotate(
@@ -184,7 +219,8 @@ _WordDef('GROW',     xFrac: 0.40, yFrac: 0.70, size: 26, angleDeg: -3.0, color: 
                           fontSize: _highlightWords[i].size.toDouble(),
                           fontWeight: FontWeight.w800,
                           letterSpacing: 1.5,
-                          color: _highlightWords[i].color ?? UniSyncColors.accent,
+                          color:
+                              _highlightWords[i].color ?? UniSyncColors.accent,
                         ),
                       ),
                     ),
@@ -204,7 +240,8 @@ class _WordDef {
   final double xFrac;
   final double yFrac;
   final int size;
-  final double angleDeg; // positive = clockwise tilt, negative = counter-clockwise
+  final double
+      angleDeg; // positive = clockwise tilt, negative = counter-clockwise
   final Color? color;
 
   const _WordDef(
@@ -216,6 +253,7 @@ class _WordDef {
     this.color,
   });
 }
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -346,8 +384,7 @@ class VerticalWordColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: words.map((word) {
-        final highlight =
-            word == "SYNC" || word == "UNI" || word == "EXAMS";
+        final highlight = word == "SYNC" || word == "UNI" || word == "EXAMS";
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -366,10 +403,6 @@ class VerticalWordColumn extends StatelessWidget {
     );
   }
 }
-
-
-
-
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool isLoading = false;
@@ -390,8 +423,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool get _hasReviewerAccess => PLAYSTORE_REVIEWER_UID.trim().isNotEmpty;
 
-
-
   @override
   void initState() {
     super.initState();
@@ -409,8 +440,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final width = size.width;
     final textTheme = Theme.of(context).textTheme;
     final reviewerAccessToggle = ref.watch(playStoreReviewerAccessProvider);
-    final reviewerAccessEnabled =
-        reviewerAccessToggle.maybeWhen(data: (enabled) => enabled, orElse: () => false);
+    final reviewerAccessEnabled = reviewerAccessToggle.maybeWhen(
+        data: (enabled) => enabled, orElse: () => false);
 
     // Calculate responsive login card height
     final loginCardHeight = height * 0.35; // ~35% of screen
@@ -422,12 +453,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Stack(
           children: [
             Positioned(
-  top: 0,
-  left: 0,
-  right: 0,
-  height: carouselAreaHeight,
-  child: _WordCloudBackground(),
-),
+              top: 0,
+              left: 0,
+              right: 0,
+              height: carouselAreaHeight,
+              child: _WordCloudBackground(),
+            ),
+
             /// ================= LOGIN CARD =================
             Positioned(
               left: 0,
@@ -464,7 +496,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
                     NeoPopLogoButton(
                       onPressed: _showNextHeadline,
                     ),
@@ -513,83 +544,82 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     SizedBox(height: height * 0.015),
                     // Sign in text
-Text(
-  'Sign in & dive into newer experiences.\nNo hassle, just innovation.',
-  textAlign: TextAlign.center,
-  style: textTheme.bodyMedium?.copyWith(
-    color: UniSyncColors.textMuted,
-    fontSize: width * 0.032,
-    fontWeight: FontWeight.w400, // lighter feels softer
-    height: 1.5,                 // breathe between lines
-    letterSpacing: 0.1,
-  ),
-),
+                    Text(
+                      'Sign in & dive into newer experiences.\nNo hassle, just innovation.',
+                      textAlign: TextAlign.center,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: UniSyncColors.textMuted,
+                        fontSize: width * 0.032,
+                        fontWeight: FontWeight.w400, // lighter feels softer
+                        height: 1.5, // breathe between lines
+                        letterSpacing: 0.1,
+                      ),
+                    ),
 
-const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
 // Badge
-Container(
-  decoration: BoxDecoration(
-    gradient: LinearGradient(
-      colors: [
-        UniSyncColors.success.withOpacity(0.12),
-        UniSyncColors.success.withOpacity(0.04),
-      ],
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
-    ),
-    borderRadius: BorderRadius.circular(24),
-    border: Border.all(
-      color: UniSyncColors.success.withOpacity(0.4),
-      width: 1,
-    ),
-  ),
-  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-  child: Row(
-  mainAxisSize: MainAxisSize.min,
-  children: [
-    Container(
-      width: 18,
-      height: 18,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0xFFFFD72F).withOpacity(0.12),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFFD72F).withOpacity(0.45),
-            blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.favorite,
-        size: 11,
-        color: Color(0xFFFFD72F),
-      ),
-    ),
-
-    const SizedBox(width: 8),
-
-    Text(
-      'Loved by 5k+ students',
-      style: textTheme.bodySmall?.copyWith(
-        color: Colors.white.withOpacity(0.85),
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.2,
-        fontSize: width * 0.030,
-      ),
-    ),
-  ],
-)
-),
+                    Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              UniSyncColors.success.withOpacity(0.12),
+                              UniSyncColors.success.withOpacity(0.04),
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: UniSyncColors.success.withOpacity(0.4),
+                            width: 1,
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 18,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color:
+                                    const Color(0xFFFFD72F).withOpacity(0.12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFFD72F)
+                                        .withOpacity(0.45),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.favorite,
+                                size: 11,
+                                color: Color(0xFFFFD72F),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Loved by 5k+ students',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withOpacity(0.85),
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                                fontSize: width * 0.030,
+                              ),
+                            ),
+                          ],
+                        )),
                     SizedBox(height: height * 0.01),
 
                     SizedBox(
                       width: double.infinity,
                       child: NeoPopButton(
                         color: UniSyncColors.backgroundPrimary,
-                        
                         bottomShadowColor: UniSyncColors.border,
                         rightShadowColor: UniSyncColors.borderSubtle,
                         depth: 6,
@@ -613,7 +643,8 @@ Container(
                           }
                         },
                         border: Border.all(
-                          color: Colors.white,//UniSyncColors.buttonPrimaryStroke,
+                          color:
+                              Colors.white, //UniSyncColors.buttonPrimaryStroke,
                           width: 1.5,
                         ),
                         child: Padding(
@@ -675,7 +706,7 @@ Container(
                     if (_hasReviewerAccess && reviewerAccessEnabled) ...[
                       SizedBox(height: height * 0.014),
                       Text(
-                        'Use below signin option(temporary) for playstore review if you cant use google signin',
+                        'Use the below signin to quickly experience the App',
                         textAlign: TextAlign.center,
                         style: textTheme.bodySmall?.copyWith(
                           color: UniSyncColors.textMuted,

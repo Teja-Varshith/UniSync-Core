@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:UniSync/features/auth/auth_repository.dart';
 import 'package:UniSync/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:UniSync/constants/constant.dart';
 
 final firebaseFirestoreProvider = Provider((ref)=>FirebaseFirestore.instance);
 final FirebaseAuthProvider = Provider<FirebaseAuth>((ref) {
@@ -196,9 +197,9 @@ final globalBanConfigProvider = FutureProvider<GlobalBanConfig>((ref) async {
 final dioProvider = Provider<Dio>((ref) {
   return Dio(
     BaseOptions(
-      baseUrl: "http://10.185.91.196:3000",
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      baseUrl: BASE_URI,
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
     ),
   );
 });

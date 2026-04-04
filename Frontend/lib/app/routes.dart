@@ -11,6 +11,7 @@ import 'package:UniSync/features/Carrer_Mode/portifolio/view/pdf_upload.dart';
 import 'package:UniSync/features/HomeScreen/homescreen.dart';
 import 'package:UniSync/features/HomeScreen/next_update_promo.dart';
 import 'package:UniSync/features/Carrer_Mode/home/resume_analyzer_screen.dart';
+import 'package:UniSync/features/HomeScreen/view/webview_screen.dart';
 import 'package:UniSync/features/auth/view/fill_tank.dart';
 import 'package:UniSync/features/auth/view/login_screen.dart';
 import 'package:UniSync/features/Carrer_Mode/carrer_main_screen.dart';
@@ -64,6 +65,12 @@ final loggedInRoutes = RouteMap(routes: {
   "/opportunity/:id": (route) => MaterialPage(
         child: OpportunityDetailsScreen(
           opportunityId: route.pathParameters['id'] ?? '',
+        ),
+      ),
+  "/webView": (route) => MaterialPage(
+        child: WebViewScreen(
+          url: route.queryParameters['url'] ??
+              'https://gen-ai-hackathon-livid.vercel.app/',
         ),
       ),
 });

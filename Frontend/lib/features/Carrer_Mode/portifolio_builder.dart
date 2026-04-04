@@ -89,7 +89,9 @@ class _PortfolioBuilderState extends ConsumerState<PortfolioBuilder> {
 
   void _editProject(PortifoloModel data, {int? index}) {
     final isNew = index == null;
-    final project = isNew ? const ProjectItem(name: '', description: '') : data.projects[index];
+    final project = isNew
+        ? const ProjectItem(name: '', description: '')
+        : data.projects[index];
 
     final nameCtrl = TextEditingController(text: project.name);
     final descCtrl = TextEditingController(text: project.description);
@@ -128,14 +130,22 @@ class _PortfolioBuilderState extends ConsumerState<PortfolioBuilder> {
     final skillsText = data.skills.map((s) => s.name).join(', ');
     final ctrl = TextEditingController(text: skillsText);
     final highlightCtrl = TextEditingController(
-      text: data.skills.where((s) => s.isHighlighted).map((s) => s.name).join(', '),
+      text: data.skills
+          .where((s) => s.isHighlighted)
+          .map((s) => s.name)
+          .join(', '),
     );
 
     _showSheet(
       title: 'Edit Skills',
       children: [
-        _SheetField(controller: ctrl, label: 'All Skills (comma separated)', maxLines: 3),
-        _SheetField(controller: highlightCtrl, label: 'Highlighted Skills (comma separated)'),
+        _SheetField(
+            controller: ctrl,
+            label: 'All Skills (comma separated)',
+            maxLines: 3),
+        _SheetField(
+            controller: highlightCtrl,
+            label: 'Highlighted Skills (comma separated)'),
       ],
       onSave: () {
         Navigator.pop(context);
@@ -176,14 +186,17 @@ class _PortfolioBuilderState extends ConsumerState<PortfolioBuilder> {
       children: [
         _SheetField(controller: roleCtrl, label: 'Role'),
         _SheetField(controller: orgCtrl, label: 'Organisation'),
-        _SheetField(controller: dateCtrl, label: 'Date Range (e.g. Jan 2025 – Present)'),
+        _SheetField(
+            controller: dateCtrl,
+            label: 'Date Range (e.g. Jan 2025 – Present)'),
         StatefulBuilder(
           builder: (ctx, setInner) => SwitchListTile(
             contentPadding: EdgeInsets.zero,
             dense: true,
             activeColor: UniSyncColors.accent,
             title: const Text('Currently Active',
-                style: TextStyle(fontSize: 13, color: UniSyncColors.textSecondary)),
+                style: TextStyle(
+                    fontSize: 13, color: UniSyncColors.textSecondary)),
             value: isActive,
             onChanged: (v) => setInner(() => isActive = v),
           ),
@@ -210,9 +223,8 @@ class _PortfolioBuilderState extends ConsumerState<PortfolioBuilder> {
 
   void _editAchievement(PortifoloModel data, {int? index}) {
     final isNew = index == null;
-    final item = isNew
-        ? const AchievementItem(title: '')
-        : data.achievements[index];
+    final item =
+        isNew ? const AchievementItem(title: '') : data.achievements[index];
 
     final titleCtrl = TextEditingController(text: item.title);
     final descCtrl = TextEditingController(text: item.description);
@@ -268,9 +280,8 @@ class _PortfolioBuilderState extends ConsumerState<PortfolioBuilder> {
           name: nameCtrl.text.trim(),
           issuer: issuerCtrl.text.trim(),
           date: dateCtrl.text.trim(),
-          credentialUrl: urlCtrl.text.trim().isEmpty
-              ? null
-              : urlCtrl.text.trim(),
+          credentialUrl:
+              urlCtrl.text.trim().isEmpty ? null : urlCtrl.text.trim(),
         );
         final list = List<CertificationItem>.from(data.certifications);
         if (isNew) {
@@ -333,20 +344,19 @@ class _PortfolioBuilderState extends ConsumerState<PortfolioBuilder> {
                 ),
                 const SizedBox(height: 12),
                 _PreviewRow('Role', parsed.role),
-                _PreviewRow('About',
+                _PreviewRow(
+                    'About',
                     parsed.about.length > 80
                         ? '${parsed.about.substring(0, 80)}…'
                         : parsed.about),
-                _PreviewRow('Skills',
-                    parsed.skills.map((s) => s.name).join(', ')),
-                _PreviewRow('Projects',
-                    '${parsed.projects.length} found'),
-                _PreviewRow('Experience',
-                    '${parsed.experience.length} found'),
-                _PreviewRow('Achievements',
-                    '${parsed.achievements.length} found'),
-                _PreviewRow('Certifications',
-                    '${parsed.certifications.length} found'),
+                _PreviewRow(
+                    'Skills', parsed.skills.map((s) => s.name).join(', ')),
+                _PreviewRow('Projects', '${parsed.projects.length} found'),
+                _PreviewRow('Experience', '${parsed.experience.length} found'),
+                _PreviewRow(
+                    'Achievements', '${parsed.achievements.length} found'),
+                _PreviewRow(
+                    'Certifications', '${parsed.certifications.length} found'),
               ],
             ),
           ),
@@ -425,7 +435,8 @@ class _PortfolioBuilderState extends ConsumerState<PortfolioBuilder> {
     if (slug.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Name is required to generate portfolio')),
+          const SnackBar(
+              content: Text('Name is required to generate portfolio')),
         );
       }
       return;
@@ -1007,8 +1018,8 @@ class _HeroCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
-                          Icon(Icons.upload_file, size: 13,
-                              color: UniSyncColors.textSecondary),
+                          Icon(Icons.upload_file,
+                              size: 13, color: UniSyncColors.textSecondary),
                           SizedBox(width: 6),
                           Text(
                             'Upload PDF & Recreate',
@@ -1038,8 +1049,8 @@ class _HeroCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
-                          Icon(Icons.web, size: 13,
-                              color: UniSyncColors.accent),
+                          Icon(Icons.web,
+                              size: 13, color: UniSyncColors.accent),
                           SizedBox(width: 6),
                           Text(
                             'Generate Portfolio Website',
@@ -1290,14 +1301,14 @@ class _SectionCard extends StatelessWidget {
   final String title;
   final String emoji;
   final VoidCallback onEdit;
-  final VoidCallback onAiImprove;
+  // final VoidCallback onAiImprove;
   final Widget body;
 
   const _SectionCard({
     required this.title,
     required this.emoji,
     required this.onEdit,
-    required this.onAiImprove,
+    // required this.onAiImprove,
     required this.body,
   });
 
@@ -1345,12 +1356,12 @@ class _SectionCard extends StatelessWidget {
                   isAccent: false,
                 ),
                 const SizedBox(width: 6),
-                _ActionButton(
-                  label: 'Improve',
-                  icon: Icons.auto_awesome,
-                  onTap: onAiImprove,
-                  isAccent: true,
-                ),
+                // _ActionButton(
+                //   label: 'Improve',
+                //   icon: Icons.auto_awesome,
+                //   onTap: onAiImprove,
+                //   isAccent: true,
+                // ),
               ],
             ),
           ),
@@ -1471,7 +1482,7 @@ class _AboutCard extends StatelessWidget {
       title: 'About',
       emoji: '👤',
       onEdit: onEdit,
-      onAiImprove: () {},
+      // onAiImprove: () {},
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
         child: Text(
@@ -1510,7 +1521,7 @@ class _ProjectsCard extends StatelessWidget {
       title: 'Projects',
       emoji: '🗂️',
       onEdit: projects.isNotEmpty ? onEdit : onAdd,
-      onAiImprove: () {},
+      // onAiImprove: () {},
       body: Column(
         children: [
           if (projects.isEmpty)
@@ -1610,7 +1621,7 @@ class _SkillsCard extends StatelessWidget {
       title: 'Skills',
       emoji: '💡',
       onEdit: onEdit,
-      onAiImprove: () {},
+      // onAiImprove: () {},
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
         child: skills.isEmpty
@@ -1679,7 +1690,7 @@ class _ExperienceCard extends StatelessWidget {
       title: 'Experience',
       emoji: '🏢',
       onEdit: experience.isNotEmpty ? onEdit : onAdd,
-      onAiImprove: () {},
+      // onAiImprove: () {},
       body: Column(
         children: [
           const SizedBox(height: 4),
@@ -1740,8 +1751,7 @@ class _ExpRow extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color:
-                      isActive ? UniSyncColors.accent : UniSyncColors.border,
+                  color: isActive ? UniSyncColors.accent : UniSyncColors.border,
                 ),
               ),
               if (isActive)
@@ -1814,7 +1824,7 @@ class _AchievementsCard extends StatelessWidget {
       title: 'Achievements',
       emoji: '🏆',
       onEdit: achievements.isNotEmpty ? onEdit : onAdd,
-      onAiImprove: () {},
+      // onAiImprove: () {},
       body: Column(
         children: [
           if (achievements.isEmpty)
@@ -1915,7 +1925,7 @@ class _CertificationsCard extends StatelessWidget {
       title: 'Certifications',
       emoji: '📜',
       onEdit: certifications.isNotEmpty ? onEdit : onAdd,
-      onAiImprove: () {},
+      // onAiImprove: () {},
       body: Column(
         children: [
           if (certifications.isEmpty)

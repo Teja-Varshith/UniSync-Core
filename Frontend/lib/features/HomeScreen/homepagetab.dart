@@ -1449,8 +1449,8 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
       return '/carrer';
     }
 
-     if (key == 'uni_cards') {
-      return '/nextUpdatePromo';
+    if (key == 'uni_cards') {
+      return '/webView';
     }
     return config.route;
   }
@@ -3248,7 +3248,7 @@ class _CarouselCard extends StatelessWidget {
                 //     ),
                 //   ),
                 // ),
-               
+
                 Positioned(
                   left: 16,
                   right: 16,
