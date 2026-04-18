@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +11,10 @@ import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/interview/controllers/reports_controller.dart';
 import 'package:UniSync/features/interview/controllers/interview_controller.dart';
 import 'package:UniSync/features/interview/view/carrer_interview_screen.dart';
+import 'package:UniSync/features/interview/view/interview_palette.dart';
 import 'package:UniSync/sockets/socket_methods.dart';
+
+InterviewPalette _ui(BuildContext context) => InterviewPalette.of(context);
 
 class StartInterviewScreen extends ConsumerStatefulWidget {
   const StartInterviewScreen({super.key});
@@ -35,13 +37,17 @@ class _StartInterviewScreenState
   void _showStartError(String message) {
     final messenger = rootScaffoldMessengerKey.currentState;
     if (messenger == null) return;
+    final themeContext = rootScaffoldMessengerKey.currentContext;
+    final errorColor = themeContext != null
+        ? _ui(themeContext).error
+        : Colors.redAccent;
 
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: UniSyncColors.error,
+          backgroundColor: errorColor,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -68,7 +74,7 @@ class _StartInterviewScreenState
 
   Future<int> _refreshUserCoins(String uid) async {
     try {
-      final firestore = ref.read(firebaseFirestoreProvider) as FirebaseFirestore;
+      final firestore = ref.read(firebaseFirestoreProvider);
       final snap = await firestore.collection('users').doc(uid).get();
       final latestCoins = (snap.data()?['coins'] as num?)?.toInt() ?? 0;
 
@@ -93,12 +99,12 @@ class _StartInterviewScreenState
     final shouldStart = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: UniSyncColors.backgroundSecondary,
+        backgroundColor: _ui(context).backgroundSecondary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text(
+        title: Text(
           'Start Interview?',
           style: TextStyle(
-            color: UniSyncColors.textPrimary,
+            color: _ui(context).textPrimary,
             fontSize: 17,
             fontWeight: FontWeight.w700,
           ),
@@ -107,8 +113,8 @@ class _StartInterviewScreenState
           'This will deduct $coinPrice UniCoins from your wallet.\n'
           'Questions to be asked: $effectiveQuestionCount\n'
           'Remaining balance: ${remainingCoins < 0 ? 0 : remainingCoins} UniCoins.',
-          style: const TextStyle(
-            color: UniSyncColors.textSecondary,
+          style: TextStyle(
+            color: _ui(context).textSecondary,
             fontSize: 13,
             height: 1.45,
           ),
@@ -116,20 +122,20 @@ class _StartInterviewScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(
+            child:  Text(
               'Cancel',
               style: TextStyle(
-                color: UniSyncColors.textMuted,
+                color: _ui(context).textMuted,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(
+            child:  Text(
               'Start',
               style: TextStyle(
-                color: UniSyncColors.accent,
+                color: _ui(context).accent,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -236,7 +242,7 @@ class _StartInterviewScreenState
     // ──────────────────────────────────────────────────────────────
 
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
 
        // ── Floating shimmer CTA ─────────────────────────────────────
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -244,13 +250,13 @@ class _StartInterviewScreenState
           ? Container(
               height: 56,
               margin: const EdgeInsets.symmetric(horizontal: 24),
-              color: UniSyncColors.accent,
-              child: const Center(
+              color: _ui(context).accent,
+              child: Center(
                 child: SizedBox(
                   width: 20, height: 20,
                   child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: UniSyncColors.buttonPrimaryFg),
+                      color: _ui(context).buttonPrimaryFg),
                 ),
               ),
             )
@@ -260,11 +266,11 @@ class _StartInterviewScreenState
                 isFloating: true,
                 decoration: NeoPopTiltedButtonDecoration(
                   color: hasEnoughCoins
-                      ? UniSyncColors.accent
-                      : UniSyncColors.textDisabled,
+                      ? _ui(context).accent
+                      : _ui(context).textDisabled,
                   plunkColor: hasEnoughCoins
-                      ? UniSyncColors.accent
-                      : UniSyncColors.textDisabled,
+                      ? _ui(context).accent
+                      : _ui(context).textDisabled,
                   shadowColor: Colors.black.withOpacity(0.5),
                   showShimmer: hasEnoughCoins,
                 ),
@@ -278,7 +284,7 @@ class _StartInterviewScreenState
                       children: [
                         Icon(Icons.rocket_launch_rounded,
                             size: 16,
-                            color: UniSyncColors.buttonPrimaryFg),
+                            color: _ui(context).buttonPrimaryFg),
                         SizedBox(width: 8),
                         Text(hasEnoughCoins
                             ? 'Start Interview'
@@ -287,8 +293,8 @@ class _StartInterviewScreenState
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
                               color: hasEnoughCoins
-                                  ? UniSyncColors.buttonPrimaryFg
-                                  : UniSyncColors.backgroundPrimary,
+                                  ? _ui(context).buttonPrimaryFg
+                                  : _ui(context).backgroundPrimary,
                               letterSpacing: 0.2,
                             )),
                       ],
@@ -303,51 +309,51 @@ class _StartInterviewScreenState
 
           // ── App bar (unchanged) ────────────────────────────────
           Container(
-            color: UniSyncColors.backgroundSecondary,
+            color: _ui(context).backgroundSecondary,
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Row(children: [
               // NeoPopButton(
-              //   color: UniSyncColors.surfaceCard,
-              //   bottomShadowColor: UniSyncColors.border,
-              //   rightShadowColor: UniSyncColors.border,
+              //   color: _ui(context).surfaceCard,
+              //   bottomShadowColor: _ui(context).border,
+              //   rightShadowColor: _ui(context).border,
               //   depth: 3,
               //   onTapUp: () => Routemaster.of(context)
               //       .replace('/carrer-interview-screen'),
               //   onTapDown: () {},
               //   child: const SizedBox(width: 40, height: 40,
               //     child: Center(child: Icon(Icons.arrow_back_ios_new_rounded,
-              //         size: 16, color: UniSyncColors.textPrimary)),
+              //         size: 16, color: _ui(context).textPrimary)),
               //   ),
               // ),
               // const SizedBox(width: 14),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('#INTERVIEW', style: TextStyle(
-                    color: UniSyncColors.accent, fontSize: 9,
+                  Text('#INTERVIEW', style: TextStyle(
+                    color: _ui(context).accent, fontSize: 9,
                     fontWeight: FontWeight.w700, letterSpacing: 1.8,
                   )),
                   const SizedBox(height: 2),
                   RichText(
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    text: const TextSpan(children: [
+                    text: TextSpan(children: [
                       TextSpan(text: 'Detailed ',
-                          style: TextStyle(color: UniSyncColors.textPrimary,
+                          style: TextStyle(color: _ui(context).textPrimary,
                               fontSize: 18, fontWeight: FontWeight.w800,
                               letterSpacing: -0.4)),
                       TextSpan(text: 'info',
-                          style: TextStyle(color: UniSyncColors.accent,
+                          style: TextStyle(color: _ui(context).accent,
                               fontSize: 18, fontWeight: FontWeight.w800,
                               letterSpacing: -0.4)),
                     ]),
                   ),
                   const SizedBox(height: 3),
-                  const Text(
+                   Text(
                     'Feel the actual butterflies before the real one',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: UniSyncColors.textMuted,
+                      color: _ui(context).textMuted,
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
                     ),
@@ -356,31 +362,31 @@ class _StartInterviewScreenState
               ),
               const SizedBox(width: 10),
               NeoPopButton(
-                color: UniSyncColors.surfaceCard,
-                bottomShadowColor: UniSyncColors.accent,
-                rightShadowColor: UniSyncColors.accent,
+                color: _ui(context).surfaceCard,
+                bottomShadowColor: _ui(context).accent,
+                rightShadowColor: _ui(context).accent,
                 depth: 3,
                 onTapUp: () {
                   ref.invalidate(ReportsControllerProvider);
                   Routemaster.of(context).push('/reportsScreen');
                 },
                 onTapDown: () {},
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Text('Reports', style: TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w700,
-                      color: UniSyncColors.accent)),
+                      color: _ui(context).accent)),
                     SizedBox(width: 5),
                     Icon(Icons.launch_rounded,
-                        size: 13, color: UniSyncColors.accent),
+                        size: 13, color: _ui(context).accent),
                   ]),
                 ),
               ),
             ]),
           ),
 
-          Container(height: 0.8, color: UniSyncColors.divider),
+          Container(height: 0.8, color: _ui(context).divider),
 
           // ── Body ────────────────────────────────────────────────
           Expanded(
@@ -395,9 +401,9 @@ class _StartInterviewScreenState
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: UniSyncColors.backgroundSecondary,
+                      color: _ui(context).backgroundSecondary,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: UniSyncColors.borderSubtle),
+                      border: Border.all(color: _ui(context).borderSubtle),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -406,20 +412,20 @@ class _StartInterviewScreenState
                           width: 60, height: 60,
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: UniSyncColors.surfaceCard,
+                            color: _ui(context).surfaceCard,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: UniSyncColors.border),
+                            border: Border.all(color: _ui(context).border),
                           ),
                           child: CachedNetworkImage(
                             imageUrl: tmplte.icon, fit: BoxFit.contain,
-                            placeholder: (_, __) => const SizedBox(
+                            placeholder: (_, __) => SizedBox(
                               width: 16, height: 16,
                               child: CircularProgressIndicator(
                                   strokeWidth: 1.5,
-                                  color: UniSyncColors.textMuted)),
-                            errorWidget: (_, __, ___) => const Icon(
+                                  color: _ui(context).textMuted)),
+                            errorWidget: (_, __, ___) => Icon(
                                 Icons.psychology_outlined,
-                                color: UniSyncColors.textMuted, size: 24),
+                                color: _ui(context).textMuted, size: 24),
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -430,9 +436,9 @@ class _StartInterviewScreenState
                               Text(tmplte.title,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style:  TextStyle(
                                     fontSize: 17, fontWeight: FontWeight.w800,
-                                    color: UniSyncColors.textPrimary,
+                                    color: _ui(context).textPrimary,
                                     letterSpacing: -0.3,
                                   )),
                               const SizedBox(height: 8),
@@ -444,17 +450,17 @@ class _StartInterviewScreenState
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: UniSyncColors.accentSoft,
+                                      color: _ui(context).accentSoft,
                                       borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
-                                        color: UniSyncColors.accent
+                                        color: _ui(context).accent
                                             .withOpacity(0.4),
                                       ),
                                     ),
                                     child: Text(
                                       'Cost: ${tmplte.coinPrice} coins',
-                                      style: const TextStyle(
-                                        color: UniSyncColors.accent,
+                                      style:  TextStyle(
+                                        color: _ui(context).accent,
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -464,16 +470,16 @@ class _StartInterviewScreenState
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: UniSyncColors.surfaceCard,
+                                      color: _ui(context).surfaceCard,
                                       borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
-                                        color: UniSyncColors.border,
+                                        color: _ui(context).border,
                                       ),
                                     ),
                                     child: Text(
                                       'You have: $availableCoins coins',
-                                      style: const TextStyle(
-                                        color: UniSyncColors.textSecondary,
+                                      style:  TextStyle(
+                                        color: _ui(context).textSecondary,
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -495,25 +501,25 @@ class _StartInterviewScreenState
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: UniSyncColors.backgroundSecondary,
+                      color: _ui(context).backgroundSecondary,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: UniSyncColors.borderSubtle),
+                      border: Border.all(color: _ui(context).borderSubtle),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          children: const [
+                          children:  [
                             Icon(
                               Icons.tune_rounded,
                               size: 16,
-                              color: UniSyncColors.accent,
+                              color: _ui(context).accent,
                             ),
                             SizedBox(width: 8),
                             Text(
                               'Interview Length',
                               style: TextStyle(
-                                color: UniSyncColors.textPrimary,
+                                color: _ui(context).textPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.2,
@@ -522,10 +528,10 @@ class _StartInterviewScreenState
                           ],
                         ),
                         const SizedBox(height: 6),
-                        const Text(
+                         Text(
                           'Select how many questions AI should ask. Minimum 4, maximum 20. Leave custom empty to use default 6.',
-                          style: TextStyle(
-                            color: UniSyncColors.textSecondary,
+                                      style: TextStyle(
+                            color: _ui(context).textSecondary,
                             fontSize: 12,
                             height: 1.4,
                           ),
@@ -551,13 +557,13 @@ class _StartInterviewScreenState
                                 ),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? UniSyncColors.accent.withOpacity(0.15)
-                                      : UniSyncColors.surfaceCard,
+                                      ? _ui(context).accent.withOpacity(0.15)
+                                      : _ui(context).surfaceCard,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: isSelected
-                                        ? UniSyncColors.accent
-                                        : UniSyncColors.border,
+                                        ? _ui(context).accent
+                                        : _ui(context).border,
                                   ),
                                 ),
                                 child: Row(
@@ -567,8 +573,8 @@ class _StartInterviewScreenState
                                       '$count',
                                       style: TextStyle(
                                         color: isSelected
-                                            ? UniSyncColors.accent
-                                            : UniSyncColors.textSecondary,
+                                            ? _ui(context).accent
+                                            : _ui(context).textSecondary,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -581,14 +587,14 @@ class _StartInterviewScreenState
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: UniSyncColors.accentSoft,
+                                          color: _ui(context).accentSoft,
                                           borderRadius:
                                               BorderRadius.circular(4),
                                         ),
-                                        child: const Text(
+                                        child: Text(
                                           'DEFAULT',
                                           style: TextStyle(
-                                            color: UniSyncColors.accent,
+                                            color: _ui(context).accent,
                                             fontSize: 8.5,
                                             fontWeight: FontWeight.w800,
                                             letterSpacing: 0.4,
@@ -626,10 +632,10 @@ class _StartInterviewScreenState
                             errorText: hasInvalidQuestionInput
                                 ? 'Enter between 4 and 20'
                                 : null,
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.help_outline_rounded,
                               size: 18,
-                              color: UniSyncColors.accent,
+                              color: _ui(context).accent,
                             ),
                             suffixIcon:
                                 _questionCountController.text.trim().isEmpty
@@ -639,10 +645,10 @@ class _StartInterviewScreenState
                                           _questionCountController.clear();
                                           setState(() {});
                                         },
-                                        icon: const Icon(
+                                        icon: Icon(
                                           Icons.close_rounded,
                                           size: 18,
-                                          color: UniSyncColors.textMuted,
+                                          color: _ui(context).textMuted,
                                         ),
                                       ),
                             isDense: true,
@@ -651,23 +657,23 @@ class _StartInterviewScreenState
                               vertical: 12,
                             ),
                             filled: true,
-                            fillColor: UniSyncColors.surfaceCard,
+                            fillColor: _ui(context).surfaceCard,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: UniSyncColors.border,
+                              borderSide:  BorderSide(
+                                color: _ui(context).border,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: UniSyncColors.accent,
+                              borderSide:  BorderSide(
+                                color: _ui(context).accent,
                                 width: 1.5,
                               ),
                             ),
                           ),
-                          style: const TextStyle(
-                            color: UniSyncColors.textPrimary,
+                          style: TextStyle(
+                            color: _ui(context).textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -675,8 +681,8 @@ class _StartInterviewScreenState
                         const SizedBox(height: 8),
                         Text(
                           'Interview will run for ${parsedQuestionLimit ?? _defaultQuestionCount} question${(parsedQuestionLimit ?? _defaultQuestionCount) > 1 ? 's' : ''}.',
-                          style: const TextStyle(
-                            color: UniSyncColors.textMuted,
+                          style: TextStyle(
+                            color: _ui(context).textMuted,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -699,13 +705,13 @@ class _StartInterviewScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: UniSyncColors.surfaceCard,
+                        color: _ui(context).surfaceCard,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: UniSyncColors.border),
+                        border: Border.all(color: _ui(context).border),
                       ),
-                      child: Text(chip, style: const TextStyle(
+                      child: Text(chip, style:  TextStyle(
                         fontSize: 12, fontWeight: FontWeight.w600,
-                        color: UniSyncColors.textSecondary,
+                        color: _ui(context).textSecondary,
                       )),
                     )).toList(),
                   ),
@@ -754,20 +760,20 @@ class _SectionHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(eyebrow, style: const TextStyle(
-        color: UniSyncColors.accent, fontSize: 9,
+      Text(eyebrow, style: TextStyle(
+        color: _ui(context).accent, fontSize: 9,
         fontWeight: FontWeight.w700, letterSpacing: 1.8,
       )),
       const SizedBox(height: 4),
       RichText(text: TextSpan(children: [
         TextSpan(text: '$title ',
-            style: const TextStyle(
-              color: UniSyncColors.textPrimary, fontSize: 22,
+            style: TextStyle(
+              color: _ui(context).textPrimary, fontSize: 22,
               fontWeight: FontWeight.w800, letterSpacing: -0.5, height: 1.1,
             )),
         TextSpan(text: highlight,
-            style: const TextStyle(
-              color: UniSyncColors.accent, fontSize: 22,
+            style: TextStyle(
+              color: _ui(context).accent, fontSize: 22,
               fontWeight: FontWeight.w800, letterSpacing: -0.5, height: 1.1,
             )),
       ])),
@@ -793,9 +799,9 @@ class _MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: UniSyncColors.surfaceCard,
+        color: _ui(context).surfaceCard,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: UniSyncColors.borderSubtle),
+        border: Border.all(color: _ui(context).borderSubtle),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -805,12 +811,12 @@ class _MetricCard extends StatelessWidget {
           Container(
             width: 28, height: 28,
             decoration: BoxDecoration(
-              color: UniSyncColors.accent.withOpacity(0.1),
+              color: _ui(context).accent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(7),
-              border: Border.all(color: UniSyncColors.accent.withOpacity(0.25)),
+              border: Border.all(color: _ui(context).accent.withOpacity(0.25)),
             ),
-            child: Center(child: Text('$index', style: const TextStyle(
-              color: UniSyncColors.accent, fontSize: 11,
+            child: Center(child: Text('$index', style: TextStyle(
+              color: _ui(context).accent, fontSize: 11,
               fontWeight: FontWeight.w800,
             ))),
           ),
@@ -820,13 +826,13 @@ class _MetricCard extends StatelessWidget {
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(
+              Text(title, style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w700,
-                color: UniSyncColors.textPrimary, letterSpacing: -0.1,
+                color: _ui(context).textPrimary, letterSpacing: -0.1,
               )),
               const SizedBox(height: 5),
-              Text(description, style: const TextStyle(
-                fontSize: 12, color: UniSyncColors.textSecondary, height: 1.45,
+              Text(description, style: TextStyle(
+                fontSize: 12, color: _ui(context).textSecondary, height: 1.45,
               )),
             ],
           )),
@@ -835,3 +841,10 @@ class _MetricCard extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+

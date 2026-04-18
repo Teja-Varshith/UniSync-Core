@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/features/attendance/repository/attendance_repository.dart';
 import 'package:UniSync/features/services/appMode.dart';
 import 'package:UniSync/models/user_model.dart';
 import 'package:UniSync/utils/badge.dart';
@@ -281,14 +282,15 @@ Widget _appbar(UserModel user,WidgetRef ref,BuildContext context) {
           ),
          
 
-          LiveAttendanceBadge(onTap: () {
-            print(ref.read(userProvider)!.cookie);
-            if(user.cookie != null){
-              print("went in");
-            Routemaster.of(context).push('/liveAttendence');
-            }else{
+          LiveAttendanceBadge(onTap: () async {
+            final hasSession =
+                await ref.read(AttendanceRepositoryProvider).hasSavedCampXSession();
+            if (!context.mounted) return;
+            if (hasSession) {
+              Routemaster.of(context).push('/liveAttendence');
+            } else {
               Routemaster.of(context).push('/campXLogin');
-            } 
+            }
           }),
         ],
       ),

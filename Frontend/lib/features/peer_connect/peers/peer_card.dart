@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/peer_connect/peers/peer_controller.dart';
 import 'package:UniSync/models/peer_model.dart';
@@ -11,6 +12,59 @@ const double kCardHeight = 440.0;
 // Characters at which we consider bio "long" and show Read more
 // ~45 chars/line × 2 lines = ~90, use 100 as safe threshold
 const int _bioCollapseThreshold = 100;
+
+class _PeerCardPalette {
+  const _PeerCardPalette({
+    required this.isDark,
+    required this.surface,
+    required this.surface2,
+    required this.border,
+    required this.divider,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.likeIdleBg,
+    required this.likeIdleShadow,
+    required this.likeIdleIcon,
+    required this.avatarCore,
+  });
+
+  final bool isDark;
+  final Color surface;
+  final Color surface2;
+  final Color border;
+  final Color divider;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color likeIdleBg;
+  final Color likeIdleShadow;
+  final Color likeIdleIcon;
+  final Color avatarCore;
+
+  factory _PeerCardPalette.of(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return _PeerCardPalette(
+      isDark: isDark,
+      surface: isDark ? const Color(0xFF0E1118) : Colors.white,
+      surface2: isDark ? const Color(0xFF1C2128) : AppColors.lightCardAlt,
+      border: isDark ? const Color(0xFF30363D) : AppColors.lightBorder,
+      divider: isDark
+          ? Colors.white.withOpacity(0.06)
+          : Colors.black.withOpacity(0.06),
+      textPrimary: theme.colorScheme.onSurface,
+      textSecondary:
+          isDark ? const Color(0xFF8B949E) : AppColors.lightTextSecondary,
+      textMuted: isDark ? const Color(0xFF555F6D) : AppColors.lightTextMuted,
+      likeIdleBg: isDark ? const Color(0xFF161B22) : AppColors.lightCardAlt,
+      likeIdleShadow: isDark ? const Color(0xFF090C12) : AppColors.lightBorder,
+      likeIdleIcon:
+          isDark ? const Color(0xFF555F6D) : AppColors.lightTextSecondary,
+      avatarCore: isDark ? const Color(0xFF0A0D14) : const Color(0xFFE8EEF5),
+    );
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  PeerCard
@@ -82,9 +136,10 @@ class _LikeButtonState extends ConsumerState<_LikeButton> {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor     = _liked ? const Color(0xFF2A1212) : const Color(0xFF161B22);
-    final shadowColor = _liked ? const Color(0xFF180808) : const Color(0xFF090C12);
-    final iconColor   = _liked ? const Color(0xFFFF6B6B) : const Color(0xFF555F6D);
+    final ui = _PeerCardPalette.of(context);
+    final bgColor = _liked ? const Color(0xFF2A1212) : ui.likeIdleBg;
+    final shadowColor = _liked ? const Color(0xFF180808) : ui.likeIdleShadow;
+    final iconColor = _liked ? const Color(0xFFFF6B6B) : ui.likeIdleIcon;
 
     return NeoPopButton(
       color: bgColor, bottomShadowColor: shadowColor,
@@ -141,6 +196,7 @@ class _MinimalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = _PeerCardPalette.of(context);
     final p        = _palette();
     final initials = peerModel.name.trim().split(' ')
         .take(2).map((w) => w.isEmpty ? '' : w[0].toUpperCase()).join();
@@ -158,9 +214,9 @@ class _MinimalCard extends StatelessWidget {
       height: kCardHeight,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0E1118),
+          color: ui.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: ui.border.withOpacity(ui.isDark ? 1 : 0.9)),
           boxShadow: [
             BoxShadow(color: p.glow.withOpacity(0.08),
                 blurRadius: 24, offset: const Offset(0, 8)),
@@ -185,7 +241,7 @@ class _MinimalCard extends StatelessWidget {
                     Expanded(
                       child: Text(peerModel.name,
                         maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white, fontSize: 16,
+                        style: TextStyle(color: ui.textPrimary, fontSize: 16,
                             fontWeight: FontWeight.w700, letterSpacing: -0.3)),
                     ),
                     if (likeWidget != null) ...[const SizedBox(width: 8), likeWidget],
@@ -218,7 +274,7 @@ class _MinimalCard extends StatelessWidget {
             ]),
           ),
 
-          Container(height: 1, color: Colors.white.withOpacity(0.06)),
+          Container(height: 1, color: ui.divider),
 
           // ── Scrollable body ────────────────────────────────────
           Expanded(
@@ -259,15 +315,21 @@ class _MinimalCard extends StatelessWidget {
                 // Social CTAs
                 if (peerModel.linkedinLink != null ||
                     peerModel.gitHubLink != null) ...[
-                  Container(height: 1, color: Colors.white.withOpacity(0.06)),
+                  Container(height: 1, color: ui.divider),
                   const SizedBox(height: 12),
                   Row(children: [
                     if (peerModel.linkedinLink != null) ...[
                       Expanded(child: _NeoLink(
                         label: 'LinkedIn', icon: Icons.work_outline_rounded,
-                        color: const Color(0xFF1A2A4A),
-                        shadow: const Color(0xFF0D1929),
-                        textColor: const Color(0xFF4A90E2),
+                        color: ui.isDark
+                            ? const Color(0xFF1A2A4A)
+                            : const Color(0xFFEAF2FF),
+                        shadow: ui.isDark
+                            ? const Color(0xFF0D1929)
+                            : const Color(0xFFD1E0FF),
+                        textColor: ui.isDark
+                            ? const Color(0xFF4A90E2)
+                            : const Color(0xFF2D5F9E),
                         onTap: () => _launch(peerModel.linkedinLink!),
                       )),
                       if (peerModel.gitHubLink != null) const SizedBox(width: 8),
@@ -275,9 +337,15 @@ class _MinimalCard extends StatelessWidget {
                     if (peerModel.gitHubLink != null)
                       Expanded(child: _NeoLink(
                         label: 'GitHub', icon: Icons.code_rounded,
-                        color: const Color(0xFF161B22),
-                        shadow: const Color(0xFF090C12),
-                        textColor: const Color(0xFF8B949E),
+                        color: ui.isDark
+                            ? const Color(0xFF161B22)
+                            : const Color(0xFFF2F4F7),
+                        shadow: ui.isDark
+                            ? const Color(0xFF090C12)
+                            : const Color(0xFFE2E6EC),
+                        textColor: ui.isDark
+                            ? const Color(0xFF8B949E)
+                            : const Color(0xFF4B5563),
                         onTap: () => _launch(peerModel.gitHubLink!),
                       )),
                   ]),
@@ -308,23 +376,32 @@ class _TechyCard extends StatelessWidget {
   final bool expanded;
   final WidgetRef ref;
 
-  static const _bg       = Color(0xFF0D1117);
-  static const _surface  = Color(0xFF161B22);
-  static const _surface2 = Color(0xFF1C2128);
-  static const _border   = Color(0xFF30363D);
-  static const _lineNum  = Color(0xFF3D444D);
-  static const _green    = Color(0xFF3FB950);
-  static const _blue     = Color(0xFF79C0FF);
-  static const _purple   = Color(0xFFD2A8FF);
-  static const _orange   = Color(0xFFFFA657);
-  static const _comment  = Color(0xFF8B949E);
-  static const _string   = Color(0xFFA5D6FF);
-  static const _white    = Color(0xFFE6EDF3);
-
   String get _slug => peerModel.name.toLowerCase().replaceAll(' ', '_');
 
   @override
   Widget build(BuildContext context) {
+    final ui = _PeerCardPalette.of(context);
+    final bg = ui.isDark ? const Color(0xFF0D1117) : const Color(0xFFF8FAFC);
+    final surface = ui.isDark ? const Color(0xFF161B22) : Colors.white;
+    final surface2 =
+        ui.isDark ? const Color(0xFF1C2128) : const Color(0xFFF1F5F9);
+    final border =
+        ui.isDark ? const Color(0xFF30363D) : const Color(0xFFD8E1EB);
+    final lineNum =
+        ui.isDark ? const Color(0xFF3D444D) : const Color(0xFF8A97A6);
+    final green = ui.isDark ? const Color(0xFF3FB950) : const Color(0xFF2D8A43);
+    final blue = ui.isDark ? const Color(0xFF79C0FF) : const Color(0xFF2563EB);
+    final purple =
+        ui.isDark ? const Color(0xFFD2A8FF) : const Color(0xFF7C3AED);
+    final orange =
+        ui.isDark ? const Color(0xFFFFA657) : const Color(0xFFB45309);
+    final comment =
+        ui.isDark ? const Color(0xFF8B949E) : const Color(0xFF64748B);
+    final string =
+        ui.isDark ? const Color(0xFFA5D6FF) : const Color(0xFF0369A1);
+    final white =
+        ui.isDark ? const Color(0xFFE6EDF3) : const Color(0xFF1E293B);
+
     final initials = peerModel.name.trim().split(' ')
         .take(2).map((w) => w.isEmpty ? '' : w[0].toUpperCase()).join();
     final showLike = _canLike(peerModel, currentUserId);
@@ -341,32 +418,32 @@ class _TechyCard extends StatelessWidget {
     // Code lines — NO name/college here, those live in the footer
     final lines = <_Line>[];
     int n = 1;
-    lines.add(_Line(n++, [_ts('export const ', _purple), _ts('dev', _blue), _ts(' = {', _white)]));
+    lines.add(_Line(n++, [_ts('export const ', purple), _ts('dev', blue), _ts(' = {', white)]));
 
     if (!peerModel.isPublic) {
-      lines.add(_Line(n++, [_ts('  visibility', _orange), _ts(': ', _white), _ts('"private"', _string), _ts(',', _white)]));
+      lines.add(_Line(n++, [_ts('  visibility', orange), _ts(': ', white), _ts('"private"', string), _ts(',', white)]));
     }
     
 
    
 
     if (peerModel.skills.isNotEmpty) {
-      lines.add(_Line(n++, [_ts('  skills', _orange), _ts(': [', _white)]));
+      lines.add(_Line(n++, [_ts('  skills', orange), _ts(': [', white)]));
       for (final s in peerModel.skills) {
-        lines.add(_Line(n++, [_ts('    ', _white), _ts('"$s"', _green), _ts(',', _white)]));
+        lines.add(_Line(n++, [_ts('    ', white), _ts('"$s"', green), _ts(',', white)]));
       }
-      lines.add(_Line(n++, [_ts('  ],', _white)]));
+      lines.add(_Line(n++, [_ts('  ],', white)]));
     }
 
     if (peerModel.traits.isNotEmpty) {
-      lines.add(_Line(n++, [_ts('  interests', _orange), _ts(': [', _white)]));
+      lines.add(_Line(n++, [_ts('  interests', orange), _ts(': [', white)]));
       for (final t in peerModel.traits) {
-        lines.add(_Line(n++, [_ts('    ', _white), _ts('"$t"', _purple), _ts(',', _white)]));
+        lines.add(_Line(n++, [_ts('    ', white), _ts('"$t"', purple), _ts(',', white)]));
       }
-      lines.add(_Line(n++, [_ts('  ],', _white)]));
+      lines.add(_Line(n++, [_ts('  ],', white)]));
     }
 
-    lines.add(_Line(n++, [_ts('}', _white)]));
+    lines.add(_Line(n++, [_ts('}', white)]));
 
      // Bio as comment block — shown in code, NOT duplicated
    if (bio.isNotEmpty) {
@@ -377,7 +454,7 @@ class _TechyCard extends StatelessWidget {
   for (final paragraph in paragraphs) {
     if (paragraph.trim().isEmpty) {
       // Blank line — emit an empty comment to preserve spacing
-      lines.add(_Line(n++, [_ts('  //', _comment)]));
+      lines.add(_Line(n++, [_ts('  //', comment)]));
       continue;
     }
     final words = paragraph.split(' ');
@@ -394,7 +471,7 @@ class _TechyCard extends StatelessWidget {
     }
     if (current.trim().isNotEmpty) commentLines.add(current.trim());
     for (final cl in commentLines) {
-      lines.add(_Line(n++, [_ts('  // $cl', _comment)]));
+      lines.add(_Line(n++, [_ts('  // $cl', comment)]));
     }
   }
 }
@@ -403,10 +480,10 @@ class _TechyCard extends StatelessWidget {
       height: kCardHeight,
       child: Container(
         decoration: BoxDecoration(
-          color: _bg, border: Border.all(color: _border),
+          color: bg, border: Border.all(color: border),
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
-            BoxShadow(color: _green.withOpacity(0.05),
+            BoxShadow(color: green.withOpacity(0.05),
                 blurRadius: 20, offset: const Offset(0, 6)),
           ],
         ),
@@ -415,28 +492,28 @@ class _TechyCard extends StatelessWidget {
           // ── Tab bar ──────────────────────────────────────────
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: const BoxDecoration(
-              color: _surface,
+            decoration: BoxDecoration(
+              color: surface,
               borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(8), topRight: Radius.circular(8)),
-              border: Border(bottom: BorderSide(color: _border)),
+              border: Border(bottom: BorderSide(color: border)),
             ),
             child: Row(children: [
               Container(
                 padding: const EdgeInsets.fromLTRB(12, 9, 12, 8),
-                decoration: const BoxDecoration(
-                  color: _bg,
+                decoration: BoxDecoration(
+                  color: bg,
                   border: Border(
-                    top:   BorderSide(color: _green, width: 1.5),
-                    left:  BorderSide(color: _border),
-                    right: BorderSide(color: _border),
+                    top:   BorderSide(color: green, width: 1.5),
+                    left:  BorderSide(color: border),
+                    right: BorderSide(color: border),
                   ),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.description_outlined, size: 11, color: _comment),
+                  Icon(Icons.description_outlined, size: 11, color: comment),
                   const SizedBox(width: 5),
-                  Text('$_slug.uni', style: const TextStyle(
-                      color: _comment, fontSize: 11, fontFamily: 'monospace')),
+                  Text('$_slug.uni', style: TextStyle(
+                      color: comment, fontSize: 11, fontFamily: 'monospace')),
                 ]),
               ),
               const Spacer(),
@@ -456,13 +533,13 @@ class _TechyCard extends StatelessWidget {
                     children: [
                   // Gutter
                   Container(
-                    color: _surface2, width: 38,
+                    color: surface2, width: 38,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Column(
                       children: lines.map((l) => SizedBox(
                         height: 22,
                         child: Center(child: Text('${l.num}',
-                            style: const TextStyle(color: _lineNum,
+                            style: TextStyle(color: lineNum,
                                 fontSize: 11, fontFamily: 'monospace'))),
                       )).toList()),
                   ),
@@ -483,9 +560,9 @@ class _TechyCard extends StatelessWidget {
 
           // ── Footer: name, college, like, links ──────────────
           Container(
-            decoration: const BoxDecoration(
-              color: _surface,
-              border: Border(top: BorderSide(color: _border)),
+            decoration: BoxDecoration(
+              color: surface,
+              border: Border(top: BorderSide(color: border)),
               borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(8),
                   bottomRight: Radius.circular(8)),
@@ -497,13 +574,15 @@ class _TechyCard extends StatelessWidget {
                 width: 34, height: 34,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [_blue.withOpacity(0.5), _purple.withOpacity(0.5)],
+                    colors: [blue.withOpacity(0.5), purple.withOpacity(0.5)],
                     begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: _border),
+                  border: Border.all(color: border),
                 ),
                 child: Center(child: Text(initials,
-                    style: const TextStyle(color: Colors.white, fontSize: 12,
+                    style: TextStyle(
+                        color: ui.isDark ? Colors.white : const Color(0xFF0F172A),
+                        fontSize: 12,
                         fontWeight: FontWeight.w700, fontFamily: 'monospace'))),
               ),
               const SizedBox(width: 10),
@@ -514,13 +593,13 @@ class _TechyCard extends StatelessWidget {
                 children: [
                   Text(peerModel.name,
                       maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: _white, fontSize: 13,
+                      style: TextStyle(color: white, fontSize: 13,
                           fontWeight: FontWeight.w600, fontFamily: 'monospace')),
                   if (college.isNotEmpty) ...[
                     const SizedBox(height: 1),
                     Text(college,
                         maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: _comment, fontSize: 10,
+                        style: TextStyle(color: comment, fontSize: 10,
                             fontFamily: 'monospace')),
                   ],
                 ],
@@ -530,12 +609,12 @@ class _TechyCard extends StatelessWidget {
               // Links
               if (peerModel.linkedinLink != null) ...[
                 _TechIconBtn(icon: Icons.work_outline_rounded,
-                    color: _blue, onTap: () => _launch(peerModel.linkedinLink!)),
+                    color: blue, onTap: () => _launch(peerModel.linkedinLink!)),
                 const SizedBox(width: 6),
               ],
               if (peerModel.gitHubLink != null)
                 _TechIconBtn(icon: Icons.code_rounded,
-                    color: _comment, onTap: () => _launch(peerModel.gitHubLink!)),
+                    color: comment, onTap: () => _launch(peerModel.gitHubLink!)),
             ]),
           ),
         ]),
@@ -580,10 +659,11 @@ class _ReadMoreBioState extends State<_ReadMoreBio> {
 
   @override
   Widget build(BuildContext context) {
+    final ui = _PeerCardPalette.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final style = TextStyle(
-          color: Colors.white.withOpacity(0.55),
+          color: ui.textSecondary.withOpacity(ui.isDark ? 0.70 : 0.95),
           fontSize: 13,
           height: 1.65,
           letterSpacing: 0.1,
@@ -654,7 +734,7 @@ class _Avatar extends StatelessWidget {
     decoration: BoxDecoration(
       shape: BoxShape.circle,
       gradient: RadialGradient(
-          colors: [ring.withOpacity(0.45), const Color(0xFF0A0D14)],
+          colors: [ring.withOpacity(0.45), _PeerCardPalette.of(context).avatarCore],
           stops: const [0.35, 1.0]),
       border: Border.all(color: glow.withOpacity(0.4), width: 1.5),
       boxShadow: [BoxShadow(color: glow.withOpacity(0.12), blurRadius: 10)],
@@ -719,7 +799,7 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(text,
-      style: TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 9,
+      style: TextStyle(color: _PeerCardPalette.of(context).textMuted.withOpacity(0.8), fontSize: 9,
           fontWeight: FontWeight.w700, letterSpacing: 1.5));
 }
 
@@ -748,8 +828,8 @@ class _GhostChip extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(5),
-      border: Border.all(color: Colors.white.withOpacity(0.1))),
-    child: Text(label, style: TextStyle(color: Colors.white.withOpacity(0.42),
+      border: Border.all(color: _PeerCardPalette.of(context).border.withOpacity(0.55))),
+    child: Text(label, style: TextStyle(color: _PeerCardPalette.of(context).textSecondary.withOpacity(0.9),
         fontSize: 11, fontWeight: FontWeight.w400)),
   );
 }

@@ -83,7 +83,6 @@ class UserModel {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'institutionCode': institutionCode,
-      'cookie': cookie,
       'id': id,
       'name': name,
       'profileComplete': profileComplete,
@@ -91,8 +90,6 @@ class UserModel {
       'emailId': emailId,
       'collegeName': collegeName,
       'tenantId': tenantId,
-      'campXPassword': campXPassword,
-      'campXUsername': campXUsername,
       'year': year,
       'semester': semester,
       'about': about,
@@ -112,9 +109,10 @@ class UserModel {
       collegeName: map['collegeName'] as String?,
       tenantId: map['tenantId'] as String?,
       institutionCode: map['institutionCode'] as String?,
-      cookie: (map['cookie'] ?? map['accessToken']) as String?,
-      campXPassword: map['password'] as String?,
-      campXUsername: map['campXUsername'] as String?,
+      // CampX secrets are stored locally only and must not be hydrated from remote data.
+      cookie: null,
+      campXPassword: null,
+      campXUsername: null,
       year: map['year'] as int?,
       semester: map['semester'] as int?,
       about: map['about'] as String?,
@@ -131,6 +129,6 @@ class UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, name: $name,  cookie: $cookie profileComplete: $profileComplete, photoUrl: $photoUrl, emailId: $emailId, collegeName: $collegeName, tenantId: $tenantId, campXPassword: $campXPassword, campXUsername: $campXUsername, year: $year, semester: $semester, about: $about, fcmToken: $fcmToken, coins: $coins, institutionCode: $institutionCode, hasAdFreeAccess: $hasAdFreeAccess)';
+    return 'UserModel(id: $id, name: $name, profileComplete: $profileComplete, photoUrl: $photoUrl, emailId: $emailId, collegeName: $collegeName, tenantId: $tenantId, year: $year, semester: $semester, about: $about, fcmToken: $fcmToken, coins: $coins, institutionCode: $institutionCode, hasAdFreeAccess: $hasAdFreeAccess)';
   }
 }

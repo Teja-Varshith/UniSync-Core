@@ -3,11 +3,63 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/app/providers.dart';
-import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/peer_connect/peers/peer_card.dart';
 import 'package:UniSync/features/peer_connect/peers/peer_controller.dart';
 import 'package:UniSync/models/peer_model.dart';
+
+class _PeerProfilePalette {
+  const _PeerProfilePalette({
+    required this.isDark,
+    required this.bg,
+    required this.surface,
+    required this.surfaceAlt,
+    required this.border,
+    required this.divider,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.accent,
+    required this.onAccent,
+    required this.success,
+  });
+
+  final bool isDark;
+  final Color bg;
+  final Color surface;
+  final Color surfaceAlt;
+  final Color border;
+  final Color divider;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color accent;
+  final Color onAccent;
+  final Color success;
+
+  factory _PeerProfilePalette.of(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    return _PeerProfilePalette(
+      isDark: isDark,
+      bg: theme.scaffoldBackgroundColor,
+      surface: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      surfaceAlt: isDark ? AppColors.darkCard : AppColors.lightCardAlt,
+      border: border,
+      divider: border.withValues(alpha: isDark ? 0.9 : 1),
+      textPrimary: scheme.onSurface,
+      textSecondary:
+          isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      textMuted: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+      accent: scheme.primary,
+      onAccent: scheme.onPrimary,
+      success: AppColors.success,
+    );
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  PeerProfile
@@ -21,12 +73,13 @@ class PeerProfile extends ConsumerStatefulWidget {
 
 class _PeerProfileState extends ConsumerState<PeerProfile> {
   void _openForm({PeerModel? existing, required String userId}) {
+    final palette = _PeerProfilePalette.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: UniSyncColors.backgroundSecondary,
-      shape: const Border(
-          top: BorderSide(color: UniSyncColors.divider, width: 0.8)),
+      backgroundColor: palette.surface,
+      shape: Border(
+          top: BorderSide(color: palette.divider, width: 0.8)),
       builder: (_) => PeerCardFormSheet(
         peerModel: existing,
         userId: userId,
@@ -37,49 +90,50 @@ class _PeerProfileState extends ConsumerState<PeerProfile> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _PeerProfilePalette.of(context);
     final ctrl = ref.watch(PeerControllerProvider.notifier);
     final user = ref.watch(userProvider)!;
     final userId = user.id!;
     final liveCollegeName = user.collegeName;
 
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: palette.bg,
       body: SafeArea(child: Column(children: [
 
         // ── Top bar ────────────────────────────────────────────────
         Container(
-          color: UniSyncColors.backgroundSecondary,
+          color: palette.surface,
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           child: Row(children: [
             NeoPopButton(
-              color: UniSyncColors.surfaceCard,
-              bottomShadowColor: UniSyncColors.border,
-              rightShadowColor: UniSyncColors.border,
+              color: palette.surfaceAlt,
+              bottomShadowColor: palette.border,
+              rightShadowColor: palette.border,
               depth: 3,
               onTapUp: () => Navigator.pop(context),
               onTapDown: () {},
-              child: const SizedBox(width: 40, height: 40,
+              child: SizedBox(width: 40, height: 40,
                   child: Center(child: Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 16, color: UniSyncColors.textPrimary))),
+                      size: 16, color: palette.textPrimary))),
             ),
             const SizedBox(width: 14),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('#MY PEERCARD',
-                  style: TextStyle(color: UniSyncColors.accent, fontSize: 9,
+              Text('#MY PEERCARD',
+                  style: TextStyle(color: palette.accent, fontSize: 9,
                       fontWeight: FontWeight.w700, letterSpacing: 1.8)),
               const SizedBox(height: 2),
-              RichText(text: const TextSpan(children: [
+              RichText(text: TextSpan(children: [
                 TextSpan(text: 'Your ',
-                    style: TextStyle(color: UniSyncColors.textPrimary,
+                    style: TextStyle(color: palette.textPrimary,
                         fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.4)),
                 TextSpan(text: 'identity',
-                    style: TextStyle(color: UniSyncColors.accent,
+                    style: TextStyle(color: palette.accent,
                         fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.4)),
               ])),
             ]),
           ]),
         ),
-        Container(height: 0.8, color: UniSyncColors.divider),
+        Container(height: 0.8, color: palette.divider),
 
         // ── Body ──────────────────────────────────────────────────
         Expanded(
@@ -89,7 +143,7 @@ class _PeerProfileState extends ConsumerState<PeerProfile> {
               if (snap.connectionState == ConnectionState.waiting) {
                 return const Center(child: SizedBox(width: 24, height: 24,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: UniSyncColors.accent)));
+                        strokeWidth: 2, color: AppColors.primary)));
               }
               if (snap.hasData) {
                 return _ExistingProfile(
@@ -120,6 +174,7 @@ class _ExistingProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _PeerProfilePalette.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 22, 16, 40),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -129,16 +184,16 @@ class _ExistingProfile extends StatelessWidget {
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Your card',
-                  style: TextStyle(color: UniSyncColors.textPrimary,
+              Text('Your card',
+                  style: TextStyle(color: palette.textPrimary,
                       fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
               const SizedBox(height: 3),
               Row(children: [
                 Container(width: 7, height: 7,
                     decoration: BoxDecoration(
                       color: peerModel.isPublic
-                          ? const Color(0xFF3ECF8E)
-                          : UniSyncColors.textMuted,
+                          ? palette.success
+                          : palette.textMuted,
                       shape: BoxShape.circle,
                     )),
                 const SizedBox(width: 6),
@@ -146,8 +201,8 @@ class _ExistingProfile extends StatelessWidget {
                   peerModel.isPublic
                       ? 'Visible to everyone'
                       : 'Only visible to you',
-                  style: const TextStyle(
-                    color: UniSyncColors.textMuted, fontSize: 12),
+                  style: TextStyle(
+                    color: palette.textMuted, fontSize: 12),
                 ),
               ]),
             ],
@@ -157,16 +212,16 @@ class _ExistingProfile extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               decoration: BoxDecoration(
-                color: UniSyncColors.surfaceCard,
-                border: Border.all(color: UniSyncColors.accent.withOpacity(0.4)),
+                color: palette.surfaceAlt,
+                border: Border.all(color: palette.accent.withOpacity(0.4)),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                Icon(Icons.edit_outlined, size: 13, color: UniSyncColors.accent),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.edit_outlined, size: 13, color: palette.accent),
                 SizedBox(width: 6),
                 Text('Edit', style: TextStyle(
                   fontSize: 12, fontWeight: FontWeight.w600,
-                  color: UniSyncColors.accent,
+                  color: palette.accent,
                 )),
               ]),
             ),
@@ -189,40 +244,41 @@ class _CreatePrompt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _PeerProfilePalette.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Container(
             width: 72, height: 72,
-            color: UniSyncColors.surfaceCard,
-            child: const Icon(Icons.person_add_alt_1_rounded,
-                color: UniSyncColors.accent, size: 30),
+            color: palette.surfaceAlt,
+            child: Icon(Icons.person_add_alt_1_rounded,
+                color: palette.accent, size: 30),
           ),
           const SizedBox(height: 22),
-          const Text('No PeerCard yet',
-              style: TextStyle(color: UniSyncColors.textPrimary,
+          Text('No PeerCard yet',
+              style: TextStyle(color: palette.textPrimary,
                   fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
           const SizedBox(height: 8),
-          const Text('Create your card and let other students discover you',
+          Text('Create your card and let other students discover you',
               textAlign: TextAlign.center,
-              style: TextStyle(color: UniSyncColors.textSecondary,
+              style: TextStyle(color: palette.textSecondary,
                   fontSize: 13, height: 1.5)),
           const SizedBox(height: 28),
           NeoPopButton(
-            color: UniSyncColors.accent,
-            bottomShadowColor: UniSyncColors.backgroundPrimary,
-            rightShadowColor: UniSyncColors.backgroundPrimary,
+            color: palette.accent,
+            bottomShadowColor: palette.bg,
+            rightShadowColor: palette.bg,
             depth: 5,
             buttonPosition: Position.fullBottom,
             onTapUp: onTap, onTapDown: () {},
-            child: const SizedBox(height: 50, width: 220,
+            child: SizedBox(height: 50, width: 220,
               child: Center(child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.add_rounded, size: 18, color: UniSyncColors.buttonPrimaryFg),
+                Icon(Icons.add_rounded, size: 18, color: palette.onAccent),
                 SizedBox(width: 8),
                 Text('Create PeerCard', style: TextStyle(
                   fontSize: 14, fontWeight: FontWeight.w800,
-                  color: UniSyncColors.buttonPrimaryFg, letterSpacing: 0.2,
+                  color: palette.onAccent, letterSpacing: 0.2,
                 )),
               ]))),
           ),
@@ -325,10 +381,15 @@ class _PeerCardFormSheetState extends ConsumerState<PeerCardFormSheet> {
   }
 
   void _snack(String m, {bool ok = false}) =>
+      _showSnack(m, ok: ok);
+
+  void _showSnack(String m, {bool ok = false}) {
+    final palette = _PeerProfilePalette.of(context);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(m),
-        backgroundColor: ok ? const Color(0xFF3ECF8E) : UniSyncColors.surfaceCard,
+        backgroundColor: ok ? palette.success : palette.surfaceAlt,
       ));
+  }
 
   @override
   void dispose() {
@@ -340,6 +401,7 @@ class _PeerCardFormSheetState extends ConsumerState<PeerCardFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _PeerProfilePalette.of(context);
     final isEdit = widget.peerModel != null;
     return DraggableScrollableSheet(
       expand: false,
@@ -350,7 +412,7 @@ class _PeerCardFormSheetState extends ConsumerState<PeerCardFormSheet> {
         const SizedBox(height: 10),
         Center(child: Container(width: 36, height: 4,
             decoration: BoxDecoration(
-              color: UniSyncColors.border,
+              color: palette.border,
               borderRadius: BorderRadius.circular(2)))),
         const SizedBox(height: 14),
 
@@ -363,27 +425,27 @@ class _PeerCardFormSheetState extends ConsumerState<PeerCardFormSheet> {
               child: Container(
                 width: 36, height: 36,
                 decoration: BoxDecoration(
-                  color: UniSyncColors.surfaceCard,
-                  border: Border.all(color: UniSyncColors.border),
+                  color: palette.surfaceAlt,
+                  border: Border.all(color: palette.border),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.close_rounded, size: 16,
-                    color: UniSyncColors.textSecondary),
+                child: Icon(Icons.close_rounded, size: 16,
+                    color: palette.textSecondary),
               ),
             ),
             const SizedBox(width: 14),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(isEdit ? '#EDIT' : '#CREATE',
-                  style: const TextStyle(color: UniSyncColors.accent, fontSize: 9,
+                  style: TextStyle(color: palette.accent, fontSize: 9,
                       fontWeight: FontWeight.w700, letterSpacing: 1.8)),
               Text(isEdit ? 'Update your card' : 'Build your card',
-                  style: const TextStyle(color: UniSyncColors.textPrimary,
+                  style: TextStyle(color: palette.textPrimary,
                       fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
             ]),
           ]),
         ),
         const SizedBox(height: 14),
-        Container(height: 0.8, color: UniSyncColors.divider),
+        Container(height: 0.8, color: palette.divider),
 
         Expanded(
           child: Form(
@@ -437,26 +499,26 @@ class _PeerCardFormSheetState extends ConsumerState<PeerCardFormSheet> {
 
                 // Public toggle
                 Container(
-                  color: UniSyncColors.backgroundSecondary,
+                  color: palette.surface,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 12),
                   child: Row(children: [
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text('Public profile', style: TextStyle(
-                          color: UniSyncColors.textPrimary, fontSize: 14,
+                          color: palette.textPrimary, fontSize: 14,
                           fontWeight: FontWeight.w600)),
                         SizedBox(height: 2),
                         Text('Allow others to discover your card',
                             style: TextStyle(
-                              color: UniSyncColors.textMuted, fontSize: 12)),
+                              color: palette.textMuted, fontSize: 12)),
                       ],
                     )),
                     Switch(
                       value: _isPublic,
                       onChanged: (v) => setState(() => _isPublic = v),
-                      activeColor: UniSyncColors.accent,
+                      activeColor: palette.accent,
                     ),
                   ]),
                 ),
@@ -464,22 +526,22 @@ class _PeerCardFormSheetState extends ConsumerState<PeerCardFormSheet> {
                 const SizedBox(height: 28),
 
                 NeoPopButton(
-                  color: UniSyncColors.accent,
-                  bottomShadowColor: UniSyncColors.backgroundPrimary,
-                  rightShadowColor: UniSyncColors.backgroundPrimary,
+                  color: palette.accent,
+                  bottomShadowColor: palette.bg,
+                  rightShadowColor: palette.bg,
                   depth: 5,
                   buttonPosition: Position.fullBottom,
                   onTapUp: _isLoading ? null : _save,
                   onTapDown: () {},
                   child: SizedBox(height: 50, child: Center(
                     child: _isLoading
-                        ? const SizedBox(width: 20, height: 20,
+                        ? SizedBox(width: 20, height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2,
-                                color: UniSyncColors.buttonPrimaryFg))
+                                color: palette.onAccent))
                         : Text(isEdit ? 'Update PeerCard' : 'Create PeerCard',
-                            style: const TextStyle(fontSize: 14,
+                            style: TextStyle(fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: UniSyncColors.buttonPrimaryFg,
+                                color: palette.onAccent,
                                 letterSpacing: 0.2)),
                   )),
                 ),
@@ -544,16 +606,17 @@ class _StyleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _PeerProfilePalette.of(context);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         decoration: BoxDecoration(
-          color: UniSyncColors.surfaceCard,
+          color: palette.surfaceAlt,
           border: Border.all(
             color: selected
-                ? UniSyncColors.accent
-                : UniSyncColors.border,
+                ? palette.accent
+                : palette.border,
             width: selected ? 1.8 : 1,
           ),
           borderRadius: BorderRadius.circular(10),
@@ -601,21 +664,21 @@ class _StyleTile extends StatelessWidget {
           Row(children: [
             Icon(icon, size: 14,
                 color: selected
-                    ? UniSyncColors.accent
-                    : UniSyncColors.textMuted),
+                    ? palette.accent
+                    : palette.textMuted),
             const SizedBox(width: 6),
             Text(title, style: TextStyle(
               color: selected
-                  ? UniSyncColors.accent
-                  : UniSyncColors.textPrimary,
+                  ? palette.accent
+                  : palette.textPrimary,
               fontSize: 13, fontWeight: FontWeight.w700,
             )),
           ]),
 
           const SizedBox(height: 2),
 
-          Text(subtitle, style: const TextStyle(
-            color: UniSyncColors.textMuted, fontSize: 10,
+          Text(subtitle, style: TextStyle(
+            color: palette.textMuted, fontSize: 10,
           )),
 
           const SizedBox(height: 8),
@@ -627,17 +690,17 @@ class _StyleTile extends StatelessWidget {
             child: Container(
               height: 20, width: double.infinity,
               decoration: BoxDecoration(
-                color: UniSyncColors.accent.withOpacity(0.12),
+                color: palette.accent.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Center(
+              child: Center(
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   Icon(Icons.check_rounded,
-                      size: 11, color: UniSyncColors.accent),
+                      size: 11, color: palette.accent),
                   SizedBox(width: 4),
                   Text('Selected', style: TextStyle(
                     fontSize: 9, fontWeight: FontWeight.w700,
-                    color: UniSyncColors.accent, letterSpacing: 0.4,
+                    color: palette.accent, letterSpacing: 0.4,
                   )),
                 ]),
               ),
@@ -655,8 +718,8 @@ class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.label});
   final String label;
   @override
-  Widget build(_) => Text(label, style: const TextStyle(
-    color: UniSyncColors.accent, fontSize: 9,
+  Widget build(BuildContext context) => Text(label, style: TextStyle(
+    color: _PeerProfilePalette.of(context).accent, fontSize: 9,
     fontWeight: FontWeight.w700, letterSpacing: 1.6,
   ));
 }
@@ -672,7 +735,9 @@ class _FormField extends StatelessWidget {
   final String? Function(String?)? validator;
 
   @override
-  Widget build(_) => Padding(
+  Widget build(BuildContext context) {
+    final palette = _PeerProfilePalette.of(context);
+    return Padding(
     padding: const EdgeInsets.only(bottom: 18),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _SectionLabel(label: label),
@@ -685,21 +750,21 @@ class _FormField extends StatelessWidget {
             ? TextInputType.multiline            // enables newline key on keyboard
             : TextInputType.text,
         validator: validator,
-        style: const TextStyle(color: UniSyncColors.textPrimary, fontSize: 13),
+        style: TextStyle(color: palette.textPrimary, fontSize: 13),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: UniSyncColors.textMuted, fontSize: 13),
+          hintStyle: TextStyle(color: palette.textMuted, fontSize: 13),
           filled: true,
-          fillColor: UniSyncColors.surfaceCard,
+          fillColor: palette.surfaceAlt,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: UniSyncColors.border)),
+              borderSide: BorderSide(color: palette.border)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: UniSyncColors.border)),
+              borderSide: BorderSide(color: palette.border)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: UniSyncColors.accent, width: 1.5)),
+              borderSide: BorderSide(color: palette.accent, width: 1.5)),
           errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFFE05252))),
@@ -708,6 +773,7 @@ class _FormField extends StatelessWidget {
       ),
     ]),
   );
+  }
 }
 class _ChipField extends StatelessWidget {
   const _ChipField({
@@ -721,7 +787,9 @@ class _ChipField extends StatelessWidget {
   final ValueChanged<String> onRemove;
 
   @override
-  Widget build(_) => Padding(
+  Widget build(BuildContext context) {
+    final palette = _PeerProfilePalette.of(context);
+    return Padding(
     padding: const EdgeInsets.only(bottom: 18),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _SectionLabel(label: label),
@@ -731,24 +799,24 @@ class _ChipField extends StatelessWidget {
           child: TextField(
             controller: ctrl,
             onSubmitted: (_) => onAdd(),
-            style: const TextStyle(
-                color: UniSyncColors.textPrimary, fontSize: 13),
+            style: TextStyle(
+                color: palette.textPrimary, fontSize: 13),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: const TextStyle(
-                  color: UniSyncColors.textMuted, fontSize: 13),
+              hintStyle: TextStyle(
+                  color: palette.textMuted, fontSize: 13),
               filled: true,
-              fillColor: UniSyncColors.surfaceCard,
+              fillColor: palette.surfaceAlt,
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: UniSyncColors.border)),
+                  borderSide: BorderSide(color: palette.border)),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: UniSyncColors.border)),
+                  borderSide: BorderSide(color: palette.border)),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(
-                      color: UniSyncColors.accent, width: 1.5)),
+                      color: palette.accent, width: 1.5)),
               contentPadding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 12),
               isDense: true,
@@ -761,11 +829,11 @@ class _ChipField extends StatelessWidget {
           child: Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-              color: UniSyncColors.accent,
+              color: palette.accent,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.add_rounded, size: 20,
-                color: UniSyncColors.buttonPrimaryFg),
+            child: Icon(Icons.add_rounded, size: 20,
+                color: palette.onAccent),
           ),
         ),
       ]),
@@ -775,20 +843,20 @@ class _ChipField extends StatelessWidget {
           Container(
             padding: const EdgeInsets.fromLTRB(10, 5, 6, 5),
             decoration: BoxDecoration(
-              color: UniSyncColors.accent.withOpacity(0.1),
+              color: palette.accent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: UniSyncColors.accent.withOpacity(0.25)),
+                  color: palette.accent.withOpacity(0.25)),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Text(item, style: const TextStyle(
+              Text(item, style: TextStyle(
                 fontSize: 12, fontWeight: FontWeight.w500,
-                color: UniSyncColors.accent)),
+                color: palette.accent)),
               const SizedBox(width: 6),
               GestureDetector(
                 onTap: () => onRemove(item),
-                child: const Icon(Icons.close_rounded,
-                    size: 12, color: UniSyncColors.accent),
+                child: Icon(Icons.close_rounded,
+                    size: 12, color: palette.accent),
               ),
             ]),
           ),
@@ -796,4 +864,5 @@ class _ChipField extends StatelessWidget {
       ],
     ]),
   );
+  }
 }

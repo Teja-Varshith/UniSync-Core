@@ -5,12 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/app/providers.dart';
-import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/auth/auth_repository.dart';
 import 'package:UniSync/features/interview/controllers/carrer_controller.dart';
-import 'package:UniSync/features/interview/repository/carrer_repository.dart';
+import 'package:UniSync/features/interview/view/interview_palette.dart';
 import 'package:UniSync/models/template_model.dart';
 import 'package:UniSync/sockets/socket_methods.dart';
+
+InterviewPalette _ui(BuildContext context) => InterviewPalette.of(context);
 
 final selectedTemplateProvider = StateProvider<TemplateModel?>((ref) => null);
 
@@ -56,9 +57,9 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
     final result = await showModalBottomSheet<List<String>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: UniSyncColors.backgroundSecondary,
-      shape: const Border(
-          top: BorderSide(color: UniSyncColors.divider, width: 0.8)),
+      backgroundColor: _ui(context).backgroundSecondary,
+      shape: Border(
+          top: BorderSide(color: _ui(context).divider, width: 0.8)),
       builder: (_) => _DomainFilterSheet(
         availableDomains: availableDomains,
         initialSelected: _selectedDomainFilters,
@@ -98,7 +99,7 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
     showDialog(
       context: context,
       builder: (_) => Dialog(
-        backgroundColor: UniSyncColors.backgroundSecondary,
+        backgroundColor: _ui(context).backgroundSecondary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
@@ -111,19 +112,19 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: UniSyncColors.accent.withOpacity(0.1),
+                      color: _ui(context).accent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(9),
                       border: Border.all(
-                          color: UniSyncColors.accent.withOpacity(0.3)),
+                          color: _ui(context).accent.withOpacity(0.3)),
                     ),
-                    child: const Icon(Icons.psychology_outlined,
-                        size: 18, color: UniSyncColors.accent),
+                    child: Icon(Icons.psychology_outlined,
+                        size: 18, color: _ui(context).accent),
                   ),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text('Why Uni interviews?',
                         style: TextStyle(
-                          color: UniSyncColors.textPrimary,
+                          color: _ui(context).textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.2,
@@ -131,12 +132,12 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.close_rounded,
-                        size: 18, color: UniSyncColors.textMuted),
+                    child: Icon(Icons.close_rounded,
+                        size: 18, color: _ui(context).textMuted),
                   ),
                 ]),
                 const SizedBox(height: 16),
-                const Divider(color: UniSyncColors.divider, height: 1),
+                Divider(color: _ui(context).divider, height: 1),
                 const SizedBox(height: 14),
                 ...[
                   _InfoPoint(
@@ -167,379 +168,15 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
     );
   }
 
-  void _showMessage(String message, {bool isError = false}) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: isError ? UniSyncColors.error : null,
-        ),
-      );
-  }
-
-  Future<void> _openManageDataSheet({
-    required List<TemplateModel> allTemplates,
-    required List<String> allDomains,
-  }) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: UniSyncColors.backgroundSecondary,
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Manage Domains & Templates',
-                  style: TextStyle(
-                    color: UniSyncColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _manageTile(
-                  icon: Icons.add_circle_outline_rounded,
-                  title: 'Add Domain',
-                  onTap: () async {
-                    Navigator.of(ctx).pop();
-                    await _openAddDomainDialog();
-                  },
-                ),
-                _manageTile(
-                  icon: Icons.remove_circle_outline_rounded,
-                  title: 'Remove Domain',
-                  onTap: () async {
-                    Navigator.of(ctx).pop();
-                    await _openRemoveDomainDialog(allDomains);
-                  },
-                ),
-                _manageTile(
-                  icon: Icons.note_add_outlined,
-                  title: 'Add Template',
-                  onTap: () async {
-                    Navigator.of(ctx).pop();
-                    await _openAddTemplateDialog(allDomains);
-                  },
-                ),
-                _manageTile(
-                  icon: Icons.delete_outline_rounded,
-                  title: 'Remove Template',
-                  onTap: () async {
-                    Navigator.of(ctx).pop();
-                    await _openRemoveTemplateDialog(allTemplates);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _manageTile({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-      leading: Icon(icon, color: UniSyncColors.accent),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: UniSyncColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: 13,
-        ),
-      ),
-      onTap: onTap,
-    );
-  }
-
-  Future<void> _openAddDomainDialog() async {
-    final ctrl = TextEditingController();
-    await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: UniSyncColors.backgroundSecondary,
-        title: const Text('Add Domain',
-            style: TextStyle(color: UniSyncColors.textPrimary)),
-        content: TextField(
-          controller: ctrl,
-          style: const TextStyle(color: UniSyncColors.textPrimary),
-          decoration: const InputDecoration(hintText: 'e.g. flutter'),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () async {
-              final domain = ctrl.text.trim();
-              if (domain.isEmpty) return;
-              Navigator.pop(context);
-              try {
-                await ref.read(carrerRepositoryProvider).createDomain(domain);
-                await ref.read(carrerControllerProvider.notifier).refresh();
-                _showMessage('Domain added successfully.');
-              } catch (_) {
-                _showMessage('Failed to add domain.', isError: true);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _openRemoveDomainDialog(List<String> allDomains) async {
-    String? selected = allDomains.isNotEmpty ? allDomains.first : null;
-    await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: UniSyncColors.backgroundSecondary,
-        title: const Text('Remove Domain',
-            style: TextStyle(color: UniSyncColors.textPrimary)),
-        content: allDomains.isEmpty
-            ? const Text('No domains available.',
-                style: TextStyle(color: UniSyncColors.textSecondary))
-            : StatefulBuilder(
-                builder: (context, setStateDialog) =>
-                    DropdownButtonFormField<String>(
-                  value: selected,
-                  dropdownColor: UniSyncColors.surfaceCard,
-                  items: allDomains
-                      .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                      .toList(),
-                  onChanged: (val) => setStateDialog(() => selected = val),
-                ),
-              ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: allDomains.isEmpty
-                ? null
-                : () async {
-                    final domain = selected;
-                    if (domain == null || domain.isEmpty) return;
-                    Navigator.pop(context);
-                    try {
-                      await ref
-                          .read(carrerRepositoryProvider)
-                          .deleteDomain(domain);
-                      await ref
-                          .read(carrerControllerProvider.notifier)
-                          .refresh();
-                      _showMessage('Domain removed successfully.');
-                    } catch (_) {
-                      _showMessage('Failed to remove domain.', isError: true);
-                    }
-                  },
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _openAddTemplateDialog(List<String> allDomains) async {
-    final titleCtrl = TextEditingController();
-    final iconCtrl = TextEditingController();
-    final topicsCtrl = TextEditingController();
-    final coinCtrl = TextEditingController(text: '10');
-    String? selectedDomain = allDomains.isNotEmpty ? allDomains.first : null;
-
-    await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: UniSyncColors.backgroundSecondary,
-        title: const Text('Add Template',
-            style: TextStyle(color: UniSyncColors.textPrimary)),
-        content: StatefulBuilder(
-          builder: (context, setStateDialog) => SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleCtrl,
-                  style: const TextStyle(color: UniSyncColors.textPrimary),
-                  decoration: const InputDecoration(labelText: 'Title'),
-                ),
-                const SizedBox(height: 8),
-                if (allDomains.isNotEmpty)
-                  DropdownButtonFormField<String>(
-                    value: selectedDomain,
-                    dropdownColor: UniSyncColors.surfaceCard,
-                    items: allDomains
-                        .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                        .toList(),
-                    onChanged: (val) =>
-                        setStateDialog(() => selectedDomain = val),
-                    decoration: const InputDecoration(labelText: 'Domain'),
-                  ),
-                if (allDomains.isEmpty)
-                  const Text(
-                    'No domains found. Add a domain first.',
-                    style:
-                        TextStyle(color: UniSyncColors.textMuted, fontSize: 12),
-                  ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: iconCtrl,
-                  style: const TextStyle(color: UniSyncColors.textPrimary),
-                  decoration: const InputDecoration(labelText: 'Icon URL/Text'),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: topicsCtrl,
-                  style: const TextStyle(color: UniSyncColors.textPrimary),
-                  decoration: const InputDecoration(
-                      labelText: 'Topics (comma separated)'),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: coinCtrl,
-                  keyboardType: TextInputType.number,
-                  style: const TextStyle(color: UniSyncColors.textPrimary),
-                  decoration: const InputDecoration(labelText: 'Coin Price'),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () async {
-              final title = titleCtrl.text.trim();
-              final domain = selectedDomain?.trim() ?? '';
-              final icon = iconCtrl.text.trim();
-              final topics = topicsCtrl.text
-                  .split(',')
-                  .map((e) => e.trim())
-                  .where((e) => e.isNotEmpty)
-                  .toList();
-              final coinPrice = int.tryParse(coinCtrl.text.trim()) ?? -1;
-
-              if (title.isEmpty ||
-                  domain.isEmpty ||
-                  icon.isEmpty ||
-                  topics.isEmpty ||
-                  coinPrice < 0) {
-                _showMessage('Please enter valid template details.',
-                    isError: true);
-                return;
-              }
-
-              Navigator.pop(context);
-              try {
-                await ref.read(carrerRepositoryProvider).createTemplate(
-                      title: title,
-                      domain: domain,
-                      icon: icon,
-                      topics: topics,
-                      coinPrice: coinPrice,
-                    );
-                await ref.read(carrerControllerProvider.notifier).refresh();
-                _showMessage('Template added successfully.');
-              } catch (_) {
-                _showMessage('Failed to add template.', isError: true);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _openRemoveTemplateDialog(
-      List<TemplateModel> allTemplates) async {
-    TemplateModel? selected =
-        allTemplates.isNotEmpty ? allTemplates.first : null;
-
-    await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: UniSyncColors.backgroundSecondary,
-        title: const Text('Remove Template',
-            style: TextStyle(color: UniSyncColors.textPrimary)),
-        content: allTemplates.isEmpty
-            ? const Text('No templates available.',
-                style: TextStyle(color: UniSyncColors.textSecondary))
-            : StatefulBuilder(
-                builder: (context, setStateDialog) =>
-                    DropdownButtonFormField<String>(
-                  value: selected?.id,
-                  dropdownColor: UniSyncColors.surfaceCard,
-                  items: allTemplates
-                      .map((t) =>
-                          DropdownMenuItem(value: t.id, child: Text(t.title)))
-                      .toList(),
-                  onChanged: (val) {
-                    setStateDialog(() {
-                      final idx = allTemplates.indexWhere((t) => t.id == val);
-                      selected = idx >= 0 ? allTemplates[idx] : null;
-                    });
-                  },
-                ),
-              ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: allTemplates.isEmpty
-                ? null
-                : () async {
-                    if (selected == null) return;
-                    Navigator.pop(context);
-                    try {
-                      await ref
-                          .read(carrerRepositoryProvider)
-                          .deleteTemplate(selected!.id);
-                      await ref
-                          .read(carrerControllerProvider.notifier)
-                          .refresh();
-                      _showMessage('Template removed successfully.');
-                    } catch (_) {
-                      _showMessage('Failed to remove template.', isError: true);
-                    }
-                  },
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final templates = ref.watch(carrerControllerProvider);
-    final allDomains =
-        ref.read(carrerControllerProvider.notifier).AvailableDomains;
-    final allTemplates =
-        ref.read(carrerControllerProvider.notifier).allTemplates;
 
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
       // floatingActionButton: FloatingActionButton.extended(
-      //   backgroundColor: UniSyncColors.accent,
-      //   foregroundColor: UniSyncColors.buttonPrimaryFg,
+      //   backgroundColor: _ui(context).accent,
+      //   foregroundColor: _ui(context).buttonPrimaryFg,
       //   onPressed: () => _openManageDataSheet(
       //     allTemplates: allTemplates,
       //     allDomains: allDomains,
@@ -554,7 +191,7 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // ── Header ─────────────────────────────────────────────────
           Container(
-            color: UniSyncColors.backgroundSecondary,
+            color: _ui(context).backgroundSecondary,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -563,12 +200,12 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      RichText(
-                          text: const TextSpan(children: [
+                        RichText(
+                          text: TextSpan(children: [
                         TextSpan(
                             text: 'Mock ',
                             style: TextStyle(
-                              color: UniSyncColors.textPrimary,
+                              color: _ui(context).textPrimary,
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.5,
@@ -576,16 +213,16 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                         TextSpan(
                             text: 'interviews',
                             style: TextStyle(
-                              color: UniSyncColors.accent,
+                              color: _ui(context).accent,
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.5,
                             )),
                       ])),
                       const SizedBox(height: 2),
-                      const Text('Pick a template and get started',
+                        Text('Pick a template and get started',
                           style: TextStyle(
-                            color: UniSyncColors.textMuted,
+                            color: _ui(context).textMuted,
                             fontSize: 12,
                           )),
                     ],
@@ -596,9 +233,9 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                   children: [
                     Row(mainAxisSize: MainAxisSize.min, children: [
                       NeoPopButton(
-                        color: UniSyncColors.surfaceCard,
-                        bottomShadowColor: UniSyncColors.accent,
-                        rightShadowColor: UniSyncColors.accent,
+                        color: _ui(context).surfaceCard,
+                        bottomShadowColor: _ui(context).accent,
+                        rightShadowColor: _ui(context).accent,
                         depth: 2,
                         onTapUp: () => Routemaster.of(context)
                             .push('/userInterviewDetails'),
@@ -608,19 +245,19 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                               horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
                             border: Border.all(
-                                color: UniSyncColors.accent.withOpacity(0.35)),
+                                color: _ui(context).accent.withOpacity(0.35)),
                           ),
                           child: Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: const [
+                              children: [
                                 Icon(Icons.bar_chart_rounded,
-                                    size: 14, color: UniSyncColors.accent),
+                                    size: 14, color: _ui(context).accent),
                                 SizedBox(width: 5),
                                 Text('My Reports',
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
-                                      color: UniSyncColors.accent,
+                                      color: _ui(context).accent,
                                     )),
                               ]),
                         ),
@@ -632,13 +269,13 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                           width: 34,
                           height: 34,
                           decoration: BoxDecoration(
-                            color: UniSyncColors.surfaceCard,
+                            color: _ui(context).surfaceCard,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: UniSyncColors.border),
+                            border: Border.all(color: _ui(context).border),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Icon(Icons.info_outline_rounded,
-                                size: 17, color: UniSyncColors.textMuted),
+                                size: 17, color: _ui(context).textMuted),
                           ),
                         ),
                       ),
@@ -649,7 +286,7 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
             ),
           ),
 
-          Container(height: 0.8, color: UniSyncColors.divider),
+          Container(height: 0.8, color: _ui(context).divider),
 
           // ── Filter bar ──────────────────────────────────────────────
           // Shows: active domain chips (removable) + filter pill button
@@ -665,7 +302,7 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
               final hasActive = _selectedDomainFilters.isNotEmpty;
 
               return Container(
-                color: UniSyncColors.backgroundSecondary,
+                color: _ui(context).backgroundSecondary,
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                 child: Row(children: [
                   // ── Left: active chip strip or empty hint ──────────
@@ -690,13 +327,13 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                                       horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
                                     color: _activeDomain == 'All'
-                                        ? UniSyncColors.accent
-                                        : UniSyncColors.surfaceCard,
+                                        ? _ui(context).accent
+                                        : _ui(context).surfaceCard,
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
                                       color: _activeDomain == 'All'
-                                          ? UniSyncColors.accent
-                                          : UniSyncColors.border,
+                                          ? _ui(context).accent
+                                          : _ui(context).border,
                                     ),
                                   ),
                                   child: Text('All',
@@ -704,8 +341,8 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         color: _activeDomain == 'All'
-                                            ? UniSyncColors.buttonPrimaryFg
-                                            : UniSyncColors.textSecondary,
+                                            ? _ui(context).buttonPrimaryFg
+                                            : _ui(context).textSecondary,
                                       )),
                                 ),
                               ),
@@ -726,13 +363,13 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                                         const EdgeInsets.fromLTRB(11, 6, 6, 6),
                                     decoration: BoxDecoration(
                                       color: isActive
-                                          ? UniSyncColors.accent
-                                          : UniSyncColors.surfaceCard,
+                                          ? _ui(context).accent
+                                          : _ui(context).surfaceCard,
                                       borderRadius: BorderRadius.circular(6),
                                       border: Border.all(
                                         color: isActive
-                                            ? UniSyncColors.accent
-                                            : UniSyncColors.border,
+                                            ? _ui(context).accent
+                                            : _ui(context).border,
                                       ),
                                     ),
                                     child: Row(
@@ -743,10 +380,8 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
                                                 color: isActive
-                                                    ? UniSyncColors
-                                                        .buttonPrimaryFg
-                                                    : UniSyncColors
-                                                        .textSecondary,
+                                                    ? _ui(context).buttonPrimaryFg
+                                                    : _ui(context).textSecondary,
                                               )),
                                           const SizedBox(width: 6),
                                           // Remove ×
@@ -770,9 +405,10 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                                               height: 16,
                                               decoration: BoxDecoration(
                                                 color: isActive
-                                                    ? Colors.white
+                                                    ? _ui(context)
+                                                        .buttonPrimaryFg
                                                         .withOpacity(0.2)
-                                                    : UniSyncColors
+                                                    : _ui(context)
                                                         .backgroundPrimary,
                                                 borderRadius:
                                                     BorderRadius.circular(4),
@@ -780,10 +416,9 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                                               child: Icon(Icons.close_rounded,
                                                   size: 10,
                                                   color: isActive
-                                                      ? UniSyncColors
+                                                      ? _ui(context)
                                                           .buttonPrimaryFg
-                                                      : UniSyncColors
-                                                          .textMuted),
+                                                      : _ui(context).textMuted),
                                             ),
                                           ),
                                         ]),
@@ -793,10 +428,10 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                             ]),
                           )
                         // Empty: hint text
-                        : const Text(
+                        : Text(
                             'No tech selected — showing all templates',
                             style: TextStyle(
-                              color: UniSyncColors.textMuted,
+                              color: _ui(context).textMuted,
                               fontSize: 11,
                             ),
                           ),
@@ -813,13 +448,13 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                           horizontal: 11, vertical: 7),
                       decoration: BoxDecoration(
                         color: hasActive
-                            ? UniSyncColors.accent.withOpacity(0.1)
-                            : UniSyncColors.surfaceCard,
+                            ? _ui(context).accent.withOpacity(0.1)
+                            : _ui(context).surfaceCard,
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                           color: hasActive
-                              ? UniSyncColors.accent.withOpacity(0.45)
-                              : UniSyncColors.border,
+                              ? _ui(context).accent.withOpacity(0.45)
+                              : _ui(context).border,
                         ),
                       ),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -827,8 +462,8 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                           hasActive ? Icons.tune_rounded : Icons.add_rounded,
                           size: 14,
                           color: hasActive
-                              ? UniSyncColors.accent
-                              : UniSyncColors.textMuted,
+                              ? _ui(context).accent
+                              : _ui(context).textMuted,
                         ),
                         const SizedBox(width: 5),
                         Text(
@@ -839,8 +474,8 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: hasActive
-                                ? UniSyncColors.accent
-                                : UniSyncColors.textMuted,
+                                ? _ui(context).accent
+                                : _ui(context).textMuted,
                           ),
                         ),
                       ]),
@@ -851,17 +486,17 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
             },
           ),
 
-          Container(height: 0.8, color: UniSyncColors.divider),
+          Container(height: 0.8, color: _ui(context).divider),
 
           // ── Template list ───────────────────────────────────────────
           Expanded(
             child: RefreshIndicator(
-              color: UniSyncColors.accent,
+              color: _ui(context).accent,
               onRefresh: _refreshTemplatesAndCoins,
               child: templates.when(
                 loading: () => ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  children: const [
+                  children: [
                     SizedBox(
                       height: 300,
                       child: Center(
@@ -870,7 +505,7 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                           height: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: UniSyncColors.accent,
+                            color: _ui(context).accent,
                           ),
                         ),
                       ),
@@ -886,14 +521,14 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                         child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.error_outline_rounded,
-                                  color: UniSyncColors.textMuted, size: 36),
+                              Icon(Icons.error_outline_rounded,
+                                  color: _ui(context).textMuted, size: 36),
                               const SizedBox(height: 12),
-                              const Text(
+                              Text(
                                 'No Cache Found',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                    color: UniSyncColors.textSecondary,
+                                    color: _ui(context).textSecondary,
                                     fontSize: 13),
                               ),
                               const SizedBox(height: 12),
@@ -904,11 +539,11 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                                       .refresh();
                                 },
                                 icon:
-                                    const Icon(Icons.refresh_rounded, size: 16),
+                                  Icon(Icons.refresh_rounded, size: 16),
                                 label:
-                                    const Text('Spin the Servers to fetch latest data..'),
+                                  Text('Spin the Servers to fetch latest data..'),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: UniSyncColors.accent,
+                                  foregroundColor: _ui(context).accent,
                                 ),
                               ),
                             ]),
@@ -930,22 +565,22 @@ class _CarrerInterviewScreenState extends ConsumerState<CarrerInterviewScreen> {
                                   Container(
                                       width: 56,
                                       height: 56,
-                                      color: UniSyncColors.surfaceCard,
-                                      child: const Icon(
+                                      color: _ui(context).surfaceCard,
+                                      child: Icon(
                                           Icons.psychology_outlined,
-                                          color: UniSyncColors.textMuted,
+                                          color: _ui(context).textMuted,
                                           size: 26)),
                                   const SizedBox(height: 14),
-                                  const Text('No templates found',
+                                  Text('No templates found',
                                       style: TextStyle(
-                                        color: UniSyncColors.textPrimary,
+                                        color: _ui(context).textPrimary,
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
                                       )),
                                   const SizedBox(height: 6),
-                                  const Text('Try a different domain',
+                                  Text('Try a different domain',
                                       style: TextStyle(
-                                        color: UniSyncColors.textSecondary,
+                                        color: _ui(context).textSecondary,
                                         fontSize: 12,
                                       )),
                                 ]),
@@ -1006,9 +641,9 @@ class TemplateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NeoPopButton(
-      color: UniSyncColors.surfaceCard,
-      bottomShadowColor: UniSyncColors.accent,
-      rightShadowColor: UniSyncColors.accent,
+      color: _ui(context).surfaceCard,
+      bottomShadowColor: _ui(context).accent,
+      rightShadowColor: _ui(context).accent,
       depth: 4,
       onTapUp: onTap,
       onTapDown: () {},
@@ -1020,20 +655,20 @@ class TemplateCard extends StatelessWidget {
             height: 48,
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-              color: UniSyncColors.backgroundSecondary,
+              color: _ui(context).backgroundSecondary,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: UniSyncColors.border),
+              border: Border.all(color: _ui(context).border),
             ),
             child: CachedNetworkImage(
               imageUrl: logo,
               fit: BoxFit.contain,
-              placeholder: (_, __) => const SizedBox(
+                  placeholder: (_, __) => SizedBox(
                   width: 14,
                   height: 14,
                   child: CircularProgressIndicator(
-                      strokeWidth: 1.5, color: UniSyncColors.textMuted)),
-              errorWidget: (_, __, ___) => const Icon(Icons.psychology_outlined,
-                  color: UniSyncColors.textMuted, size: 20),
+                      strokeWidth: 1.5, color: _ui(context).textMuted)),
+                errorWidget: (_, __, ___) => Icon(Icons.psychology_outlined,
+                  color: _ui(context).textMuted, size: 20),
             ),
           ),
           const SizedBox(width: 14),
@@ -1043,36 +678,36 @@ class TemplateCard extends StatelessWidget {
               Text(heading,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: UniSyncColors.textPrimary,
+                    color: _ui(context).textPrimary,
                     letterSpacing: -0.2,
                   )),
               const SizedBox(height: 5),
               Text(topics.take(4).join(' · '),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: UniSyncColors.textSecondary,
+                    color: _ui(context).textSecondary,
                     height: 1.4,
                   )),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: UniSyncColors.accentSoft,
+                  color: _ui(context).accentSoft,
                   borderRadius: BorderRadius.circular(6),
                   border:
-                      Border.all(color: UniSyncColors.accent.withOpacity(0.3)),
+                      Border.all(color: _ui(context).accent.withOpacity(0.3)),
                 ),
                 child: Text(
                   '$coinPrice coins',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: UniSyncColors.accent,
+                    color: _ui(context).accent,
                   ),
                 ),
               ),
@@ -1109,11 +744,11 @@ class _InfoPoint extends StatelessWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: UniSyncColors.surfaceCard,
+            color: _ui(context).surfaceCard,
             borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: UniSyncColors.borderSubtle),
+            border: Border.all(color: _ui(context).borderSubtle),
           ),
-          child: Icon(icon, size: 14, color: UniSyncColors.accent),
+          child: Icon(icon, size: 14, color: _ui(context).accent),
         ),
         const SizedBox(width: 11),
         Expanded(
@@ -1121,15 +756,15 @@ class _InfoPoint extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title,
-                style: const TextStyle(
-                  color: UniSyncColors.textPrimary,
+                style: TextStyle(
+                  color: _ui(context).textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 )),
             const SizedBox(height: 3),
             Text(body,
-                style: const TextStyle(
-                  color: UniSyncColors.textSecondary,
+              style: TextStyle(
+                  color: _ui(context).textSecondary,
                   fontSize: 12,
                   height: 1.45,
                 )),
@@ -1189,7 +824,7 @@ class _DomainFilterSheetState extends State<_DomainFilterSheet> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: UniSyncColors.border,
+                    color: _ui(context).border,
                     borderRadius: BorderRadius.circular(2)))),
         const SizedBox(height: 14),
 
@@ -1198,26 +833,26 @@ class _DomainFilterSheetState extends State<_DomainFilterSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(children: [
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('#Technologies',
+                Text('#Technologies',
                   style: TextStyle(
-                      color: UniSyncColors.accent,
+                      color: _ui(context).accent,
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.8)),
               const SizedBox(height: 2),
-              RichText(
-                  text: const TextSpan(children: [
+                RichText(
+                  text: TextSpan(children: [
                 TextSpan(
                     text: 'Filter ',
                     style: TextStyle(
-                        color: UniSyncColors.textPrimary,
+                        color: _ui(context).textPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3)),
                 TextSpan(
                     text: 'by tech',
                     style: TextStyle(
-                        color: UniSyncColors.accent,
+                        color: _ui(context).accent,
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3)),
@@ -1230,28 +865,28 @@ class _DomainFilterSheetState extends State<_DomainFilterSheet> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                    color: UniSyncColors.surfaceCard,
+                    color: _ui(context).surfaceCard,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: UniSyncColors.border)),
+                    border: Border.all(color: _ui(context).border)),
                 child: Text(allSelected ? 'Clear all' : 'Select all',
-                    style: const TextStyle(
+                  style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: UniSyncColors.textSecondary)),
+                        color: _ui(context).textSecondary)),
               ),
             ),
           ]),
         ),
 
         const SizedBox(height: 12),
-        Container(height: 0.8, color: UniSyncColors.divider),
+        Container(height: 0.8, color: _ui(context).divider),
 
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
           child: Text(
               '${_selected.length} of ${widget.availableDomains.length} selected',
-              style: const TextStyle(
-                  color: UniSyncColors.textMuted,
+                style: TextStyle(
+                  color: _ui(context).textMuted,
                   fontSize: 11,
                   fontWeight: FontWeight.w500)),
         ),
@@ -1273,13 +908,13 @@ class _DomainFilterSheetState extends State<_DomainFilterSheet> {
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: active
-                          ? UniSyncColors.accent.withOpacity(0.12)
-                          : UniSyncColors.surfaceCard,
+                          ? _ui(context).accent.withOpacity(0.12)
+                          : _ui(context).surfaceCard,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: active
-                            ? UniSyncColors.accent.withOpacity(0.5)
-                            : UniSyncColors.border,
+                            ? _ui(context).accent.withOpacity(0.5)
+                            : _ui(context).border,
                         width: active ? 1.5 : 1,
                       ),
                     ),
@@ -1290,8 +925,8 @@ class _DomainFilterSheetState extends State<_DomainFilterSheet> {
                         height: 7,
                         decoration: BoxDecoration(
                             color: active
-                                ? UniSyncColors.accent
-                                : UniSyncColors.border,
+                                ? _ui(context).accent
+                                : _ui(context).border,
                             shape: BoxShape.circle),
                       ),
                       const SizedBox(width: 8),
@@ -1301,8 +936,8 @@ class _DomainFilterSheetState extends State<_DomainFilterSheet> {
                             fontWeight:
                                 active ? FontWeight.w600 : FontWeight.w400,
                             color: active
-                                ? UniSyncColors.accent
-                                : UniSyncColors.textSecondary,
+                                ? _ui(context).accent
+                                : _ui(context).textSecondary,
                           )),
                     ]),
                   ),
@@ -1313,25 +948,25 @@ class _DomainFilterSheetState extends State<_DomainFilterSheet> {
         ),
 
         Container(
-          color: UniSyncColors.backgroundSecondary,
+          color: _ui(context).backgroundSecondary,
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           child: NeoPopButton(
-            color: UniSyncColors.accent,
-            bottomShadowColor: UniSyncColors.backgroundPrimary,
-            rightShadowColor: UniSyncColors.backgroundPrimary,
+            color: _ui(context).accent,
+            bottomShadowColor: _ui(context).backgroundPrimary,
+            rightShadowColor: _ui(context).backgroundPrimary,
             depth: 4,
             buttonPosition: Position.fullBottom,
             onTapUp: () =>
                 Navigator.of(context).pop(_selected.toList()..sort()),
             onTapDown: () {},
-            child: const SizedBox(
+            child: SizedBox(
                 height: 48,
                 child: Center(
                     child: Text('Add These Filters',
                         style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: UniSyncColors.buttonPrimaryFg,
+                            color: _ui(context).buttonPrimaryFg,
                             letterSpacing: 0.2)))),
           ),
         ),
@@ -1339,3 +974,9 @@ class _DomainFilterSheetState extends State<_DomainFilterSheet> {
     );
   }
 }
+
+
+
+
+
+

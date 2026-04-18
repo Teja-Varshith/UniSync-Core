@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/app/providers.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/auth/auth_controller.dart';
@@ -20,7 +21,7 @@ final playStoreReviewerAccessProvider = StreamProvider<bool>((ref) {
       .map((snapshot) {
         final data = snapshot.data();
         if (data == null) return false;
-        return data['enabled3'] == true;
+        return data['enabled6'] == true;
       });
 });
 
@@ -104,6 +105,24 @@ _WordDef('GROW',     xFrac: 0.40, yFrac: 0.70, size: 26, angleDeg: -3.0, color: 
   // radians conversion done once at use-site to keep consts clean
   static double _deg2rad(double deg) => deg * 0.017453292519943295;
 
+  Color _resolveHighlightColor({
+    required Color? seededColor,
+    required bool isDark,
+    required Color accent,
+    required Color onSurface,
+  }) {
+    if (seededColor == null) return accent;
+    if (seededColor.value == Colors.white.value) {
+      return isDark
+          ? Colors.white
+          : onSurface.withValues(alpha: 0.82);
+    }
+    if (seededColor.value == const Color(0xFFFFD72F).value) {
+      return accent;
+    }
+    return seededColor;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -125,6 +144,13 @@ _WordDef('GROW',     xFrac: 0.40, yFrac: 0.70, size: 26, angleDeg: -3.0, color: 
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final areaH = _carouselHeight(size);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = theme.colorScheme.primary;
+    final onSurface = theme.colorScheme.onSurface;
+    final noiseColor = isDark
+        ? Colors.white.withValues(alpha: 0.07)
+        : onSurface.withValues(alpha: 0.09);
 
     return ShaderMask(
       shaderCallback: (rect) => const LinearGradient(
@@ -155,7 +181,7 @@ _WordDef('GROW',     xFrac: 0.40, yFrac: 0.70, size: 26, angleDeg: -3.0, color: 
                     fontSize: w.size.toDouble(),
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,
-                    color: Colors.white.withValues(alpha: 0.07),
+                    color: noiseColor,
                   ),
                 ),
               ),
@@ -184,7 +210,12 @@ _WordDef('GROW',     xFrac: 0.40, yFrac: 0.70, size: 26, angleDeg: -3.0, color: 
                           fontSize: _highlightWords[i].size.toDouble(),
                           fontWeight: FontWeight.w800,
                           letterSpacing: 1.5,
-                          color: _highlightWords[i].color ?? UniSyncColors.accent,
+                          color: _resolveHighlightColor(
+                            seededColor: _highlightWords[i].color,
+                            isDark: isDark,
+                            accent: accent,
+                            onSurface: onSurface,
+                          ),
                         ),
                       ),
                     ),
@@ -272,6 +303,13 @@ class _NeoPopLogoButtonState extends State<NeoPopLogoButton>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final shadowColor =
+        isDark ? const Color(0xFF8A8A8A) : AppColors.lightTextMuted;
+    final faceColor = isDark ? Colors.white : AppColors.lightCard;
+    final faceBorderColor =
+        isDark ? const Color(0xFFDDDDDD) : AppColors.lightBorder;
+
     return GestureDetector(
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
@@ -298,9 +336,9 @@ class _NeoPopLogoButtonState extends State<NeoPopLogoButton>
                   child: Container(
                     width: _size,
                     height: _size,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFF8A8A8A),
+                      color: shadowColor,
                     ),
                   ),
                 ),
@@ -314,9 +352,9 @@ class _NeoPopLogoButtonState extends State<NeoPopLogoButton>
                     height: _size,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
+                      color: faceColor,
                       border: Border.all(
-                        color: const Color(0xFFDDDDDD),
+                        color: faceBorderColor,
                         width: 1,
                       ),
                     ),
@@ -344,6 +382,11 @@ class VerticalWordColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = theme.colorScheme.primary;
+    final muted = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+
     return Column(
       children: words.map((word) {
         final highlight =
@@ -355,8 +398,8 @@ class VerticalWordColumn extends StatelessWidget {
             word,
             style: TextStyle(
               color: highlight
-                  ? UniSyncColors.accent
-                  : UniSyncColors.textMuted.withValues(alpha: 0.2),
+                  ? accent
+                  : muted.withValues(alpha: 0.4),
               fontWeight: highlight ? FontWeight.w700 : FontWeight.w400,
               fontSize: 22,
             ),
@@ -404,10 +447,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = theme.colorScheme.primary;
+    final onAccent = theme.colorScheme.onPrimary;
+    final surface = theme.colorScheme.surface;
+    final onSurface = theme.colorScheme.onSurface;
+    final muted = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final shadowColor = Colors.black.withValues(alpha: isDark ? 0.6 : 0.14);
+    final edgeShadow = border.withValues(alpha: isDark ? 0.6 : 0.35);
+    final success = AppColors.success;
     final size = MediaQuery.of(context).size;
     final height = size.height;
     final width = size.width;
-    final textTheme = Theme.of(context).textTheme;
+    final textTheme = theme.textTheme;
     final reviewerAccessToggle = ref.watch(playStoreReviewerAccessProvider);
     final reviewerAccessEnabled =
         reviewerAccessToggle.maybeWhen(data: (enabled) => enabled, orElse: () => false);
@@ -417,7 +471,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final carouselAreaHeight = height - loginCardHeight;
 
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -435,20 +489,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               bottom: 0,
               child: Container(
                 decoration: BoxDecoration(
-                  color: UniSyncColors.surfaceCard,
+                  color: surface,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(32),
                     topRight: Radius.circular(32),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.6),
+                      color: shadowColor,
                       blurRadius: 20,
                       spreadRadius: 5,
                       offset: const Offset(0, -10),
                     ),
                     BoxShadow(
-                      color: UniSyncColors.borderSubtle.withValues(alpha: 0.6),
+                      color: edgeShadow,
                       blurRadius: 20,
                       spreadRadius: 2,
                       offset: const Offset(0, -5),
@@ -471,7 +525,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // Container(
                     //   decoration: BoxDecoration(
                     //     shape: BoxShape.circle,
-                    //     border: Border.all(color: UniSyncColors.borderSubtle)
+                    //     border: Border.all(color: border)
                     //   ),
                     //   height: 70,
                     //   child: ClipOval(
@@ -504,7 +558,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         key: ValueKey(headlineTexts[activeHeadlineIndex]),
                         textAlign: TextAlign.center,
                         style: textTheme.headlineSmall?.copyWith(
-                          color: UniSyncColors.textPrimary,
+                          color: onSurface,
                           fontSize: width * 0.065, // Responsive font size
                           height: 1.2,
                           fontWeight: FontWeight.w700,
@@ -517,7 +571,7 @@ Text(
   'Sign in & dive into newer experiences.\nNo hassle, just innovation.',
   textAlign: TextAlign.center,
   style: textTheme.bodyMedium?.copyWith(
-    color: UniSyncColors.textMuted,
+    color: muted,
     fontSize: width * 0.032,
     fontWeight: FontWeight.w400, // lighter feels softer
     height: 1.5,                 // breathe between lines
@@ -532,15 +586,15 @@ Container(
   decoration: BoxDecoration(
     gradient: LinearGradient(
       colors: [
-        UniSyncColors.success.withOpacity(0.12),
-        UniSyncColors.success.withOpacity(0.04),
+        success.withValues(alpha: 0.12),
+        success.withValues(alpha: 0.04),
       ],
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
     ),
     borderRadius: BorderRadius.circular(24),
     border: Border.all(
-      color: UniSyncColors.success.withOpacity(0.4),
+      color: success.withValues(alpha: 0.4),
       width: 1,
     ),
   ),
@@ -553,19 +607,19 @@ Container(
       height: 18,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFFFD72F).withOpacity(0.12),
+        color: accent.withValues(alpha: 0.12),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFD72F).withOpacity(0.45),
+            color: accent.withValues(alpha: 0.45),
             blurRadius: 8,
             spreadRadius: 1,
           ),
         ],
       ),
-      child: const Icon(
+      child: Icon(
         Icons.favorite,
         size: 11,
-        color: Color(0xFFFFD72F),
+        color: accent,
       ),
     ),
 
@@ -574,7 +628,7 @@ Container(
     Text(
       'Loved by 5k+ students',
       style: textTheme.bodySmall?.copyWith(
-        color: Colors.white.withOpacity(0.85),
+        color: onSurface.withValues(alpha: 0.85),
         fontWeight: FontWeight.w600,
         letterSpacing: 0.2,
         fontSize: width * 0.030,
@@ -588,10 +642,10 @@ Container(
                     SizedBox(
                       width: double.infinity,
                       child: NeoPopButton(
-                        color: UniSyncColors.backgroundPrimary,
+                        color: accent,
                         
-                        bottomShadowColor: UniSyncColors.border,
-                        rightShadowColor: UniSyncColors.borderSubtle,
+                        bottomShadowColor: border,
+                        rightShadowColor: border,
                         depth: 6,
                         parentColor: Colors.transparent,
                         buttonPosition: Position.fullBottom,
@@ -613,7 +667,7 @@ Container(
                           }
                         },
                         border: Border.all(
-                          color: Colors.white,//UniSyncColors.buttonPrimaryStroke,
+                          color: accent.withValues(alpha: 0.4),
                           width: 1.5,
                         ),
                         child: Padding(
@@ -633,7 +687,7 @@ Container(
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
                                             valueColor: AlwaysStoppedAnimation(
-                                              UniSyncColors.textPrimary,
+                                              onAccent,
                                             ),
                                           ),
                                         ),
@@ -643,7 +697,7 @@ Container(
                                         'Signing you in securely...',
                                         style: TextStyle(
                                           fontSize: width * 0.038,
-                                          color: UniSyncColors.textPrimary,
+                                          color: onAccent,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -652,10 +706,10 @@ Container(
                                 : Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.rocket_launch,
                                         size: 20,
-                                        color: UniSyncColors.textPrimary,
+                                        color: onAccent,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
@@ -663,7 +717,7 @@ Container(
                                         style: TextStyle(
                                           fontSize: width * 0.04,
                                           fontWeight: FontWeight.w700,
-                                          color: UniSyncColors.textPrimary,
+                                          color: onAccent,
                                         ),
                                       ),
                                     ],
@@ -678,7 +732,7 @@ Container(
                         'Use below signin option(temporary) for playstore review if you cant use google signin',
                         textAlign: TextAlign.center,
                         style: textTheme.bodySmall?.copyWith(
-                          color: UniSyncColors.textMuted,
+                          color: muted,
                           fontSize: width * 0.029,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.1,
@@ -688,9 +742,9 @@ Container(
                       SizedBox(
                         width: double.infinity,
                         child: NeoPopButton(
-                          color: UniSyncColors.surfaceElevated,
-                          bottomShadowColor: UniSyncColors.accent,
-                          rightShadowColor: UniSyncColors.accent,
+                          color: isDark ? AppColors.darkCardAlt : AppColors.lightCardAlt,
+                          bottomShadowColor: accent.withValues(alpha: 0.4),
+                          rightShadowColor: accent.withValues(alpha: 0.4),
                           depth: 5,
                           parentColor: Colors.transparent,
                           buttonPosition: Position.fullBottom,
@@ -712,7 +766,7 @@ Container(
                             }
                           },
                           border: Border.all(
-                            color: UniSyncColors.border,
+                            color: border,
                             width: 1.2,
                           ),
                           child: Padding(
@@ -725,13 +779,13 @@ Container(
                                   ? Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const SizedBox(
+                                         SizedBox(
                                           height: 18,
                                           width: 18,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
                                             valueColor: AlwaysStoppedAnimation(
-                                              UniSyncColors.accent,
+                                              accent,
                                             ),
                                           ),
                                         ),
@@ -740,7 +794,7 @@ Container(
                                           'Opening reviewer access...',
                                           style: TextStyle(
                                             fontSize: width * 0.036,
-                                            color: UniSyncColors.textPrimary,
+                                            color: onSurface,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -749,10 +803,10 @@ Container(
                                   : Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.visibility_outlined,
                                           size: 18,
-                                          color: UniSyncColors.accent,
+                                          color: accent,
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
@@ -760,7 +814,7 @@ Container(
                                           style: TextStyle(
                                             fontSize: width * 0.038,
                                             fontWeight: FontWeight.w700,
-                                            color: UniSyncColors.textPrimary,
+                                            color: onSurface,
                                           ),
                                         ),
                                       ],

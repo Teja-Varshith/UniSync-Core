@@ -1,12 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:UniSync/ads%20Manager/add_manager.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/app/providers.dart';
 import 'package:UniSync/app/routes.dart';
+import 'package:UniSync/app/theme/app_theme.dart';
+import 'package:UniSync/app/theme/theme_provider.dart';
 import 'package:UniSync/firebase_options.dart';
 import 'package:UniSync/firebase_service.dart';
 import 'package:UniSync/app/startup_splash_screen.dart';
@@ -61,7 +61,7 @@ class _AppState extends ConsumerState<App> {
   @override
   Widget build(BuildContext context) {
     final userState = ref.watch(userProvider);
-    final theme = buildUniSyncDarkTheme();
+    final themeMode = ref.watch(themeModeProvider);
 
     final analyticsUserId = userState?.id;
     if (_lastAnalyticsUserId != analyticsUserId) {
@@ -101,7 +101,9 @@ class _AppState extends ConsumerState<App> {
             title: 'UniSync - AI College Companion',
             debugShowCheckedModeBanner: false,
             scaffoldMessengerKey: rootScaffoldMessengerKey,
-            theme: theme,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: themeMode,
             home: const StartupSplashScreen(
               statusText: 'Initializing UniSync...',
             ),
@@ -113,7 +115,9 @@ class _AppState extends ConsumerState<App> {
             title: 'UniSync - AI College Companion',
             debugShowCheckedModeBanner: false,
             scaffoldMessengerKey: rootScaffoldMessengerKey,
-            theme: theme,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: themeMode,
             home: StartupSplashScreen(
               statusText: 'Something\'s Wrong...',
               errorText: 'Startup failed. Please try again.',
@@ -127,7 +131,9 @@ class _AppState extends ConsumerState<App> {
           title: 'UniSync - AI College Companion',
           debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
-      theme: theme,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
       routerDelegate: RoutemasterDelegate(
         routesBuilder: (_) {
           return loggedOutRoutes;
@@ -142,7 +148,9 @@ class _AppState extends ConsumerState<App> {
         title: 'UniSync - AI College Companion',
           debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
-      theme: theme,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
       routerDelegate: RoutemasterDelegate(
         routesBuilder: (_) {
           return completeProfileRoutes;
@@ -172,7 +180,9 @@ class _AppState extends ConsumerState<App> {
               title: 'UniSync - AI College Companion',
               debugShowCheckedModeBanner: false,
               scaffoldMessengerKey: rootScaffoldMessengerKey,
-              theme: theme,
+              theme: AppTheme.light,
+              darkTheme: AppTheme.dark,
+              themeMode: themeMode,
               home: StartupSplashScreen(
                 statusText: 'Service Unavailable',
                 errorText: globalBanMessage.trim(),
@@ -225,7 +235,9 @@ class _AppState extends ConsumerState<App> {
                   title: 'UniSync - AI College Companion',
                   debugShowCheckedModeBanner: false,
                   scaffoldMessengerKey: rootScaffoldMessengerKey,
-                  theme: theme,
+                  theme: AppTheme.light,
+                  darkTheme: AppTheme.dark,
+                  themeMode: themeMode,
                   home: StartupSplashScreen(
                     statusText: 'Account Restricted',
                     errorText: message,
@@ -242,7 +254,9 @@ class _AppState extends ConsumerState<App> {
                 title: 'UniSync - AI College Companion',
                 debugShowCheckedModeBanner: false,
                 scaffoldMessengerKey: rootScaffoldMessengerKey,
-                theme: theme,
+                theme: AppTheme.light,
+                darkTheme: AppTheme.dark,
+                themeMode: themeMode,
                 routerDelegate: RoutemasterDelegate(
                   routesBuilder: (_) {
                     return loggedInRoutes;
@@ -256,7 +270,9 @@ class _AppState extends ConsumerState<App> {
               title: 'UniSync - AI College Companion',
               debugShowCheckedModeBanner: false,
               scaffoldMessengerKey: rootScaffoldMessengerKey,
-              theme: theme,
+              theme: AppTheme.light,
+              darkTheme: AppTheme.dark,
+              themeMode: themeMode,
               home: const StartupSplashScreen(
                 statusText: 'Checking account status...',
               ),
@@ -265,7 +281,9 @@ class _AppState extends ConsumerState<App> {
               title: 'UniSync - AI College Companion',
               debugShowCheckedModeBanner: false,
               scaffoldMessengerKey: rootScaffoldMessengerKey,
-              theme: theme,
+              theme: AppTheme.light,
+              darkTheme: AppTheme.dark,
+              themeMode: themeMode,
               home: StartupSplashScreen(
                 statusText: 'Something\'s Wrong...',
                 errorText: 'Could not verify account status. Please try again.',
@@ -278,7 +296,9 @@ class _AppState extends ConsumerState<App> {
           title: 'UniSync - AI College Companion',
           debugShowCheckedModeBanner: false,
           scaffoldMessengerKey: rootScaffoldMessengerKey,
-          theme: theme,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeMode,
           home: const StartupSplashScreen(
             statusText: 'Checking account status...',
           ),
@@ -287,7 +307,9 @@ class _AppState extends ConsumerState<App> {
           title: 'UniSync - AI College Companion',
           debugShowCheckedModeBanner: false,
           scaffoldMessengerKey: rootScaffoldMessengerKey,
-          theme: theme,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeMode,
           home: StartupSplashScreen(
             statusText: 'Something\'s Wrong...',
             errorText: 'Could not verify account status. Please try again.',

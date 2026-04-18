@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:UniSync/constants/constant.dart';
 
 class BlockedScreen extends StatelessWidget {
   const BlockedScreen({
@@ -14,8 +12,15 @@ class BlockedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final error = theme.colorScheme.error;
+    final titleColor = theme.textTheme.headlineSmall?.color ??
+        theme.colorScheme.onSurface;
+    final bodyColor = theme.textTheme.bodyMedium?.color ??
+        theme.colorScheme.onSurface.withValues(alpha: 0.7);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C0A),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -28,14 +33,14 @@ class BlockedScreen extends StatelessWidget {
                   height: 84,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: UniSyncColors.error.withOpacity(0.12),
+                    color: error.withValues(alpha: 0.12),
                     border: Border.all(
-                      color: UniSyncColors.error.withOpacity(0.35),
+                      color: error.withValues(alpha: 0.35),
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.block_rounded,
-                    color: UniSyncColors.error,
+                    color: error,
                     size: 38,
                   ),
                 ),
@@ -43,8 +48,9 @@ class BlockedScreen extends StatelessWidget {
                 Text(
                   'Access Blocked',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.dmSans(
-                    color: Colors.white,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: titleColor,
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
                   ),
@@ -53,8 +59,9 @@ class BlockedScreen extends StatelessWidget {
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.dmSans(
-                    color: Colors.white.withOpacity(0.74),
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: bodyColor,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     height: 1.5,
@@ -64,9 +71,9 @@ class BlockedScreen extends StatelessWidget {
                 OutlinedButton(
                   onPressed: onRefresh,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: UniSyncColors.accent,
+                    foregroundColor: theme.colorScheme.primary,
                     side: BorderSide(
-                      color: UniSyncColors.accent.withOpacity(0.5),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 28,
@@ -78,7 +85,8 @@ class BlockedScreen extends StatelessWidget {
                   ),
                   child: Text(
                     'Refresh Status',
-                    style: GoogleFonts.dmSans(
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                     ),

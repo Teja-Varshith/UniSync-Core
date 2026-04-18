@@ -7,6 +7,7 @@ class SecureStorageService {
   static const _campxTokenKey = 'campx-session-token';
   static const _campxUsernameKey = 'campx-username';
   static const _campxPasswordKey = 'campx-password';
+  static const _themeModeKey = 'theme-mode';
 
   Future<void> setLoginStatus(bool status,String uid) async {
     await _storage.write(key: 'isLoggedIn', value: status.toString());
@@ -64,6 +65,15 @@ class SecureStorageService {
 
   Future<String?> getCampXPassword() async {
     final value = await _storage.read(key: _campxPasswordKey);
+    return value;
+  }
+
+  Future<void> setThemeMode(String mode) async {
+    await _storage.write(key: _themeModeKey, value: mode);
+  }
+
+  Future<String?> getThemeMode() async {
+    final value = await _storage.read(key: _themeModeKey);
     return value;
   }
 

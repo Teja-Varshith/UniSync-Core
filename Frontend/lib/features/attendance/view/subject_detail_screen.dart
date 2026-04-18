@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:UniSync/ads%20Manager/add_manager.dart';
 import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/attendance/repository/live_attendance_repository2.dart';
 
@@ -15,11 +16,86 @@ final subjectAttendanceProvider =
       .fetchSubjectAttendance(subjectId: subjectId);
 });
 
+_AttendancePalette _ui(BuildContext context) => _AttendancePalette.of(context);
+
+class _AttendancePalette {
+  const _AttendancePalette({
+    required this.isDark,
+    required this.backgroundPrimary,
+    required this.backgroundSecondary,
+    required this.surfaceCard,
+    required this.surfaceElevated,
+    required this.divider,
+    required this.border,
+    required this.borderSubtle,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.textDisabled,
+    required this.accent,
+    required this.accentSoft,
+    required this.buttonPrimaryFg,
+    required this.success,
+    required this.warning,
+    required this.error,
+  });
+
+  final bool isDark;
+  final Color backgroundPrimary;
+  final Color backgroundSecondary;
+  final Color surfaceCard;
+  final Color surfaceElevated;
+  final Color divider;
+  final Color border;
+  final Color borderSubtle;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color textDisabled;
+  final Color accent;
+  final Color accentSoft;
+  final Color buttonPrimaryFg;
+  final Color success;
+  final Color warning;
+  final Color error;
+
+  factory _AttendancePalette.of(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return _AttendancePalette(
+      isDark: isDark,
+      backgroundPrimary: isDark ? AppColors.darkBg : AppColors.lightBg,
+      backgroundSecondary: isDark ? AppColors.darkSurface : AppColors.lightCardAlt,
+      surfaceCard: isDark ? AppColors.darkCard : AppColors.lightCard,
+      surfaceElevated: isDark ? AppColors.darkCardAlt : AppColors.lightSurface,
+      divider: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.9)
+          : AppColors.lightBorder.withValues(alpha: 0.9),
+      border: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+      borderSubtle: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.8)
+          : AppColors.lightBorder.withValues(alpha: 0.8),
+      textPrimary: theme.colorScheme.onSurface,
+      textSecondary: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      textMuted: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+      textDisabled: isDark
+          ? AppColors.darkTextMuted.withValues(alpha: 0.7)
+          : AppColors.lightTextMuted.withValues(alpha: 0.8),
+      accent: AppColors.primary,
+      accentSoft: AppColors.primary.withValues(alpha: 0.14),
+      buttonPrimaryFg: theme.colorScheme.onPrimary,
+      success: AppColors.success,
+      warning: AppColors.warning,
+      error: theme.colorScheme.error,
+    );
+  }
+}
+
 class SubjectDetailsScreen extends ConsumerWidget {
   final int subjectId;
   final String subjectName;
 
-  const SubjectDetailsScreen({
+  SubjectDetailsScreen({
     super.key,
     required this.subjectId,
     required this.subjectName,
@@ -41,18 +117,18 @@ class SubjectDetailsScreen extends ConsumerWidget {
         ref.watch(userProvider)?.hasAdFreeAccess ?? AdManager.instance.isAdFree;
 
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
       body: SafeArea(
         child: Column(
           children: [
             _AppBar(subjectName: subjectName),
-            Container(height: 0.8, color: UniSyncColors.divider),
-            Expanded(child: _buildBody(attendanceAsync, ref)),
+            Container(height: 0.8, color: _ui(context).divider),
+            Expanded(child: _buildBody(context, attendanceAsync, ref)),
             if (!hasAdFreeAccess) ...[
-              Container(height: 0.8, color: UniSyncColors.divider),
-              const SizedBox(height: 8),
+              Container(height: 0.8, color: _ui(context).divider),
+              SizedBox(height: 8),
               Center(child: AdManager.instance.buildBannerAd()),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
             ],
           ],
         ),
@@ -60,44 +136,43 @@ class SubjectDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBody(
-      AsyncValue<Map<String, dynamic>?> attendanceAsync, WidgetRef ref) {
+  Widget _buildBody(BuildContext context, AsyncValue<Map<String, dynamic>?> attendanceAsync, WidgetRef ref) {
     return attendanceAsync.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: SizedBox(
           width: 24,
           height: 24,
           child: CircularProgressIndicator(
-              strokeWidth: 2, color: UniSyncColors.accent),
+              strokeWidth: 2, color: _ui(context).accent),
         ),
       ),
       error: (error, stack) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                color: UniSyncColors.textMuted, size: 36),
-            const SizedBox(height: 12),
-            const Text(
+            Icon(Icons.error_outline_rounded,
+                color: _ui(context).textMuted, size: 36),
+            SizedBox(height: 12),
+            Text(
               'Unable to load attendance.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: UniSyncColors.textSecondary, fontSize: 13),
+                  color: _ui(context).textSecondary, fontSize: 13),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             NeoPopButton(
-              color: UniSyncColors.accent,
-              bottomShadowColor: UniSyncColors.backgroundPrimary,
-              rightShadowColor: UniSyncColors.backgroundPrimary,
+              color: _ui(context).accent,
+              bottomShadowColor: _ui(context).backgroundPrimary,
+              rightShadowColor: _ui(context).backgroundPrimary,
               depth: 4,
               onTapUp: () => ref.invalidate(subjectAttendanceProvider(subjectId)),
               onTapDown: () {},
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Text(
                   'Retry',
                   style: TextStyle(
-                    color: UniSyncColors.backgroundPrimary,
+                    color: _ui(context).backgroundPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -116,24 +191,24 @@ class SubjectDetailsScreen extends ConsumerWidget {
                 Container(
                   width: 60,
                   height: 60,
-                  color: UniSyncColors.surfaceCard,
-                  child: const Icon(Icons.warning_amber_rounded,
-                      color: UniSyncColors.textMuted, size: 26),
+                  color: _ui(context).surfaceCard,
+                  child: Icon(Icons.warning_amber_rounded,
+                      color: _ui(context).textMuted, size: 26),
                 ),
-                const SizedBox(height: 16),
-                const Text(
+                SizedBox(height: 16),
+                Text(
                   'No data available',
                   style: TextStyle(
-                    color: UniSyncColors.textPrimary,
+                    color: _ui(context).textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
+                SizedBox(height: 6),
+                Text(
                   'No attendance records found for this subject',
                   style: TextStyle(
-                      color: UniSyncColors.textSecondary, fontSize: 12),
+                      color: _ui(context).textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -158,9 +233,9 @@ class SubjectDetailsScreen extends ConsumerWidget {
 
               // ── Summary card ────────────────────────────────────
               NeoPopButton(
-                color: UniSyncColors.surfaceCard,
-                bottomShadowColor: UniSyncColors.accent,
-                rightShadowColor: UniSyncColors.accent,
+                color: _ui(context).surfaceCard,
+                bottomShadowColor: _ui(context).accent,
+                rightShadowColor: _ui(context).accent,
                 depth: 4,
                 onTapUp: () {},
                 onTapDown: () {},
@@ -172,37 +247,37 @@ class SubjectDetailsScreen extends ConsumerWidget {
                       // Eyebrow
                       Row(
                         children: [
-                          const Text(
+                          Text(
                             '#ATTENDANCE SUMMARY',
                             style: TextStyle(
-                              color: UniSyncColors.accent,
+                              color: _ui(context).accent,
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.8,
                             ),
                           ),
-                          const Spacer(),
+                          Spacer(),
                           // Safe / At-risk badge
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: isSafe
-                                  ? UniSyncColors.accent.withValues(alpha: 0.12)
-                                  : UniSyncColors.error.withValues(alpha: 0.12),
+                                  ? _ui(context).accent.withValues(alpha: 0.12)
+                                  : _ui(context).error.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
                                 color: isSafe
-                                    ? UniSyncColors.accent.withValues(alpha: 0.4)
-                                    : UniSyncColors.error.withValues(alpha: 0.4),
+                                    ? _ui(context).accent.withValues(alpha: 0.4)
+                                    : _ui(context).error.withValues(alpha: 0.4),
                               ),
                             ),
                             child: Text(
                               isSafe ? 'Safe' : 'At Risk',
                               style: TextStyle(
                                 color: isSafe
-                                    ? UniSyncColors.accent
-                                    : UniSyncColors.error,
+                                    ? _ui(context).accent
+                                    : _ui(context).error,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
@@ -212,7 +287,7 @@ class SubjectDetailsScreen extends ConsumerWidget {
                         ],
                       ),
 
-                      const SizedBox(height: 18),
+                      SizedBox(height: 18),
 
                       // Big percentage
                       Row(
@@ -223,11 +298,11 @@ class SubjectDetailsScreen extends ConsumerWidget {
                                 ? Icons.trending_up_rounded
                                 : Icons.trending_down_rounded,
                             color: isSafe
-                                ? UniSyncColors.accent
-                                : UniSyncColors.error,
+                                ? _ui(context).accent
+                                : _ui(context).error,
                             size: 28,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Text(
                             '$attendancePercentage%',
                             style: TextStyle(
@@ -235,17 +310,17 @@ class SubjectDetailsScreen extends ConsumerWidget {
                               fontWeight: FontWeight.w800,
                               letterSpacing: -1,
                               color: isSafe
-                                  ? UniSyncColors.accent
-                                  : UniSyncColors.error,
+                                  ? _ui(context).accent
+                                  : _ui(context).error,
                             ),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 18),
+                      SizedBox(height: 18),
 
-                      Container(height: 0.8, color: UniSyncColors.divider),
-                      const SizedBox(height: 18),
+                      Container(height: 0.8, color: _ui(context).divider),
+                      SizedBox(height: 18),
 
                       // Stats row
                       Row(
@@ -254,23 +329,23 @@ class SubjectDetailsScreen extends ConsumerWidget {
                           _StatChip(
                               label: 'Total',
                               value: totalClasses.toString(),
-                              color: UniSyncColors.textPrimary),
+                              color: _ui(context).textPrimary),
                           Container(
                               width: 0.8,
                               height: 36,
-                              color: UniSyncColors.divider),
+                              color: _ui(context).divider),
                           _StatChip(
                               label: 'Present',
                               value: present.toString(),
-                              color: UniSyncColors.accent),
+                              color: _ui(context).accent),
                           Container(
                               width: 0.8,
                               height: 36,
-                              color: UniSyncColors.divider),
+                              color: _ui(context).divider),
                           _StatChip(
                               label: 'Absent',
                               value: absent.toString(),
-                              color: UniSyncColors.error),
+                              color: _ui(context).error),
                         ],
                       ),
                     ],
@@ -278,34 +353,34 @@ class SubjectDetailsScreen extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // ── Class History header ─────────────────────────────
               if (timeline.isNotEmpty) ...[
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       '#CLASS HISTORY',
                       style: TextStyle(
-                        color: UniSyncColors.accent,
+                        color: _ui(context).accent,
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.8,
                       ),
                     ),
-                    const Spacer(),
+                    Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: UniSyncColors.surfaceCard,
+                        color: _ui(context).surfaceCard,
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: UniSyncColors.border),
+                        border: Border.all(color: _ui(context).border),
                       ),
                       child: Text(
                         '${timeline.length} classes',
-                        style: const TextStyle(
-                          color: UniSyncColors.textMuted,
+                        style: TextStyle(
+                          color: _ui(context).textMuted,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -313,7 +388,7 @@ class SubjectDetailsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
               ],
 
               // ── Timeline list ────────────────────────────────────
@@ -322,22 +397,22 @@ class SubjectDetailsScreen extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 48),
+                          SizedBox(height: 48),
                           Container(
                             width: 60,
                             height: 60,
-                            color: UniSyncColors.surfaceCard,
-                            child: const Icon(
+                            color: _ui(context).surfaceCard,
+                            child: Icon(
                               Icons.calendar_today_outlined,
-                              color: UniSyncColors.textMuted,
+                              color: _ui(context).textMuted,
                               size: 26,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          const Text(
+                          SizedBox(height: 16),
+                          Text(
                             'No classes found',
                             style: TextStyle(
-                              color: UniSyncColors.textPrimary,
+                              color: _ui(context).textPrimary,
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                             ),
@@ -347,10 +422,10 @@ class SubjectDetailsScreen extends ConsumerWidget {
                     )
                   : ListView.separated(
                       shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
+                      physics: NeverScrollableScrollPhysics(),
                       itemCount: timeline.length,
                       separatorBuilder: (_, __) =>
-                          const SizedBox(height: 10),
+                          SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final classData = timeline[index];
                         final isPresent = classData['status'] == false;
@@ -405,68 +480,68 @@ class SubjectDetailsScreen extends ConsumerWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AppBar extends StatelessWidget {
-  const _AppBar({required this.subjectName});
+  _AppBar({required this.subjectName});
   final String subjectName;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: UniSyncColors.backgroundSecondary,
+      color: _ui(context).backgroundSecondary,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Back button
           NeoPopButton(
-            color: UniSyncColors.surfaceCard,
-            bottomShadowColor: UniSyncColors.border,
-            rightShadowColor: UniSyncColors.border,
+            color: _ui(context).surfaceCard,
+            bottomShadowColor: _ui(context).border,
+            rightShadowColor: _ui(context).border,
             depth: 3,
             onTapUp: () => Navigator.of(context).pop(),
             onTapDown: () {},
-            child: const SizedBox(
+            child: SizedBox(
               width: 40,
               height: 40,
               child: Center(
                 child: Icon(
                   Icons.arrow_back_ios_new_rounded,
                   size: 15,
-                  color: UniSyncColors.textMuted,
+                  color: _ui(context).textMuted,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   '#SUBJECT DETAILS',
                   style: TextStyle(
-                    color: UniSyncColors.accent,
+                    color: _ui(context).accent,
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.8,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   subjectName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: UniSyncColors.textPrimary,
+                  style: TextStyle(
+                    color: _ui(context).textPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 2),
-                const Text(
+                SizedBox(height: 2),
+                Text(
                   'Attendance Details',
                   style: TextStyle(
-                    color: UniSyncColors.textMuted,
+                    color: _ui(context).textMuted,
                     fontSize: 11,
                   ),
                 ),
@@ -484,7 +559,7 @@ class _AppBar extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _StatChip extends StatelessWidget {
-  const _StatChip({
+  _StatChip({
     required this.label,
     required this.value,
     required this.color,
@@ -507,12 +582,12 @@ class _StatChip extends StatelessWidget {
             letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
-            color: UniSyncColors.textMuted,
+            color: _ui(context).textMuted,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.3,
           ),
@@ -527,7 +602,7 @@ class _StatChip extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ClassCard extends StatelessWidget {
-  const _ClassCard({
+  _ClassCard({
     required this.isPresent,
     required this.formattedDate,
     required this.orderNumber,
@@ -544,11 +619,11 @@ class _ClassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NeoPopButton(
-      color: UniSyncColors.surfaceCard,
+      color: _ui(context).surfaceCard,
       bottomShadowColor:
-          isPresent ? UniSyncColors.accent : UniSyncColors.error,
+          isPresent ? _ui(context).accent : _ui(context).error,
       rightShadowColor:
-          isPresent ? UniSyncColors.accent : UniSyncColors.error,
+          isPresent ? _ui(context).accent : _ui(context).error,
       depth: 3,
       onTapUp: () {},
       onTapDown: () {},
@@ -562,13 +637,13 @@ class _ClassCard extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: isPresent
-                    ? UniSyncColors.accent.withValues(alpha: 0.12)
-                    : UniSyncColors.error.withValues(alpha: 0.12),
+                    ? _ui(context).accent.withValues(alpha: 0.12)
+                    : _ui(context).error.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isPresent
-                      ? UniSyncColors.accent.withValues(alpha: 0.35)
-                      : UniSyncColors.error.withValues(alpha: 0.35),
+                      ? _ui(context).accent.withValues(alpha: 0.35)
+                      : _ui(context).error.withValues(alpha: 0.35),
                 ),
               ),
               child: Center(
@@ -577,13 +652,13 @@ class _ClassCard extends StatelessWidget {
                       ? Icons.check_rounded
                       : Icons.close_rounded,
                   color:
-                      isPresent ? UniSyncColors.accent : UniSyncColors.error,
+                      isPresent ? _ui(context).accent : _ui(context).error,
                   size: 18,
                 ),
               ),
             ),
 
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
 
             // Text
             Expanded(
@@ -592,17 +667,17 @@ class _ClassCard extends StatelessWidget {
                 children: [
                   Text(
                     formattedDate,
-                    style: const TextStyle(
-                      color: UniSyncColors.textPrimary,
+                    style: TextStyle(
+                      color: _ui(context).textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3),
                   Text(
                     'Period $orderNumber  ·  $fromTime – $toTime',
-                    style: const TextStyle(
-                      color: UniSyncColors.textSecondary,
+                    style: TextStyle(
+                      color: _ui(context).textSecondary,
                       fontSize: 11,
                       height: 1.4,
                     ),
@@ -611,7 +686,7 @@ class _ClassCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
 
             // P / A badge
             Container(
@@ -619,15 +694,15 @@ class _ClassCard extends StatelessWidget {
               height: 28,
               decoration: BoxDecoration(
                 color: isPresent
-                    ? UniSyncColors.accent
-                    : UniSyncColors.error,
+                    ? _ui(context).accent
+                    : _ui(context).error,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Center(
                 child: Text(
                   isPresent ? 'P' : 'A',
-                  style: const TextStyle(
-                    color: UniSyncColors.backgroundPrimary,
+                  style: TextStyle(
+                    color: _ui(context).backgroundPrimary,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                   ),
@@ -640,3 +715,4 @@ class _ClassCard extends StatelessWidget {
     );
   }
 }
+

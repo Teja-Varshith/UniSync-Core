@@ -2,17 +2,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/app/providers.dart';
-import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/peer_connect/peers/peer_controller.dart';
 import 'package:UniSync/features/peer_connect/peers/peer_decs.dart';
 import 'package:UniSync/models/peer_model.dart';
 
-const _kBg       = Color(0xFF090C12);
-const _kSurface  = Color(0xFF0E1118);
-const _kSurface2 = Color(0xFF161B22);
-const _kBorder   = Color(0xFF252D38);
-const _kMuted    = Color(0xFF555F6D);
+class _PeerPalette {
+  const _PeerPalette({
+    required this.isDark,
+    required this.bg,
+    required this.surface,
+    required this.surface2,
+    required this.border,
+    required this.muted,
+    required this.textPrimary,
+    required this.accent,
+    required this.onAccent,
+  });
+
+  final bool isDark;
+  final Color bg;
+  final Color surface;
+  final Color surface2;
+  final Color border;
+  final Color muted;
+  final Color textPrimary;
+  final Color accent;
+  final Color onAccent;
+
+  factory _PeerPalette.of(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    return _PeerPalette(
+      isDark: isDark,
+      bg: theme.scaffoldBackgroundColor,
+      surface: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      surface2: isDark ? AppColors.darkCard : AppColors.lightCardAlt,
+      border: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+      muted: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+      textPrimary: scheme.onSurface,
+      accent: scheme.primary,
+      onAccent: scheme.onPrimary,
+    );
+  }
+}
 
 class PeerScreen extends ConsumerStatefulWidget {
   const PeerScreen({super.key});
@@ -100,11 +135,12 @@ class _PeerScreenState extends ConsumerState<PeerScreen> {
   });
 
   void _showFilterSheet() {
+    final palette = _PeerPalette.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _kSurface,
-      shape: const Border(top: BorderSide(color: _kBorder, width: 1)),
+      backgroundColor: palette.surface,
+      shape: Border(top: BorderSide(color: palette.border, width: 1)),
       builder: (_) => _FilterSheet(
         allSkills:      _allSkills,
         allTraits:      _allTraits,
@@ -118,6 +154,7 @@ class _PeerScreenState extends ConsumerState<PeerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _PeerPalette.of(context);
     final currentUserId = ref.watch(userProvider)?.id ?? '';
     final filtered      = _filtered;
     final isFiltered    = _hasFilters;
@@ -126,27 +163,27 @@ class _PeerScreenState extends ConsumerState<PeerScreen> {
         : '${_allPeers.length} peers';
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: palette.bg,
       body: SafeArea(
         child: Column(children: [
 
           // ── Top bar ──────────────────────────────────────────
           Container(
-            color: _kSurface,
+            color: palette.surface,
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Row(children: [
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('PEER CONNECT',
-                    style: TextStyle(color: UniSyncColors.accent,
+                    style: TextStyle(color: palette.accent,
                         fontSize: 9, fontWeight: FontWeight.w700,
                         letterSpacing: 1.8)),
                 const SizedBox(height: 2),
                 RichText(text: TextSpan(children: [
-                  const TextSpan(text: 'Find your ',
-                      style: TextStyle(color: Colors.white, fontSize: 18,
+                  TextSpan(text: 'Find your ',
+                      style: TextStyle(color: palette.textPrimary, fontSize: 18,
                           fontWeight: FontWeight.w700, letterSpacing: -0.4)),
                   TextSpan(text: 'people',
-                      style: TextStyle(color: UniSyncColors.accent,
+                      style: TextStyle(color: palette.accent,
                           fontSize: 18, fontWeight: FontWeight.w700,
                           letterSpacing: -0.4)),
                 ])),
@@ -155,25 +192,25 @@ class _PeerScreenState extends ConsumerState<PeerScreen> {
               // Quiet count
               if (!_loading && _error == null)
                 Text(displayCount,
-                    style: const TextStyle(color: _kMuted, fontSize: 11,
+                    style: TextStyle(color: palette.muted, fontSize: 11,
                         fontWeight: FontWeight.w500, letterSpacing: 0.2)),
               const SizedBox(width: 14),
               NeoPopButton(
-                color: UniSyncColors.accent,
-                bottomShadowColor: _kBg,
-                rightShadowColor: _kBg,
+                color: palette.accent,
+                bottomShadowColor: palette.bg,
+                rightShadowColor: palette.bg,
                 depth: 4,
                 onTapUp: () => Routemaster.of(context).push('/peerProfile'),
                 onTapDown: () {},
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Text('My Card',
                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                            color: UniSyncColors.buttonPrimaryFg)),
+                            color: palette.onAccent)),
                     SizedBox(width: 5),
                     Icon(Icons.launch_rounded, size: 12,
-                        color: UniSyncColors.buttonPrimaryFg),
+                        color: palette.onAccent),
                   ]),
                 ),
               ),
@@ -182,31 +219,31 @@ class _PeerScreenState extends ConsumerState<PeerScreen> {
 
           // ── Search + filter ──────────────────────────────────
           Container(
-            color: _kSurface,
+            color: palette.surface,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: Row(children: [
               Expanded(
                 child: Container(
                   height: 42,
                   decoration: BoxDecoration(
-                    color: _kSurface2,
-                    border: Border.all(color: _kBorder),
+                    color: palette.surface2,
+                    border: Border.all(color: palette.border),
                     borderRadius: BorderRadius.circular(13)),
                   child: TextField(
                     controller: _searchCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    style: TextStyle(color: palette.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'Search by name...',
-                      hintStyle: const TextStyle(color: _kMuted, fontSize: 13),
-                      prefixIcon: const Icon(Icons.search_rounded,
-                          color: _kMuted, size: 17),
+                      hintStyle: TextStyle(color: palette.muted, fontSize: 13),
+                      prefixIcon: Icon(Icons.search_rounded,
+                          color: palette.muted, size: 17),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 12),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.close_rounded,
-                                  color: _kMuted, size: 15),
+                              icon: Icon(Icons.close_rounded,
+                                  color: palette.muted, size: 15),
                               onPressed: () {
                                 _searchCtrl.clear();
                                 setState(() => _searchQuery = '');
@@ -224,25 +261,25 @@ class _PeerScreenState extends ConsumerState<PeerScreen> {
                   width: 42, height: 42,
                   decoration: BoxDecoration(
                     color: (_selectedSkills.isNotEmpty || _selectedTraits.isNotEmpty)
-                        ? UniSyncColors.accent : _kSurface2,
+                        ? palette.accent : palette.surface2,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                         color: (_selectedSkills.isNotEmpty || _selectedTraits.isNotEmpty)
-                            ? UniSyncColors.accent : _kBorder)),
+                            ? palette.accent : palette.border)),
                   child: Center(child: Icon(Icons.tune_rounded, size: 17,
                       color: (_selectedSkills.isNotEmpty || _selectedTraits.isNotEmpty)
-                          ? UniSyncColors.buttonPrimaryFg : _kMuted)),
+                          ? palette.onAccent : palette.muted)),
                 ),
               ),
             ]),
           ),
 
-          Container(height: 1, color: _kBorder),
+          Container(height: 1, color: palette.border),
 
           // ── Active filter chips ──────────────────────────────
           if (_hasFilters)
             Container(
-              color: _kSurface,
+              color: palette.surface,
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -258,7 +295,7 @@ class _PeerScreenState extends ConsumerState<PeerScreen> {
                   GestureDetector(
                     onTap: _clearFilters,
                     child: Text('Clear all',
-                        style: TextStyle(color: UniSyncColors.accent,
+                        style: TextStyle(color: palette.accent,
                             fontSize: 11, fontWeight: FontWeight.w600))),
                 ]),
               ),
@@ -271,18 +308,18 @@ class _PeerScreenState extends ConsumerState<PeerScreen> {
           // making the deck itself scroll.
           Expanded(
             child: _loading
-                ? const Center(
+                ? Center(
                     child: SizedBox(
                       width: 22, height: 22,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: UniSyncColors.accent),
+                          strokeWidth: 2, color: palette.accent),
                     ))
                 : _error != null
                     ? _ErrorState(onRetry: _loadAll)
                     : RefreshIndicator(
                         onRefresh: _loadAll,
-                        color: UniSyncColors.accent,
-                        backgroundColor: _kSurface2,
+                        color: palette.accent,
+                        backgroundColor: palette.surface2,
                         displacement: 20,
                         child: CustomScrollView(
                           // Allow the overscroll that triggers pull-to-refresh
@@ -350,6 +387,7 @@ class _FilterSheetState extends State<_FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _PeerPalette.of(context);
     final visibleSkills = widget.allSkills.take(_skillsShown).toList();
     final visibleTraits = widget.allTraits.take(_traitsShown).toList();
     final moreSkills    = widget.allSkills.length - _skillsShown;
@@ -363,25 +401,25 @@ class _FilterSheetState extends State<_FilterSheet> {
       builder: (_, ctrl) => Column(children: [
         const SizedBox(height: 10),
         Center(child: Container(width: 32, height: 3,
-            decoration: BoxDecoration(color: _kBorder,
+            decoration: BoxDecoration(color: palette.border,
                 borderRadius: BorderRadius.circular(2)))),
         const SizedBox(height: 14),
 
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(children: [
-            const Text('Filters',
-                style: TextStyle(color: Colors.white, fontSize: 17,
+            Text('Filters',
+                style: TextStyle(color: palette.textPrimary, fontSize: 17,
                     fontWeight: FontWeight.w700)),
             if (_activeCount > 0) ...[
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(color: UniSyncColors.accent,
+                decoration: BoxDecoration(color: palette.accent,
                     borderRadius: BorderRadius.circular(20)),
                 child: Text('$_activeCount',
-                    style: const TextStyle(
-                        color: UniSyncColors.buttonPrimaryFg,
+                    style: TextStyle(
+                        color: palette.onAccent,
                         fontSize: 10, fontWeight: FontWeight.w700))),
             ],
             const Spacer(),
@@ -393,19 +431,19 @@ class _FilterSheetState extends State<_FilterSheet> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: UniSyncColors.accent.withOpacity(0.1),
+                    color: palette.accent.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color: UniSyncColors.accent.withOpacity(0.25))),
+                        color: palette.accent.withOpacity(0.25))),
                   child: Text('Clear all',
                       style: TextStyle(fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: UniSyncColors.accent))),
+                          color: palette.accent))),
               ),
           ]),
         ),
         const SizedBox(height: 12),
-        Container(height: 1, color: _kBorder),
+        Container(height: 1, color: palette.border),
 
         Expanded(child: ListView(
           controller: ctrl,
@@ -442,14 +480,14 @@ class _FilterSheetState extends State<_FilterSheet> {
               },
               child: Container(
                 height: 50,
-                decoration: BoxDecoration(color: UniSyncColors.accent,
+                decoration: BoxDecoration(color: palette.accent,
                     borderRadius: BorderRadius.circular(8)),
                 child: Center(child: Text(
                   _activeCount > 0
                       ? 'Apply $_activeCount filter${_activeCount > 1 ? 's' : ''}'
                       : 'Apply',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-                      color: UniSyncColors.buttonPrimaryFg,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
+                      color: palette.onAccent,
                       letterSpacing: 0.2)))),
             ),
           ],
@@ -468,16 +506,19 @@ class _SectionHeader extends StatelessWidget {
   final int selectedCount;
 
   @override
-  Widget build(_) => Row(children: [
-    Text(label, style: TextStyle(color: UniSyncColors.accent, fontSize: 9,
+  Widget build(BuildContext context) {
+    final palette = _PeerPalette.of(context);
+    return Row(children: [
+    Text(label, style: TextStyle(color: palette.accent, fontSize: 9,
         fontWeight: FontWeight.w700, letterSpacing: 1.6)),
     if (selectedCount > 0) ...[
       const SizedBox(width: 8),
       Text('$selectedCount selected',
-          style: TextStyle(color: UniSyncColors.accent, fontSize: 10,
+          style: TextStyle(color: palette.accent, fontSize: 10,
               fontWeight: FontWeight.w600)),
     ],
   ]);
+  }
 }
 
 class _ChipWrap extends StatelessWidget {
@@ -486,7 +527,9 @@ class _ChipWrap extends StatelessWidget {
   final ValueChanged<String> onTap;
 
   @override
-  Widget build(_) => Wrap(spacing: 8, runSpacing: 8,
+  Widget build(BuildContext context) {
+    final palette = _PeerPalette.of(context);
+    return Wrap(spacing: 8, runSpacing: 8,
     children: items.map((item) {
       final active = selected.contains(item);
       return GestureDetector(
@@ -495,20 +538,21 @@ class _ChipWrap extends StatelessWidget {
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: active ? UniSyncColors.accent.withOpacity(0.1) : _kSurface2,
+            color: active ? palette.accent.withOpacity(0.1) : palette.surface2,
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: active ? UniSyncColors.accent.withOpacity(0.45) : _kBorder,
+              color: active ? palette.accent.withOpacity(0.45) : palette.border,
               width: active ? 1.5 : 1)),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             if (active) ...[
-              Icon(Icons.check_rounded, size: 11, color: UniSyncColors.accent),
+              Icon(Icons.check_rounded, size: 11, color: palette.accent),
               const SizedBox(width: 4),
             ],
             Text(item, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500,
-                color: active ? UniSyncColors.accent : _kMuted)),
+                color: active ? palette.accent : palette.muted)),
           ])));
     }).toList());
+  }
 }
 
 class _LoadMoreBtn extends StatelessWidget {
@@ -517,20 +561,23 @@ class _LoadMoreBtn extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(_) => GestureDetector(
+  Widget build(BuildContext context) {
+    final palette = _PeerPalette.of(context);
+    return GestureDetector(
     onTap: onTap,
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(color: _kSurface,
+      decoration: BoxDecoration(color: palette.surface,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: _kBorder)),
+          border: Border.all(color: palette.border)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.expand_more_rounded, size: 14, color: _kMuted),
+        Icon(Icons.expand_more_rounded, size: 14, color: palette.muted),
         const SizedBox(width: 5),
         Text('Show $remaining more',
-            style: const TextStyle(fontSize: 11,
-                fontWeight: FontWeight.w600, color: _kMuted)),
+            style: TextStyle(fontSize: 11,
+                fontWeight: FontWeight.w600, color: palette.muted)),
       ])));
+  }
 }
 
 class _ActiveChip extends StatelessWidget {
@@ -539,21 +586,24 @@ class _ActiveChip extends StatelessWidget {
   final VoidCallback onRemove;
 
   @override
-  Widget build(_) => Container(
+  Widget build(BuildContext context) {
+    final palette = _PeerPalette.of(context);
+    return Container(
     margin: const EdgeInsets.only(right: 6),
     padding: const EdgeInsets.fromLTRB(9, 4, 6, 4),
     decoration: BoxDecoration(
-      color: UniSyncColors.accent.withOpacity(0.1),
+      color: palette.accent.withOpacity(0.1),
       borderRadius: BorderRadius.circular(5),
-      border: Border.all(color: UniSyncColors.accent.withOpacity(0.3))),
+      border: Border.all(color: palette.accent.withOpacity(0.3))),
     child: Row(mainAxisSize: MainAxisSize.min, children: [
       Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
-          color: UniSyncColors.accent)),
+          color: palette.accent)),
       const SizedBox(width: 5),
       GestureDetector(
         onTap: onRemove,
-        child: Icon(Icons.close_rounded, size: 11, color: UniSyncColors.accent)),
+        child: Icon(Icons.close_rounded, size: 11, color: palette.accent)),
     ]));
+  }
 }
 
 class _ErrorState extends StatelessWidget {
@@ -561,23 +611,26 @@ class _ErrorState extends StatelessWidget {
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) {
+    final palette = _PeerPalette.of(context);
+    return Center(
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Icon(Icons.wifi_off_rounded, color: _kMuted, size: 34),
+      Icon(Icons.wifi_off_rounded, color: palette.muted, size: 34),
       const SizedBox(height: 12),
-      const Text('Could not load peers',
-          style: TextStyle(color: Colors.white, fontSize: 14,
+      Text('Could not load peers',
+          style: TextStyle(color: palette.textPrimary, fontSize: 14,
               fontWeight: FontWeight.w600)),
       const SizedBox(height: 16),
       GestureDetector(
         onTap: onRetry,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(color: _kSurface2,
-              border: Border.all(color: UniSyncColors.accent),
+          decoration: BoxDecoration(color: palette.surface2,
+              border: Border.all(color: palette.accent),
               borderRadius: BorderRadius.circular(6)),
           child: Text('Retry',
-              style: TextStyle(color: UniSyncColors.accent,
+              style: TextStyle(color: palette.accent,
                   fontWeight: FontWeight.w600)))),
     ]));
+  }
 }

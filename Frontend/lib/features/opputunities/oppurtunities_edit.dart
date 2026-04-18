@@ -150,7 +150,7 @@ class _OpportunityFormScreenState extends ConsumerState<OpportunityFormScreen> {
             ? 'Opportunity updated successfully!' 
             : 'Opportunity added successfully!'
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
       Navigator.of(context).pop();
@@ -161,7 +161,7 @@ class _OpportunityFormScreenState extends ConsumerState<OpportunityFormScreen> {
             ? 'Failed to update opportunity' 
             : 'Failed to add opportunity'
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }

@@ -22,6 +22,7 @@ import 'package:UniSync/features/opputunities/oppurtunities_screen.dart';
 import 'package:UniSync/features/opputunities/oppurtunity_detail_screen.dart';
 import 'package:UniSync/features/profile/edit_profile_screen.dart';
 import 'package:UniSync/features/profile/profile_screen.dart';
+import 'package:UniSync/features/webview/view/unisync_webview_screen.dart';
 
 final loggedOutRoutes = RouteMap(routes: {
   "/": (_) => MaterialPage(child: LoginScreen()),
@@ -59,6 +60,7 @@ final loggedInRoutes = RouteMap(routes: {
   "/nextUpdatePromo": (_) => MaterialPage(child: NextUpdatePromoScreen()),
   "/userInterviewDetails": (_) => MaterialPage(child: UserInterviewDetails()),
   "/opportunities": (_) => MaterialPage(child: OpportunitiesScreen()),
+  "/webview": (_) => const MaterialPage(child: WebViewPage()),
   "/opportunity/:id": (route) => MaterialPage(
         child: OpportunityDetailsScreen(
           opportunityId: route.pathParameters['id'] ?? '',

@@ -9,6 +9,7 @@ import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/ads%20Manager/add_manager.dart';
 import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/attendance/repository/attendance_repository.dart';
 import 'package:UniSync/features/attendance/controller/attendance_controller.dart';
@@ -17,8 +18,83 @@ import 'package:UniSync/features/coins/coin_purchase_service.dart';
 import 'package:UniSync/firebase_service.dart';
 import 'package:UniSync/models/course_model.dart';
 
+_AttendancePalette _ui(BuildContext context) => _AttendancePalette.of(context);
+
+class _AttendancePalette {
+  _AttendancePalette({
+    required this.isDark,
+    required this.backgroundPrimary,
+    required this.backgroundSecondary,
+    required this.surfaceCard,
+    required this.surfaceElevated,
+    required this.divider,
+    required this.border,
+    required this.borderSubtle,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.textDisabled,
+    required this.accent,
+    required this.accentSoft,
+    required this.buttonPrimaryFg,
+    required this.success,
+    required this.warning,
+    required this.error,
+  });
+
+  final bool isDark;
+  final Color backgroundPrimary;
+  final Color backgroundSecondary;
+  final Color surfaceCard;
+  final Color surfaceElevated;
+  final Color divider;
+  final Color border;
+  final Color borderSubtle;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color textDisabled;
+  final Color accent;
+  final Color accentSoft;
+  final Color buttonPrimaryFg;
+  final Color success;
+  final Color warning;
+  final Color error;
+
+  factory _AttendancePalette.of(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return _AttendancePalette(
+      isDark: isDark,
+      backgroundPrimary: isDark ? AppColors.darkBg : AppColors.lightBg,
+      backgroundSecondary: isDark ? AppColors.darkSurface : AppColors.lightCardAlt,
+      surfaceCard: isDark ? AppColors.darkCard : AppColors.lightCard,
+      surfaceElevated: isDark ? AppColors.darkCardAlt : AppColors.lightSurface,
+      divider: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.9)
+          : AppColors.lightBorder.withValues(alpha: 0.9),
+      border: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+      borderSubtle: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.8)
+          : AppColors.lightBorder.withValues(alpha: 0.8),
+      textPrimary: theme.colorScheme.onSurface,
+      textSecondary: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      textMuted: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+      textDisabled: isDark
+          ? AppColors.darkTextMuted.withValues(alpha: 0.7)
+          : AppColors.lightTextMuted.withValues(alpha: 0.8),
+      accent: AppColors.primary,
+      accentSoft: AppColors.primary.withValues(alpha: 0.14),
+      buttonPrimaryFg: theme.colorScheme.onPrimary,
+      success: AppColors.success,
+      warning: AppColors.warning,
+      error: theme.colorScheme.error,
+    );
+  }
+}
+
 class LiveAttendence extends ConsumerStatefulWidget {
-  const LiveAttendence({super.key});
+  LiveAttendence({super.key});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _LiveAttendenceState();
@@ -32,8 +108,8 @@ Future<void> _openInfoQueryPageHere() async {
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: UniSyncColors.backgroundSecondary,
-      shape: const RoundedRectangleBorder(
+      backgroundColor: _ui(context).backgroundSecondary,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
       ),
       builder: (ctx) {
@@ -48,39 +124,39 @@ Future<void> _openInfoQueryPageHere() async {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: UniSyncColors.accent.withOpacity(0.10),
+                    color: _ui(context).accent.withOpacity(0.10),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.info_outline_rounded,
-                    color: UniSyncColors.accent,
+                    color: _ui(context).accent,
                     size: 20,
                   ),
                 ),
-                const SizedBox(height: 14),
-                const Text(
+                SizedBox(height: 14),
+                Text(
                   'Help?',
                   style: TextStyle(
-                    color: UniSyncColors.textPrimary,
+                    color: _ui(context).textPrimary,
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: UniSyncColors.surfaceCard,
+                    color: _ui(context).surfaceCard,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: UniSyncColors.accent.withOpacity(0.13)),
+                    border: Border.all(color: _ui(context).accent.withOpacity(0.13)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         '• Only CampX-supported colleges are eligible to use this feature.',
                         style: TextStyle(
-                          color: UniSyncColors.textPrimary,
+                          color: _ui(context).textPrimary,
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
                         ),
@@ -89,7 +165,7 @@ Future<void> _openInfoQueryPageHere() async {
                       Text(
                         '• You must use your CampX username and password to connect.',
                         style: TextStyle(
-                          color: UniSyncColors.textPrimary,
+                          color: _ui(context).textPrimary,
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
                         ),
@@ -98,7 +174,7 @@ Future<void> _openInfoQueryPageHere() async {
                       Text(
                         '• We do NOT store any of your CampX credentials or personal information. All sensitive data stays only on your device.',
                         style: TextStyle(
-                          color: UniSyncColors.textPrimary,
+                          color: _ui(context).textPrimary,
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
                         ),
@@ -106,19 +182,19 @@ Future<void> _openInfoQueryPageHere() async {
                     ],
                   ),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: 18),
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(
                     style: TextButton.styleFrom(
-                      backgroundColor: UniSyncColors.accent,
-                      foregroundColor: UniSyncColors.buttonPrimaryFg,
+                      backgroundColor: _ui(context).accent,
+                      foregroundColor: _ui(context).buttonPrimaryFg,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
                       padding: EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Got it',
+                    child: Text('Got it',
                         style: TextStyle(
                             fontSize: 13, fontWeight: FontWeight.w700)),
                   ),
@@ -337,7 +413,7 @@ Future<void> _openInfoQueryPageHere() async {
     final shouldDisconnect = await showDialog<bool>(
       context: context,
       builder: (_) => Dialog(
-        backgroundColor: UniSyncColors.backgroundSecondary,
+        backgroundColor: _ui(context).backgroundSecondary,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
@@ -351,60 +427,60 @@ Future<void> _openInfoQueryPageHere() async {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE05252).withOpacity(0.12),
+                  color: _ui(context).error.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                      color: const Color(0xFFE05252).withOpacity(0.3)),
+                      color: _ui(context).error.withOpacity(0.3)),
                 ),
-                child: const Icon(Icons.link_off_rounded,
-                    color: Color(0xFFE05252), size: 20),
+                child: Icon(Icons.link_off_rounded,
+                    color: _ui(context).error, size: 20),
               ),
-              const SizedBox(height: 14),
-              const Text(
+              SizedBox(height: 14),
+              Text(
                 'Disconnect CampX?',
                 style: TextStyle(
-                  color: UniSyncColors.textPrimary,
+                  color: _ui(context).textPrimary,
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3,
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
+              SizedBox(height: 6),
+              Text(
                 'You will have to enter your credentials again to view attendance.',
                 style: TextStyle(
-                  color: UniSyncColors.textSecondary,
+                  color: _ui(context).textSecondary,
                   fontSize: 13,
                   height: 1.5,
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: UniSyncColors.textSecondary,
-                        side: const BorderSide(color: UniSyncColors.border),
+                        foregroundColor: _ui(context).textSecondary,
+                        side: BorderSide(color: _ui(context).border),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel',
+                      child: Text('Cancel',
                           style: TextStyle(fontWeight: FontWeight.w600)),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(
                     child: NeoPopButton(
-                      color: const Color(0xFFE05252),
-                      bottomShadowColor: const Color(0xFF8B1A1A),
-                      rightShadowColor: const Color(0xFF8B1A1A),
+                      color: _ui(context).error,
+                      bottomShadowColor: _ui(context).error.withValues(alpha: 0.55),
+                      rightShadowColor: _ui(context).error.withValues(alpha: 0.55),
                       depth: 3,
                       onTapUp: () => Navigator.of(context).pop(true),
                       onTapDown: () {},
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Center(
                           child: Text('Disconnect',
@@ -463,15 +539,15 @@ Future<void> _openInfoQueryPageHere() async {
         _stickyBannerHeight + MediaQuery.of(context).padding.bottom;
 
     if (_checkingSession) {
-      return const Scaffold(
-        backgroundColor: UniSyncColors.backgroundPrimary,
+      return Scaffold(
+        backgroundColor: _ui(context).backgroundPrimary,
         body: Center(
           child: SizedBox(
             width: 28,
             height: 28,
             child: CircularProgressIndicator(
               strokeWidth: 2.5,
-              color: UniSyncColors.accent,
+              color: _ui(context).accent,
             ),
           ),
         ),
@@ -483,7 +559,7 @@ Future<void> _openInfoQueryPageHere() async {
     }
 
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
       body: SafeArea(
         bottom: false,
         child: Stack(
@@ -491,16 +567,16 @@ Future<void> _openInfoQueryPageHere() async {
             Column(
               children: [
                 _appBar(),
-                Container(height: 1, color: UniSyncColors.divider),
+                Container(height: 1, color: _ui(context).divider),
                 Expanded(
                   child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
+                    physics: BouncingScrollPhysics(),
                     child: Column(
                       children: [
                         if (!hasAdFreeAccess) ...[
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Center(child: AdManager.instance.buildBannerAd()),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                         ],
                         if (!hasAdFreeAccess && !_promoCardDismissed)
                           _buildAdFreePromoCard(),
@@ -522,10 +598,10 @@ Future<void> _openInfoQueryPageHere() async {
                 right: 0,
                 bottom: 0,
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: UniSyncColors.backgroundPrimary,
+                  decoration: BoxDecoration(
+                    color: _ui(context).backgroundPrimary,
                     border: Border(
-                      top: BorderSide(color: UniSyncColors.divider, width: 0.8),
+                      top: BorderSide(color: _ui(context).divider, width: 0.8),
                     ),
                   ),
                   padding: EdgeInsets.fromLTRB(
@@ -548,7 +624,7 @@ Future<void> _openInfoQueryPageHere() async {
 
   Widget _buildNotConnectedScreen() {
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
       body: SafeArea(
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -561,9 +637,9 @@ Future<void> _openInfoQueryPageHere() async {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('CONNECT',
+                    Text('CONNECT',
                         style: TextStyle(
-                          color: UniSyncColors.accent,
+                          color: _ui(context).accent,
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 2.5,
@@ -572,21 +648,21 @@ Future<void> _openInfoQueryPageHere() async {
 
                         NeoPopButton(
                           onTapUp: () => _openInfoQueryPageHere(),
-                          color: UniSyncColors.accent.withOpacity(0.13),
-                          bottomShadowColor: UniSyncColors.accent.withOpacity(0.18),
-                          rightShadowColor: UniSyncColors.accent.withOpacity(0.18),
+                          color: _ui(context).accent.withOpacity(0.13),
+                          bottomShadowColor: _ui(context).accent.withOpacity(0.18),
+                          rightShadowColor: _ui(context).accent.withOpacity(0.18),
                           depth: 4,
-                          child: const SizedBox(
+                          child: SizedBox(
                             width: 38,
                             height: 38,
                             child: Center(
                               child: Icon(
                                 Icons.info_outline_rounded,
                                 size: 20,
-                                color: UniSyncColors.accent,
+                                color: _ui(context).accent,
                                 shadows: [
                                   Shadow(
-                                    color: UniSyncColors.accent,
+                                    color: _ui(context).accent,
                                     blurRadius: 6,
                                   ),
                                 ],
@@ -596,34 +672,34 @@ Future<void> _openInfoQueryPageHere() async {
                         )
                   ],
                 ),
-                const SizedBox(height: 6),
-                const Text('Link your\nCampX account',
+                SizedBox(height: 6),
+                Text('Link your\nCampX account',
                     style: TextStyle(
-                      color: UniSyncColors.textPrimary,
+                      color: _ui(context).textPrimary,
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.8,
                       height: 1.2,
                     )),
-                const SizedBox(height: 10),
-                const Text(
+                SizedBox(height: 10),
+                Text(
                   'Login cheyyi... lekapothe skills eppuduu build cheskuntaav 😭',
                   style: TextStyle(
-                    color: UniSyncColors.textSecondary,
+                    color: _ui(context).textSecondary,
                     fontSize: 14,
                     height: 1.6,
                   ),
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
 
                 // Credentials card
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: UniSyncColors.surfaceCard,
+                    color: _ui(context).surfaceCard,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: UniSyncColors.border),
+                    border: Border.all(color: _ui(context).border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -633,28 +709,28 @@ Future<void> _openInfoQueryPageHere() async {
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: UniSyncColors.accent.withOpacity(0.12),
+                            color: _ui(context).accent.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.lock_outline_rounded,
-                              size: 16, color: UniSyncColors.accent),
+                          child: Icon(Icons.lock_outline_rounded,
+                              size: 16, color: _ui(context).accent),
                         ),
-                        const SizedBox(width: 10),
-                        const Text('CampX Credentials',
+                        SizedBox(width: 10),
+                        Text('CampX Credentials',
                             style: TextStyle(
-                              color: UniSyncColors.textPrimary,
+                              color: _ui(context).textPrimary,
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             )),
                       ]),
-                      const SizedBox(height: 18),
+                      SizedBox(height: 18),
                       _buildTextField(
                         controller: _campxUsernameController,
                         label: 'Username / JNTU No.',
                         icon: Icons.person_outline_rounded,
                         enabled: !_isConnectingCampX,
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       _buildTextField(
                         controller: _campxPasswordController,
                         label: 'Password',
@@ -670,16 +746,16 @@ Future<void> _openInfoQueryPageHere() async {
                             _hideCampXPassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: UniSyncColors.textMuted,
+                            color: _ui(context).textMuted,
                             size: 18,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       NeoPopButton(
-                        color: UniSyncColors.accent,
-                        bottomShadowColor: UniSyncColors.backgroundPrimary,
-                        rightShadowColor: UniSyncColors.backgroundPrimary,
+                        color: _ui(context).accent,
+                        bottomShadowColor: _ui(context).backgroundPrimary,
+                        rightShadowColor: _ui(context).backgroundPrimary,
                         depth: 5,
                         buttonPosition: Position.fullBottom,
                         onTapUp:
@@ -694,22 +770,22 @@ Future<void> _openInfoQueryPageHere() async {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 if (_isConnectingCampX)
-                                  const SizedBox(
+                                  SizedBox(
                                     width: 16,
                                     height: 16,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: UniSyncColors.buttonPrimaryFg,
+                                      color: _ui(context).buttonPrimaryFg,
                                     ),
                                   )
                                 else ...[
-                                  const Icon(Icons.link_rounded,
+                                  Icon(Icons.link_rounded,
                                       size: 17,
-                                      color: UniSyncColors.buttonPrimaryFg),
-                                  const SizedBox(width: 8),
-                                  const Text('Link CampX Now',
+                                      color: _ui(context).buttonPrimaryFg),
+                                  SizedBox(width: 8),
+                                  Text('Link CampX Now',
                                       style: TextStyle(
-                                        color: UniSyncColors.buttonPrimaryFg,
+                                        color: _ui(context).buttonPrimaryFg,
                                         fontSize: 15,
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 0.2,
@@ -724,17 +800,17 @@ Future<void> _openInfoQueryPageHere() async {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Center(
                   child: GestureDetector(
                     onTap: _bootstrapCampXConnection,
-                    child: const Text('Already have a session? Refresh?',
+                    child: Text('Already have a session? Refresh?',
                         style: TextStyle(
-                          color: UniSyncColors.accent,
+                          color: _ui(context).accent,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           decoration: TextDecoration.underline,
-                          decorationColor: UniSyncColors.accent,
+                          decorationColor: _ui(context).accent,
                         )),
                   ),
                 ),
@@ -758,30 +834,30 @@ Future<void> _openInfoQueryPageHere() async {
       controller: controller,
       enabled: enabled,
       obscureText: obscure,
-      style: const TextStyle(
-          color: UniSyncColors.textPrimary, fontSize: 14),
-      cursorColor: UniSyncColors.accent,
+      style: TextStyle(
+          color: _ui(context).textPrimary, fontSize: 14),
+      cursorColor: _ui(context).accent,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(
-            color: UniSyncColors.textMuted, fontSize: 13),
+        labelStyle: TextStyle(
+            color: _ui(context).textMuted, fontSize: 13),
         prefixIcon:
-            Icon(icon, color: UniSyncColors.textMuted, size: 18),
+            Icon(icon, color: _ui(context).textMuted, size: 18),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: UniSyncColors.backgroundSecondary,
+        fillColor: _ui(context).backgroundSecondary,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: UniSyncColors.border),
+          borderSide: BorderSide(color: _ui(context).border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: UniSyncColors.border),
+          borderSide: BorderSide(color: _ui(context).border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide:
-              const BorderSide(color: UniSyncColors.accent, width: 1.5),
+              BorderSide(color: _ui(context).accent, width: 1.5),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -792,54 +868,55 @@ Future<void> _openInfoQueryPageHere() async {
   // ── App Bar ─────────────────────────────────────────────────────────────
   Widget _appBar() {
     return Container(
-      color: UniSyncColors.backgroundSecondary,
+      color: _ui(context).backgroundSecondary,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           NeoPopButton(
-            color: UniSyncColors.surfaceCard,
-            bottomShadowColor: UniSyncColors.border,
-            rightShadowColor: UniSyncColors.border,
+            color: _ui(context).surfaceCard,
+            bottomShadowColor: _ui(context).border,
+            rightShadowColor: _ui(context).border,
             depth: 3,
             onTapUp: () => Navigator.of(context).pop(),
             onTapDown: () {},
-            child: const SizedBox(
+            child: SizedBox(
               width: 42,
               height: 42,
               child: Center(
                 child: Icon(
                   Icons.arrow_back_rounded,
                   size: 18,
-                  color: UniSyncColors.textSecondary,
+                  color: _ui(context).textSecondary,
                 ),
               ),
             ),
           ),
-          const Spacer(),
+          Spacer(),
           // Disconnect button
           NeoPopButton(
-            color: const Color(0xFF1C0808),
-            bottomShadowColor: const Color(0xFF8B1A1A),
-            rightShadowColor: const Color(0xFF8B1A1A),
+            color: _ui(context).error
+                .withValues(alpha: _ui(context).isDark ? 0.18 : 0.12),
+            bottomShadowColor: _ui(context).error.withValues(alpha: 0.55),
+            rightShadowColor: _ui(context).error.withValues(alpha: 0.55),
             depth: 3,
             onTapUp: _confirmAndDisconnectCampX,
             onTapDown: () {},
-            child: const SizedBox(
+            child: SizedBox(
               width: 42,
               height: 42,
               child: Center(
                 child: Icon(Icons.link_off_rounded,
-                    size: 17, color: Color(0xFFE05252)),
+                    size: 17, color: _ui(context).error),
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           // Refresh button
           NeoPopButton(
-            color: UniSyncColors.surfaceCard,
-            bottomShadowColor: UniSyncColors.border,
-            rightShadowColor: UniSyncColors.border,
+            color: _ui(context).surfaceCard,
+            bottomShadowColor: _ui(context).border,
+            rightShadowColor: _ui(context).border,
             depth: 3,
             onTapUp: () {
               FirebaseService.logEvent(name: 'attendance_refresh_tapped');
@@ -864,15 +941,15 @@ Future<void> _openInfoQueryPageHere() async {
                 ..showSnackBar(snackBar);
             },
             onTapDown: () {},
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(Icons.refresh_rounded,
-                    size: 15, color: UniSyncColors.textSecondary),
+                    size: 15, color: _ui(context).textSecondary),
                 SizedBox(width: 6),
-                Text('Sync',
+                Text('Refresh',
                     style: TextStyle(
-                      color: UniSyncColors.textSecondary,
+                      color: _ui(context).textSecondary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     )),
@@ -889,9 +966,9 @@ Future<void> _openInfoQueryPageHere() async {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: NeoPopButton(
-        color: UniSyncColors.surfaceCard,
-        bottomShadowColor: UniSyncColors.border,
-        rightShadowColor: UniSyncColors.border,
+        color: _ui(context).surfaceCard,
+        bottomShadowColor: _ui(context).border,
+        rightShadowColor: _ui(context).border,
         depth: 4,
         onTapUp: () {},
         onTapDown: () {},
@@ -904,52 +981,52 @@ Future<void> _openInfoQueryPageHere() async {
               // ── Eyebrow + target input ──────────────────────
               Row(
                 children: [
-                  const Text('#OVERALL',
+                  Text('#OVERALL',
                       style: TextStyle(
-                        color: UniSyncColors.accent,
+                        color: _ui(context).accent,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.6,
                       )),
-                  const Spacer(),
+                  Spacer(),
                   // Target input inline
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Target:',
+                      Text('Target:',
                           style: TextStyle(
-                            color: UniSyncColors.textMuted,
+                            color: _ui(context).textMuted,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           )),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Container(
                         width: 80,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: UniSyncColors.backgroundSecondary,
+                          color: _ui(context).backgroundSecondary,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                              color: UniSyncColors.accent.withOpacity(0.5),
+                              color: _ui(context).accent.withOpacity(0.5),
                               width: 1.5),
                         ),
                         child: TextFormField(
                           initialValue: _targetPercentage.toStringAsFixed(0),
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: UniSyncColors.accent,
+                          style: TextStyle(
+                            color: _ui(context).accent,
                             fontWeight: FontWeight.w800,
                             fontSize: 14,
                           ),
-                          cursorColor: UniSyncColors.accent,
-                          decoration: const InputDecoration(
+                          cursorColor: _ui(context).accent,
+                          decoration: InputDecoration(
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 7),
                             suffix: Text('%',
                                 style: TextStyle(
-                                  color: UniSyncColors.accent,
+                                  color: _ui(context).accent,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                 )),
@@ -968,14 +1045,14 @@ Future<void> _openInfoQueryPageHere() async {
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const Text(
+                  Text(
                     'Set your target attendance here ^',
                     style: TextStyle(
-                      color: UniSyncColors.textMuted,
+                      color: _ui(context).textMuted,
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
                     ),
@@ -984,7 +1061,7 @@ Future<void> _openInfoQueryPageHere() async {
                 ],
               ),
 
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
 
               // ── Overall stats from async ─────────────────────
               attendanceAsync.when(
@@ -1002,8 +1079,8 @@ Future<void> _openInfoQueryPageHere() async {
                           totalPresent, totalClasses, _targetPercentage);
                   final isGood = overallPct >= _targetPercentage;
                   final statusColor = isGood
-                      ? const Color(0xFF3ECF8E)
-                      : const Color(0xFFE05252);
+                      ? _ui(context).success
+                      : _ui(context).error;
                   final progressFraction =
                       (overallPct / 100).clamp(0.0, 1.0);
                   String overallFutureCalculation = '';
@@ -1041,7 +1118,7 @@ Future<void> _openInfoQueryPageHere() async {
                             color: statusColor,
                             size: 26,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Text(
                             '${_formatPctFloor(overallPct)}%',
                             style: TextStyle(
@@ -1054,7 +1131,7 @@ Future<void> _openInfoQueryPageHere() async {
                         ],
                       ),
 
-                      const SizedBox(height: 14),
+                      SizedBox(height: 14),
 
                       // Progress bar
                       Stack(
@@ -1062,7 +1139,7 @@ Future<void> _openInfoQueryPageHere() async {
                           Container(
                               height: 4,
                               width: double.infinity,
-                              color: UniSyncColors.backgroundPrimary),
+                              color: _ui(context).backgroundPrimary),
                           FractionallySizedBox(
                             widthFactor: progressFraction,
                             child: Container(height: 4, color: statusColor),
@@ -1075,79 +1152,79 @@ Future<void> _openInfoQueryPageHere() async {
                               child: Container(
                                   width: 2,
                                   height: 4,
-                                  color: Colors.white),
+                                  color: _ui(context).textPrimary),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('$totalPresent / $totalClasses attended',
-                              style: const TextStyle(
-                                color: UniSyncColors.textMuted,
+                              style: TextStyle(
+                                color: _ui(context).textMuted,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               )),
                           Text('Target ${_targetPercentage.toInt()}%',
                               style: TextStyle(
-                                color: UniSyncColors.accent.withOpacity(0.6),
+                                color: _ui(context).accent.withOpacity(0.6),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               )),
                         ],
                       ),
 
-                      const SizedBox(height: 18),
-                      Container(height: 0.8, color: UniSyncColors.divider),
-                      const SizedBox(height: 18),
+                      SizedBox(height: 18),
+                      Container(height: 0.8, color: _ui(context).divider),
+                      SizedBox(height: 18),
 
                       // Stats row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildCardStat('Total', '$totalClasses',
-                              UniSyncColors.textPrimary),
+                              _ui(context).textPrimary),
                           Container(
                               width: 0.8,
                               height: 36,
-                              color: UniSyncColors.divider),
+                              color: _ui(context).divider),
                           _buildCardStat('Present', '$totalPresent',
-                              const Color(0xFF3ECF8E)),
+                              _ui(context).success),
                           Container(
                               width: 0.8,
                               height: 36,
-                              color: UniSyncColors.divider),
+                              color: _ui(context).divider),
                           _buildCardStat(
                               'Absent',
                               '${totalClasses - totalPresent}',
-                              const Color(0xFFE05252)),
+                              _ui(context).error),
                         ],
                       ),
 
-                      const SizedBox(height: 18),
-                      Container(height: 0.8, color: UniSyncColors.divider),
-                      const SizedBox(height: 14),
+                      SizedBox(height: 18),
+                      Container(height: 0.8, color: _ui(context).divider),
+                      SizedBox(height: 14),
 
                       if (overallFutureCalculation.isNotEmpty) ...[
                         Row(children: [
-                          const Icon(Icons.calculate_outlined,
-                              size: 13, color: UniSyncColors.textMuted),
-                          const SizedBox(width: 7),
+                          Icon(Icons.calculate_outlined,
+                              size: 13, color: _ui(context).textMuted),
+                          SizedBox(width: 7),
                           Expanded(
                             child: Text(
                               overallFutureCalculation,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: UniSyncColors.textPrimary,
+                                color: _ui(context).textPrimary,
                                 letterSpacing: -0.2,
                               ),
                             ),
                           ),
                         ]),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                       ],
                       Row(children: [
                         Icon(
@@ -1157,7 +1234,7 @@ Future<void> _openInfoQueryPageHere() async {
                           size: 13,
                           color: statusColor,
                         ),
-                        const SizedBox(width: 7),
+                        SizedBox(width: 7),
                         Expanded(
                           child: Text(
                             calc.message,
@@ -1170,7 +1247,7 @@ Future<void> _openInfoQueryPageHere() async {
                           ),
                         ),
                       ]),
-                      // const SizedBox(height: 8),
+                      // SizedBox(height: 8),
                       // Row(children: [
                       //   Icon(
                       //     isGood
@@ -1179,7 +1256,7 @@ Future<void> _openInfoQueryPageHere() async {
                       //     size: 13,
                       //     color: statusColor.withOpacity(0.85),
                       //   ),
-                      //   const SizedBox(width: 7),
+                      //   SizedBox(width: 7),
                       //   Expanded(
                       //     child: Text(
                       //       _getSavageMessage(calc, isGood),
@@ -1195,14 +1272,14 @@ Future<void> _openInfoQueryPageHere() async {
                     ],
                   );
                 },
-                loading: () => const Padding(
+                loading: () => Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
                   child: Center(
                     child: SizedBox(
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: UniSyncColors.accent)),
+                            strokeWidth: 2, color: _ui(context).accent)),
                   ),
                 ),
                 error: (_, __) => const SizedBox.shrink(),
@@ -1229,26 +1306,26 @@ Future<void> _openInfoQueryPageHere() async {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: UniSyncColors.surfaceCard,
+                    color: _ui(context).surfaceCard,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: UniSyncColors.border),
+                    border: Border.all(color: _ui(context).border),
                   ),
-                  child: const Icon(Icons.school_outlined,
-                      color: UniSyncColors.textMuted, size: 28),
+                  child: Icon(Icons.school_outlined,
+                      color: _ui(context).textMuted, size: 28),
                 ),
-                const SizedBox(height: 16),
-                const Text('Subjects levu... or life lo clarity levu? 🤡',
+                SizedBox(height: 16),
+                Text('Subjects levu... or life lo clarity levu? 🤡',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: UniSyncColors.textPrimary,
+                      color: _ui(context).textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     )),
-                const SizedBox(height: 6),
-                const Text('Sync cheyyi ra, lekapothe guess chesthu brathakali 😭',
+                SizedBox(height: 6),
+                Text('Sync cheyyi ra, lekapothe guess chesthu brathakali 😭',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: UniSyncColors.textSecondary,
+                      color: _ui(context).textSecondary,
                       fontSize: 13,
                     )),
               ]),
@@ -1293,7 +1370,7 @@ Future<void> _openInfoQueryPageHere() async {
           ));
 
           if (i == 2 && !_hasAdFreeAccess) {
-            subjectWidgets.add(const _NativeAdCard());
+            subjectWidgets.add(_NativeAdCard());
           }
         }
 
@@ -1304,43 +1381,43 @@ Future<void> _openInfoQueryPageHere() async {
             children: [
               // Section header
               Row(children: [
-                const Text('SUBJECTS',
+                Text('SUBJECTS',
                     style: TextStyle(
-                      color: UniSyncColors.textMuted,
+                      color: _ui(context).textMuted,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 2.0,
                     )),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: UniSyncColors.accent.withOpacity(0.1),
+                    color: _ui(context).accent.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text('${data.length}',
-                      style: const TextStyle(
-                        color: UniSyncColors.accent,
+                      style: TextStyle(
+                        color: _ui(context).accent,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       )),
                 ),
               ]),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               ...subjectWidgets,
             ],
           ),
         );
       },
-      loading: () => const Padding(
+      loading: () => Padding(
         padding: EdgeInsets.all(60),
         child: Center(
           child: SizedBox(
               width: 24,
               height: 24,
               child: CircularProgressIndicator(
-                  strokeWidth: 2, color: UniSyncColors.accent)),
+                  strokeWidth: 2, color: _ui(context).accent)),
         ),
       ),
       error: (error, _) => Padding(
@@ -1348,25 +1425,25 @@ Future<void> _openInfoQueryPageHere() async {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFFE05252).withOpacity(0.07),
+            color: _ui(context).error.withOpacity(0.07),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: const Color(0xFFE05252).withOpacity(0.25)),
+                color: _ui(context).error.withOpacity(0.25)),
           ),
-          child: const Column(children: [
+          child: Column(children: [
             Icon(Icons.error_outline_rounded,
-                color: Color(0xFFE05252), size: 40),
+                color: _ui(context).error, size: 40),
             SizedBox(height: 12),
             Text('Something went wrong',
                 style: TextStyle(
-                  color: Color(0xFFE05252),
+                  color: _ui(context).error,
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                 )),
             SizedBox(height: 6),
             Text('Unable to load attendance data.',
                 style: TextStyle(
-                  color: UniSyncColors.textSecondary,
+                  color: _ui(context).textSecondary,
                   fontSize: 12,
                 )),
           ]),
@@ -1385,16 +1462,16 @@ Future<void> _openInfoQueryPageHere() async {
     required String futureSavageCaption,
   }) {
     final Color accentColor = isAboveTarget
-        ? const Color(0xFF3ECF8E)
+        ? _ui(context).success
         : isCritical
-            ? const Color(0xFFE05252)
-            : const Color(0xFFE8A838);
+            ? _ui(context).error
+            : _ui(context).warning;
 
     final Color shadowColor = isAboveTarget
-        ? const Color(0xFF1A6B4A)
+        ? _ui(context).success.withValues(alpha: 0.35)
         : isCritical
-            ? const Color(0xFF7A1F1F)
-            : const Color(0xFF7A5010);
+            ? _ui(context).error.withValues(alpha: 0.35)
+            : _ui(context).warning.withValues(alpha: 0.35);
 
     final double progressFraction = course.numberOfClasses > 0
         ? (course.present / course.numberOfClasses).clamp(0.0, 1.0)
@@ -1443,7 +1520,7 @@ Future<void> _openInfoQueryPageHere() async {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: NeoPopButton(
-        color: UniSyncColors.surfaceCard,
+        color: _ui(context).surfaceCard,
         bottomShadowColor: shadowColor,
         rightShadowColor: shadowColor,
         depth: 4,
@@ -1467,7 +1544,7 @@ Future<void> _openInfoQueryPageHere() async {
                       letterSpacing: 1.6,
                     ),
                   ),
-                  const Spacer(),
+                  Spacer(),
                   // Status badge
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -1491,15 +1568,15 @@ Future<void> _openInfoQueryPageHere() async {
                 ],
               ),
 
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
 
               // ── Subject name ─────────────────────────────────
               Text(
                 course.subjectName,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: UniSyncColors.textPrimary,
+                  color: _ui(context).textPrimary,
                   letterSpacing: -0.3,
                   height: 1.3,
                 ),
@@ -1507,14 +1584,14 @@ Future<void> _openInfoQueryPageHere() async {
                 overflow: TextOverflow.ellipsis,
               ),
 
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
 
               // ── Big percentage + trend ───────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(trendIcon, color: accentColor, size: 26),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text(
                     '${_formatPctFloor(course.percentage)}%',
                     style: TextStyle(
@@ -1527,7 +1604,7 @@ Future<void> _openInfoQueryPageHere() async {
                 ],
               ),
 
-              const SizedBox(height: 14),
+              SizedBox(height: 14),
 
               // ── Progress bar ─────────────────────────────────
               Stack(
@@ -1535,7 +1612,7 @@ Future<void> _openInfoQueryPageHere() async {
                   Container(
                     height: 4,
                     width: double.infinity,
-                    color: UniSyncColors.backgroundPrimary,
+                    color: _ui(context).backgroundPrimary,
                   ),
                   FractionallySizedBox(
                     widthFactor: progressFraction,
@@ -1549,19 +1626,19 @@ Future<void> _openInfoQueryPageHere() async {
                       child: Container(
                           width: 2,
                           height: 4,
-                          color: Colors.white),
+                          color: _ui(context).textPrimary),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     '${course.present} / ${course.numberOfClasses} attended',
-                    style: const TextStyle(
-                      color: UniSyncColors.textMuted,
+                    style: TextStyle(
+                      color: _ui(context).textMuted,
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1569,7 +1646,7 @@ Future<void> _openInfoQueryPageHere() async {
                   Text(
                     'Target ${_targetPercentage.toInt()}%',
                     style: TextStyle(
-                      color: UniSyncColors.accent.withOpacity(0.6),
+                      color: _ui(context).accent.withOpacity(0.6),
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1577,9 +1654,9 @@ Future<void> _openInfoQueryPageHere() async {
                 ],
               ),
 
-              const SizedBox(height: 18),
-              Container(height: 0.8, color: UniSyncColors.divider),
-              const SizedBox(height: 18),
+              SizedBox(height: 18),
+              Container(height: 0.8, color: _ui(context).divider),
+              SizedBox(height: 18),
 
               // ── Stats row ────────────────────────────────────
               Row(
@@ -1587,50 +1664,50 @@ Future<void> _openInfoQueryPageHere() async {
                 children: [
                   _buildCardStat('Total',
                       '${course.numberOfClasses}',
-                      UniSyncColors.textPrimary),
+                      _ui(context).textPrimary),
                   Container(
                       width: 0.8,
                       height: 36,
-                      color: UniSyncColors.divider),
+                      color: _ui(context).divider),
                   _buildCardStat('Present',
                       '${course.present}',
-                      const Color(0xFF3ECF8E)),
+                      _ui(context).success),
                   Container(
                       width: 0.8,
                       height: 36,
-                      color: UniSyncColors.divider),
+                      color: _ui(context).divider),
                   _buildCardStat('Absent',
                       '${course.absent}',
-                      const Color(0xFFE05252)),
+                      _ui(context).error),
                 ],
               ),
 
               // ── Skip / attend message + future scenario ──────
               if (calc.message.isNotEmpty || futureCalculation.isNotEmpty) ...[
-                const SizedBox(height: 18),
-                Container(height: 0.8, color: UniSyncColors.divider),
-                const SizedBox(height: 14),
+                SizedBox(height: 18),
+                Container(height: 0.8, color: _ui(context).divider),
+                SizedBox(height: 14),
               ],
 
               // 1. Calculation line — prominent, shown first
               if (futureCalculation.isNotEmpty) ...[
                 Row(children: [
-                  const Icon(Icons.calculate_outlined,
-                      size: 13, color: UniSyncColors.textMuted),
-                  const SizedBox(width: 7),
+                  Icon(Icons.calculate_outlined,
+                      size: 13, color: _ui(context).textMuted),
+                  SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       futureCalculation,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: UniSyncColors.textPrimary,
+                        color: _ui(context).textPrimary,
                         letterSpacing: -0.2,
                       ),
                     ),
                   ),
                 ]),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
               ],
 
               // 2. Savage caption below the calc
@@ -1645,7 +1722,7 @@ Future<void> _openInfoQueryPageHere() async {
                     size: 13,
                     color: accentColor,
                   ),
-                  const SizedBox(width: 7),
+                  SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       futureSavageCaption,
@@ -1670,7 +1747,7 @@ Future<void> _openInfoQueryPageHere() async {
                     size: 13,
                     color: accentColor,
                   ),
-                  const SizedBox(width: 7),
+                  SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       calc.message,
@@ -1692,7 +1769,7 @@ Future<void> _openInfoQueryPageHere() async {
                 children: [
                 Text('Tap for details >',
                     style: TextStyle(
-                      color: UniSyncColors.textMuted,
+                      color: _ui(context).textMuted,
                       fontSize: 10,
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w500,
@@ -1717,7 +1794,7 @@ Future<void> _openInfoQueryPageHere() async {
               color: color,
               letterSpacing: -0.5,
             )),
-        const SizedBox(height: 3),
+        SizedBox(height: 3),
         Text(label,
             style: TextStyle(
               fontSize: 10,
@@ -1735,9 +1812,9 @@ Future<void> _openInfoQueryPageHere() async {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       child: Container(
         decoration: BoxDecoration(
-          color: UniSyncColors.surfaceCard,
+          color: _ui(context).surfaceCard,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: UniSyncColors.accent.withOpacity(0.25)),
+          border: Border.all(color: _ui(context).accent.withOpacity(0.25)),
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
@@ -1747,67 +1824,67 @@ Future<void> _openInfoQueryPageHere() async {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: UniSyncColors.accent.withOpacity(0.1),
+                  color: _ui(context).accent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                      color: UniSyncColors.accent.withOpacity(0.2)),
+                      color: _ui(context).accent.withOpacity(0.2)),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded,
-                    size: 18, color: UniSyncColors.accent),
+                child: Icon(Icons.auto_awesome_rounded,
+                    size: 18, color: _ui(context).accent),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Go Ad-Free ✨',
+                    Text('Go Ad-Free ✨',
                         style: TextStyle(
-                          color: UniSyncColors.textPrimary,
+                          color: _ui(context).textPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                         )),
-                    const SizedBox(height: 2),
-                    const Text('Ads chusthu unda leva ₹10 lo go ad-free lifetime? 👑',
+                    SizedBox(height: 2),
+                    Text('Ads chusthu unda leva ₹10 lo go ad-free lifetime? 👑',
                         style: TextStyle(
-                          color: UniSyncColors.textSecondary,
+                          color: _ui(context).textSecondary,
                           fontSize: 11,
                           height: 1.4,
                         )),
-                    const SizedBox(height: 5),
+                    SizedBox(height: 5),
                     // Price row
                     Row(
                       children: [
                         Text(
                           '₹99',
                           style: TextStyle(
-                            color: UniSyncColors.textMuted,
+                            color: _ui(context).textMuted,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             decoration: TextDecoration.lineThrough,
-                            decorationColor: UniSyncColors.textMuted,
+                            decorationColor: _ui(context).textMuted,
                           ),
                         ),
-                        const SizedBox(width: 5),
-                        const Text(
+                        SizedBox(width: 5),
+                        Text(
                           '₹10',
                           style: TextStyle(
-                            color: UniSyncColors.accent,
+                            color: _ui(context).accent,
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 5, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF3ECF8E).withOpacity(0.12),
+                            color: _ui(context).success.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(3),
                           ),
-                          child: const Text(
+                          child: Text(
                             '90% OFF',
                             style: TextStyle(
-                              color: Color(0xFF3ECF8E),
+                              color: _ui(context).success,
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.5,
@@ -1819,14 +1896,14 @@ Future<void> _openInfoQueryPageHere() async {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   NeoPopButton(
-                    color: UniSyncColors.accent,
-                    bottomShadowColor: UniSyncColors.backgroundPrimary,
-                    rightShadowColor: UniSyncColors.backgroundPrimary,
+                    color: _ui(context).accent,
+                    bottomShadowColor: _ui(context).backgroundPrimary,
+                    rightShadowColor: _ui(context).backgroundPrimary,
                     depth: 3,
                     onTapUp: _isPurchasingAdFree ? null : _buyAdFreeAccess,
                     onTapDown: () {},
@@ -1836,30 +1913,30 @@ Future<void> _openInfoQueryPageHere() async {
                         vertical: 8,
                       ),
                       child: _isPurchasingAdFree
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 14,
                               height: 14,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: UniSyncColors.buttonPrimaryFg,
+                                color: _ui(context).buttonPrimaryFg,
                               ),
                             )
-                          : const Text('Upgrade',
+                          : Text('Upgrade',
                               style: TextStyle(
-                                color: UniSyncColors.buttonPrimaryFg,
+                                color: _ui(context).buttonPrimaryFg,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                               )),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   GestureDetector(
                     onTap: _isPurchasingAdFree
                         ? null
                         : () => setState(() => _promoCardDismissed = true),
-                    child: const Text('Not now',
+                    child: Text('Not now',
                         style: TextStyle(
-                          color: UniSyncColors.textMuted,
+                          color: _ui(context).textMuted,
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
                         )),
@@ -1933,7 +2010,7 @@ class AttendanceCalculation {
 //  NATIVE AD CARD — inserted between subjects
 // ─────────────────────────────────────────────────────────────────────────────
 class _NativeAdCard extends StatefulWidget {
-  const _NativeAdCard();
+  _NativeAdCard();
   @override
   State<_NativeAdCard> createState() => _NativeAdCardState();
 }
@@ -1963,7 +2040,7 @@ class _NativeAdCardState extends State<_NativeAdCard> {
           ad.dispose();
         },
       ),
-      request: const AdRequest(),
+      request: AdRequest(),
     )..load();
   }
 
@@ -1980,9 +2057,9 @@ class _NativeAdCardState extends State<_NativeAdCard> {
       margin: const EdgeInsets.only(bottom: 12),
       height: 100,
       decoration: BoxDecoration(
-        color: UniSyncColors.surfaceCard,
+        color: _ui(context).surfaceCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: UniSyncColors.borderSubtle),
+        border: Border.all(color: _ui(context).borderSubtle),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -1991,4 +2068,5 @@ class _NativeAdCardState extends State<_NativeAdCard> {
     );
   }
 }
+
 

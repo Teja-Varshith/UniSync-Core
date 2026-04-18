@@ -41,17 +41,22 @@ class _AvatarSlideToggleState extends ConsumerState<AvatarSlideToggle> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.black,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<AppMode>(
               value: widget.currentMode,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 18),
-              dropdownColor: Colors.black,
+              icon: Icon(
+                Icons.keyboard_arrow_down,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 18,
+              ),
+              dropdownColor: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -65,14 +70,14 @@ class _AvatarSlideToggleState extends ConsumerState<AvatarSlideToggle> {
                         mode == AppMode.campus ? Icons.school : (mode == AppMode.career) ? Icons.work : Icons.build,
 
 
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         size: 16,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         mode == AppMode.campus ? 'Campus' : (mode == AppMode.career) ? 'Career' : 'Builder',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),

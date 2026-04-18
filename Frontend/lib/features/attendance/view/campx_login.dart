@@ -6,10 +6,86 @@ import 'package:routemaster/routemaster.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/attendance/repository/attendance_repository.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/storage/secure_storage.dart';
 
+_AttendancePalette _ui(BuildContext context) => _AttendancePalette.of(context);
+
+class _AttendancePalette {
+  const _AttendancePalette({
+    required this.isDark,
+    required this.backgroundPrimary,
+    required this.backgroundSecondary,
+    required this.surfaceCard,
+    required this.surfaceElevated,
+    required this.divider,
+    required this.border,
+    required this.borderSubtle,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.textDisabled,
+    required this.accent,
+    required this.accentSoft,
+    required this.buttonPrimaryFg,
+    required this.success,
+    required this.warning,
+    required this.error,
+  });
+
+  final bool isDark;
+  final Color backgroundPrimary;
+  final Color backgroundSecondary;
+  final Color surfaceCard;
+  final Color surfaceElevated;
+  final Color divider;
+  final Color border;
+  final Color borderSubtle;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color textDisabled;
+  final Color accent;
+  final Color accentSoft;
+  final Color buttonPrimaryFg;
+  final Color success;
+  final Color warning;
+  final Color error;
+
+  factory _AttendancePalette.of(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return _AttendancePalette(
+      isDark: isDark,
+      backgroundPrimary: isDark ? AppColors.darkBg : AppColors.lightBg,
+      backgroundSecondary: isDark ? AppColors.darkSurface : AppColors.lightCardAlt,
+      surfaceCard: isDark ? AppColors.darkCard : AppColors.lightCard,
+      surfaceElevated: isDark ? AppColors.darkCardAlt : AppColors.lightSurface,
+      divider: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.9)
+          : AppColors.lightBorder.withValues(alpha: 0.9),
+      border: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+      borderSubtle: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.8)
+          : AppColors.lightBorder.withValues(alpha: 0.8),
+      textPrimary: theme.colorScheme.onSurface,
+      textSecondary: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      textMuted: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+      textDisabled: isDark
+          ? AppColors.darkTextMuted.withValues(alpha: 0.7)
+          : AppColors.lightTextMuted.withValues(alpha: 0.8),
+      accent: AppColors.primary,
+      accentSoft: AppColors.primary.withValues(alpha: 0.14),
+      buttonPrimaryFg: theme.colorScheme.onPrimary,
+      success: AppColors.success,
+      warning: AppColors.warning,
+      error: theme.colorScheme.error,
+    );
+  }
+}
+
 class CampxLoginScreen extends ConsumerStatefulWidget {
-  const CampxLoginScreen({super.key});
+  CampxLoginScreen({super.key});
 
   @override
   ConsumerState<CampxLoginScreen> createState() => _LoginScreenState();
@@ -106,10 +182,10 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: UniSyncColors.backgroundSecondary,
+          backgroundColor: _ui(context).backgroundSecondary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: UniSyncColors.border),
+            side: BorderSide(color: _ui(context).border),
           ),
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -118,52 +194,52 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // eyebrow
-                const Text(
+                Text(
                   '#HELP',
                   style: TextStyle(
-                    color: UniSyncColors.accent,
+                    color: _ui(context).accent,
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.8,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
+                SizedBox(height: 6),
+                Text(
                   'How to Sign In?',
                   style: TextStyle(
-                    color: UniSyncColors.textPrimary,
+                    color: _ui(context).textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.4,
                   ),
                 ),
-                const SizedBox(height: 14),
-                Container(height: 0.8, color: UniSyncColors.divider),
-                const SizedBox(height: 14),
-                const Text(
+                SizedBox(height: 14),
+                Container(height: 0.8, color: _ui(context).divider),
+                SizedBox(height: 14),
+                Text(
                   'Use your JNTU Number or College Email registered on CampX along with your password to sign in.\n\nYour password is the one you set during your CampX registration.\n\nIf you face any issues, please contact hello.unisync@gmail.com',
                   style: TextStyle(
-                    color: UniSyncColors.textSecondary,
+                    color: _ui(context).textSecondary,
                     fontSize: 13,
                     height: 1.6,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Align(
                   alignment: Alignment.centerRight,
                   child: NeoPopButton(
-                    color: UniSyncColors.accent,
-                    bottomShadowColor: UniSyncColors.backgroundPrimary,
-                    rightShadowColor: UniSyncColors.backgroundPrimary,
+                    color: _ui(context).accent,
+                    bottomShadowColor: _ui(context).backgroundPrimary,
+                    rightShadowColor: _ui(context).backgroundPrimary,
                     depth: 3,
                     onTapUp: () => Navigator.pop(context),
                     onTapDown: () {},
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       child: Text(
                         'Got it',
                         style: TextStyle(
-                          color: UniSyncColors.backgroundPrimary,
+                          color: _ui(context).backgroundPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.3,
@@ -207,12 +283,12 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+              physics: AlwaysScrollableScrollPhysics(),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
@@ -222,7 +298,7 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
 
                       // ── Top bar ────────────────────────────────────────
                       Container(
-                        color: UniSyncColors.backgroundSecondary,
+                        color: _ui(context).backgroundSecondary,
                         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                         child: Row(
                           children: [
@@ -230,22 +306,22 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  Text(
                                     '#CAMPUS MODE',
                                     style: TextStyle(
-                                      color: UniSyncColors.accent,
+                                      color: _ui(context).accent,
                                       fontSize: 9,
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 1.8,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  SizedBox(height: 4),
                                   RichText(
-                                    text: const TextSpan(children: [
+                                    text: TextSpan(children: [
                                       TextSpan(
                                         text: 'Camp',
                                         style: TextStyle(
-                                          color: UniSyncColors.textPrimary,
+                                          color: _ui(context).textPrimary,
                                           fontSize: 22,
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: -0.5,
@@ -254,7 +330,7 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                                       TextSpan(
                                         text: 'X Login',
                                         style: TextStyle(
-                                          color: UniSyncColors.accent,
+                                          color: _ui(context).accent,
                                           fontSize: 22,
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: -0.5,
@@ -272,15 +348,15 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: UniSyncColors.surfaceCard,
+                                  color: _ui(context).surfaceCard,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: UniSyncColors.border),
+                                  border: Border.all(color: _ui(context).border),
                                 ),
-                                child: const Center(
+                                child: Center(
                                   child: Icon(
                                     Icons.question_mark_rounded,
                                     size: 16,
-                                    color: UniSyncColors.textMuted,
+                                    color: _ui(context).textMuted,
                                   ),
                                 ),
                               ),
@@ -289,11 +365,11 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                         ),
                       ),
 
-                      Container(height: 0.8, color: UniSyncColors.divider),
+                      Container(height: 0.8, color: _ui(context).divider),
 
                       // ── Lottie ─────────────────────────────────────────
                       Container(
-                        color: UniSyncColors.backgroundSecondary,
+                        color: _ui(context).backgroundSecondary,
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Lottie.asset(
                           'assets/animations/login_lottie.json',
@@ -301,12 +377,12 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                         ),
                       ),
 
-                      Container(height: 0.8, color: UniSyncColors.divider),
+                      Container(height: 0.8, color: _ui(context).divider),
 
                       // ── Form card ──────────────────────────────────────
                       Expanded(
                         child: Container(
-                          color: UniSyncColors.backgroundPrimary,
+                          color: _ui(context).backgroundPrimary,
                           padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
                           child: Form(
                             key: _formKey,
@@ -315,27 +391,27 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                               children: [
 
                                 // Tagline
-                                const Text(
+                                Text(
                                   'Your Campus,\nYour Vibe.',
                                   style: TextStyle(
-                                    color: UniSyncColors.textPrimary,
+                                    color: _ui(context).textPrimary,
                                     fontSize: 28,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: -0.5,
                                     height: 1.2,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
+                                SizedBox(height: 8),
+                                Text(
                                   'Use your College Credentials to sign in instantly.',
                                   style: TextStyle(
-                                    color: UniSyncColors.textSecondary,
+                                    color: _ui(context).textSecondary,
                                     fontSize: 13,
                                     height: 1.5,
                                   ),
                                 ),
 
-                                const SizedBox(height: 28),
+                                SizedBox(height: 28),
 
                                 // ── JNTU / Email field ─────────────────
                                 _UniSyncTextField(
@@ -351,7 +427,7 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                                   },
                                 ),
 
-                                const SizedBox(height: 16),
+                                SizedBox(height: 16),
 
                                 // ── Password field ─────────────────────
                                 _UniSyncTextField(
@@ -365,7 +441,7 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                                           ? Icons.visibility_off_outlined
                                           : Icons.visibility_outlined,
                                       size: 18,
-                                      color: UniSyncColors.textMuted,
+                                      color: _ui(context).textMuted,
                                     ),
                                     onPressed: () => setState(
                                         () => _isPasswordVisible = !_isPasswordVisible),
@@ -379,33 +455,33 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                                   },
                                 ),
 
-                                const SizedBox(height: 28),
+                                SizedBox(height: 28),
 
                                 // ── Login button ───────────────────────
                                 _isloading
                                     ? Container(
                                         padding: const EdgeInsets.all(14),
                                         decoration: BoxDecoration(
-                                          color: UniSyncColors.surfaceCard,
-                                          border: Border.all(color: UniSyncColors.border),
+                                          color: _ui(context).surfaceCard,
+                                          border: Border.all(color: _ui(context).border),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
-                                          children: const [
+                                          children: [
                                             SizedBox(
                                               width: 18,
                                               height: 18,
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 2,
-                                                color: UniSyncColors.accent,
+                                                color: _ui(context).accent,
                                               ),
                                             ),
                                             SizedBox(width: 12),
                                             Text(
                                               'Signing you securely...',
                                               style: TextStyle(
-                                                color: UniSyncColors.textSecondary,
+                                                color: _ui(context).textSecondary,
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -414,27 +490,27 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                                         ),
                                       )
                                     : NeoPopButton(
-                                        color: UniSyncColors.accent,
-                                        bottomShadowColor: UniSyncColors.backgroundPrimary,
-                                        rightShadowColor: UniSyncColors.backgroundPrimary,
+                                        color: _ui(context).accent,
+                                        bottomShadowColor: _ui(context).backgroundPrimary,
+                                        rightShadowColor: _ui(context).backgroundPrimary,
                                         depth: 5,
                                         onTapUp: login,
                                         onTapDown: () {},
-                                        child: const Padding(
+                                        child: Padding(
                                           padding: EdgeInsets.symmetric(vertical: 16),
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
                                               Icon(
                                                 Icons.rocket_launch_rounded,
-                                                color: UniSyncColors.backgroundPrimary,
+                                                color: _ui(context).backgroundPrimary,
                                                 size: 18,
                                               ),
                                               SizedBox(width: 10),
                                               Text(
                                                 "Let's Go.....",
                                                 style: TextStyle(
-                                                  color: UniSyncColors.backgroundPrimary,
+                                                  color: _ui(context).backgroundPrimary,
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w800,
                                                   letterSpacing: 0.3,
@@ -445,22 +521,22 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
                                         ),
                                       ),
 
-                                const SizedBox(height: 20),
+                                SizedBox(height: 20),
 
                                 // ── Secure note ────────────────────────
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
+                                  children: [
                                     Icon(
                                       Icons.lock_rounded,
                                       size: 11,
-                                      color: UniSyncColors.textMuted,
+                                      color: _ui(context).textMuted,
                                     ),
                                     SizedBox(width: 5),
                                     Text(
                                       'Your credentials are stored securely on-device',
                                       style: TextStyle(
-                                        color: UniSyncColors.textMuted,
+                                        color: _ui(context).textMuted,
                                         fontSize: 11,
                                       ),
                                     ),
@@ -488,7 +564,7 @@ class _LoginScreenState extends ConsumerState<CampxLoginScreen> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _UniSyncTextField extends StatelessWidget {
-  const _UniSyncTextField({
+  _UniSyncTextField({
     required this.controller,
     required this.label,
     required this.validator,
@@ -512,48 +588,48 @@ class _UniSyncTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      style: const TextStyle(
-        color: UniSyncColors.textPrimary,
+      style: TextStyle(
+        color: _ui(context).textPrimary,
         fontSize: 14,
         fontWeight: FontWeight.w500,
       ),
-      cursorColor: UniSyncColors.accent,
+      cursorColor: _ui(context).accent,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(
-          color: UniSyncColors.textMuted,
+        labelStyle: TextStyle(
+          color: _ui(context).textMuted,
           fontSize: 13,
         ),
-        floatingLabelStyle: const TextStyle(
-          color: UniSyncColors.accent,
+        floatingLabelStyle: TextStyle(
+          color: _ui(context).accent,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
         filled: true,
-        fillColor: UniSyncColors.surfaceCard,
+        fillColor: _ui(context).surfaceCard,
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, size: 18, color: UniSyncColors.textMuted)
+            ? Icon(prefixIcon, size: 18, color: _ui(context).textMuted)
             : null,
         suffixIcon: suffixIcon,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         enabledBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: UniSyncColors.border),
+          borderSide: BorderSide(color: _ui(context).border),
           borderRadius: BorderRadius.circular(8),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: UniSyncColors.accent, width: 1.5),
+          borderSide: BorderSide(color: _ui(context).accent, width: 1.5),
           borderRadius: BorderRadius.circular(8),
         ),
         errorBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: UniSyncColors.error),
+          borderSide: BorderSide(color: _ui(context).error),
           borderRadius: BorderRadius.circular(8),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: UniSyncColors.error, width: 1.5),
+          borderSide: BorderSide(color: _ui(context).error, width: 1.5),
           borderRadius: BorderRadius.circular(8),
         ),
-        errorStyle: const TextStyle(
-          color: UniSyncColors.error,
+        errorStyle: TextStyle(
+          color: _ui(context).error,
           fontSize: 11,
         ),
       ),

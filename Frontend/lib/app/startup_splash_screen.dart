@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 
 class StartupSplashScreen extends StatelessWidget {
   const StartupSplashScreen({
@@ -21,58 +20,62 @@ class StartupSplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = theme.colorScheme.primary;
+    const logoAsset = 'assets/svg/unisync_svgremove1.svg';
+    final subtleText = isDark
+        ? Colors.white.withValues(alpha: 0.28)
+        : AppColors.lightTextSecondary.withValues(alpha: 0.9);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C0A),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
-            // ── Main centered content ────────────────────────────
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ── Logo ────────────────────────────────────
                     Center(
                       child: Container(
                         width: 100,
                         height: 100,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.03),
+                          color: Colors.black,
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(
-                            color: UniSyncColors.accent.withOpacity(0.14),
+                            color: Colors.black,
                           ),
                         ),
                         child: SvgPicture.asset(
-                          'assets/svg/unisync_svgremove1.svg',
+                          logoAsset,
                           fit: BoxFit.contain,
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // ── Tagline only — logo already has the name ─
                     Text(
                       'AI College Companion App',
-                      style: GoogleFonts.dmSans(
-                        color: Colors.white.withOpacity(0.28),
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: subtleText,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 0.3,
                       ),
                     ),
                     const SizedBox(height: 52),
-
-                    // ── Progress / error ─────────────────────────
                     if (_hasError) ...[
                       Text(
                         errorText!,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.dmSans(
-                          color: UniSyncColors.error,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: theme.colorScheme.error,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           height: 1.5,
@@ -83,19 +86,22 @@ class StartupSplashScreen extends StatelessWidget {
                         OutlinedButton(
                           onPressed: onRetry,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: UniSyncColors.accent,
+                            foregroundColor: accent,
                             side: BorderSide(
-                              color: UniSyncColors.accent.withOpacity(0.5),
+                              color: accent.withValues(alpha: 0.5),
                             ),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 28, vertical: 11),
+                              horizontal: 28,
+                              vertical: 11,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           child: Text(
                             retryButtonText,
-                            style: GoogleFonts.dmSans(
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
                             ),
@@ -107,11 +113,11 @@ class StartupSplashScreen extends StatelessWidget {
                         width: 200,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(999),
-                          child: const LinearProgressIndicator(
+                          child: LinearProgressIndicator(
                             minHeight: 2,
-                            backgroundColor: Color(0xFF1E1E1C),
+                            backgroundColor: theme.dividerColor,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              UniSyncColors.accent,
+                              accent,
                             ),
                           ),
                         ),
@@ -120,8 +126,9 @@ class StartupSplashScreen extends StatelessWidget {
                       Text(
                         statusText,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.dmSans(
-                          color: Colors.white.withOpacity(0.28),
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: subtleText,
                           fontSize: 11.5,
                           fontWeight: FontWeight.w500,
                         ),
@@ -131,17 +138,16 @@ class StartupSplashScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // ── Made in India pinned bottom ──────────────────────
             Positioned(
               bottom: 24,
               left: 0,
               right: 0,
               child: Text(
-                'Made with ❤️ by Team Aavishkaar',
+                'Made with love by Team Aavishkaar',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.dmSans(
-                  color: Colors.white,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: subtleText,
                   fontSize: 10.5,
                   letterSpacing: 0.2,
                 ),
