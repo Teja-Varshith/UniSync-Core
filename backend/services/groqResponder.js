@@ -1,7 +1,7 @@
 export class GroqResponder {
   constructor({
     // model = "llama-3.1-8b-instant",
-    model = "GPT OSS 20B",
+    model = "openai/gpt-oss-120b",
     apiKey = process.env.GROQ_API_KEY || process.env.GROK_API_KEY,
     baseUrl = "https://api.groq.com/openai/v1/chat/completions",
   } = {}) {
