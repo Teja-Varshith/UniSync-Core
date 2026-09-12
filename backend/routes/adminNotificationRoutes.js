@@ -29,9 +29,28 @@ async function requireSuperUser(req, res, next) {
       return res.status(401).json({ ok: false, error: "Missing ID token" });
     }
 
+    // Initialise firebase-admin *before* touching getAuth().
+    //
+    // initializeApp() only runs inside getFirebaseDb(). On a cold start —
+    // which on Render's free tier is most requests — nothing has called it
+    // yet, so getAuth() throws "The default Firebase app does not exist"
+    // and, caught below, surfaces as a misleading "Invalid ID token".
+    //
+    // Kept in its own try so a missing service account reports itself as a
+    // server problem rather than being blamed on the caller's token.
+    let db;
+    try {
+      db = getFirebaseDb();
+    } catch (initError) {
+      console.error("[adminNotifications] firebase-admin init failed:", initError);
+      return res.status(500).json({
+        ok: false,
+        error: "Server: firebase-admin could not start (service account?)",
+      });
+    }
+
     const decoded = await getAuth().verifyIdToken(token);
 
-    const db = getFirebaseDb();
     const snap = await db.collection("app_config").doc("access").get();
     const data = snap.data() || {};
 
@@ -50,8 +69,41 @@ async function requireSuperUser(req, res, next) {
     req.admin = { uid: decoded.uid, email };
     return next();
   } catch (error) {
-    console.error("[adminNotifications] auth failed:", error.message);
-    return res.status(401).json({ ok: false, error: "Invalid ID token" });
+    console.error("[adminNotifications] auth failed:", error);
+
+    // Distinguish the three very different things that land here, because
+    // "Invalid ID token" sent back for all of them is unactionable.
+    const code = error.code || "";
+    const message = error.message || "";
+
+    // Server misconfiguration, not a bad token.
+    if (message.includes("default Firebase app does not exist")) {
+      return res.status(500).json({
+        ok: false,
+        error: "Server: firebase-admin is not initialised",
+      });
+    }
+
+    // The service account belongs to a different Firebase project than the
+    // app that minted the token, so every token looks forged.
+    if (message.includes("incorrect \"aud\"") || message.includes("audience")) {
+      return res.status(500).json({
+        ok: false,
+        error:
+          "Server: service account project does not match the app's Firebase project",
+      });
+    }
+
+    if (code === "auth/id-token-expired") {
+      return res
+        .status(401)
+        .json({ ok: false, error: "Session expired — reopen the panel" });
+    }
+
+    return res.status(401).json({
+      ok: false,
+      error: `Token rejected: ${code || message || "unknown"}`,
+    });
   }
 }
 
