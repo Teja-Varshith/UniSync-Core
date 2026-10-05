@@ -10,6 +10,7 @@ import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/ads%20Manager/add_manager.dart';
 import 'package:UniSync/app/providers.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:UniSync/features/admin/controllers/admin_controllers.dart';
 import 'package:UniSync/features/attendance/view/live_attendance_screen.dart';
 import 'package:UniSync/features/HomeScreen/homepagetab.dart';
 import 'package:UniSync/features/interview/view/carrer_interview_screen.dart';
@@ -94,6 +95,10 @@ class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
 
   Future<void> _openAttendanceScreen() async {
     if (!mounted) return;
+    // The nav entry is already hidden when the flag is off, but routes can
+    // still be reached from a deep link or a banner, so the switch is
+    // enforced here too rather than only in the UI that exposes it.
+    if (!ref.read(attendanceEnabledProvider)) return;
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) =>  LiveAttendence()),
     );
@@ -144,6 +149,11 @@ class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Remotely switchable from the admin panel. Passing null removes the
+    // widget entirely rather than disabling it — a greyed-out button still
+    // tells the user the feature exists.
+    final attendanceEnabled = ref.watch(attendanceEnabledProvider);
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: IndexedStack(index: _currentPageIndex, children: _pages),
@@ -151,10 +161,15 @@ class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
         items: _navItems,
         currentIndex: _currentNavIndex,
         onIndexChanged: _onNavIndexChanged,
-        leftEdgeWidget: _NavAttendanceWidget(
-          isActive: _currentPageIndex == 0,
-          onTap: () => unawaited(_openAttendanceScreen()),
-        ),
+        // An empty box, not nothing: the slot's width feeds the nav bar's
+        // scroll extent and snap targets, so collapsing it shifts every chip
+        // and changes how the bar scrolls.
+        leftEdgeWidget: attendanceEnabled
+            ? _NavAttendanceWidget(
+                isActive: _currentPageIndex == 0,
+                onTap: () => unawaited(_openAttendanceScreen()),
+              )
+            : const SizedBox.shrink(),
         rightEdgeWidget: const _NavFollowWidget(),
       ),
     );

@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:UniSync/features/admin/controllers/admin_controllers.dart';
+import 'package:UniSync/features/admin/view/admin_panel_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -590,6 +592,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
 
               SizedBox(height: 32),
+
+              // ── Admin (super users only) ─────────────────────────────────
+              // Renders nothing at all for everyone else, so the existence
+              // of the panel is not advertised to ordinary users.
+              const _AdminEntryPoint(),
 
               // ── Log Out ──────────────────────────────────────────────────
               Padding(
@@ -2274,3 +2281,59 @@ class LegalDocumentModal extends StatelessWidget {
 }
 
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ADMIN ENTRY POINT
+//
+//  Visible only to accounts on the app_config/access allowlist. This hides
+//  the door; it does not lock it — the panel re-checks access when opened,
+//  and Firestore rules are what actually protect the data behind it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AdminEntryPoint extends ConsumerWidget {
+  const _AdminEntryPoint();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isSuperUser = ref.watch(isSuperUserProvider).valueOrNull ?? false;
+    if (!isSuperUser) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+      child: Material(
+        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AdminPanelScreen()),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            child: Row(
+              children: [
+                Icon(Icons.shield_outlined,
+                    size: 19, color: theme.colorScheme.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Admin panel',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded,
+                    size: 19, color: theme.colorScheme.primary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

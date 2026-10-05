@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.9.18+2047
+version: 4.01.16+2048
 # version: 2026.1.13+2028
 
 environment:
@@ -33,7 +33,9 @@ dependencies:
     sdk: flutter
   #core
   flutter_riverpod:
-  routemaster:
+  # 1.0.1 doesn't build on Flutter 3.47 (CupertinoPageTransitionsBuilder const
+  # ctor removed); 1.1.x is the compatible line.
+  routemaster: ^1.1.1
 
   firebase_auth: ^5.5.2
   firebase_core: ^3.13.0
@@ -67,12 +69,13 @@ dependencies:
 
   #design
   lottie:
-  icons_flutter: ^0.0.5
   neopop: ^1.0.2
   google_fonts: ^6.1.0
   iconsax:
   awesome_snackbar_content: ^0.1.6
-  in_app_purchase: ^3.2.0
+  # 3.3.0 pulls in_app_purchase_android 0.5.x = Google Play Billing Library 8.0.0
+  # (required by Play from 31 Aug 2026).
+  in_app_purchase: ^3.3.0
 
   #voice
   flutter_tts:

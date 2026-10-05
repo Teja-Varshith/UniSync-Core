@@ -322,6 +322,11 @@ Future<void> _openInfoQueryPageHere() async {
   void initState() {
     super.initState();
     _bootstrapCampXConnection();
+    // Warm an interstitial for this screen: the one pre-loaded at app start
+    // may have failed or already been spent.
+    if (!_hasAdFreeAccess) {
+      AdManager.instance.loadInterstitialAd(reset: true);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_hasLoggedAttendanceScreen) return;
       _hasLoggedAttendanceScreen = true;
@@ -920,9 +925,11 @@ Future<void> _openInfoQueryPageHere() async {
             depth: 3,
             onTapUp: () {
               FirebaseService.logEvent(name: 'attendance_refresh_tapped');
-              if (!_hasAdFreeAccess &&
-                  Math.Random().nextInt(3) == 0) {
-                AdManager.instance.showInterstitialAd();
+              if (!_hasAdFreeAccess) {
+                // Gated by AdManager's cooldown, not by a random roll — a
+                // random gate on top of an often-empty cache meant the
+                // interstitial almost never appeared.
+                AdManager.instance.maybeShowInterstitialAd();
               }
               ref.invalidate(attendanceProvider);
               ref.refresh(attendanceProvider);
@@ -1497,23 +1504,22 @@ Future<void> _openInfoQueryPageHere() async {
           'subject_name': course.subjectName,
         },
       );
-      if (!_hasAdFreeAccess && Math.Random().nextInt(3) == 0) {
-        AdManager.instance.showInterstitialAd(onDismissed: () {
-          if (!mounted) return;
-          Navigator.push(context, MaterialPageRoute(
-            builder: (_) => SubjectDetailsScreen(
-              subjectId: course.subjectId,
-              subjectName: course.subjectName,
-            ),
-          ));
-        });
-      } else {
+      void openSubject() {
+        if (!mounted) return;
         Navigator.push(context, MaterialPageRoute(
           builder: (_) => SubjectDetailsScreen(
             subjectId: course.subjectId,
             subjectName: course.subjectName,
           ),
         ));
+      }
+
+      if (_hasAdFreeAccess) {
+        openSubject();
+      } else {
+        // onDismissed always fires — immediately when no ad is cached — so
+        // navigation never gets swallowed by a missing interstitial.
+        AdManager.instance.maybeShowInterstitialAd(onDismissed: openSubject);
       }
     }
 

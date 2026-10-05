@@ -22,6 +22,7 @@ import 'package:UniSync/features/opputunities/oppurtunities_screen.dart';
 import 'package:UniSync/features/opputunities/oppurtunity_detail_screen.dart';
 import 'package:UniSync/features/profile/edit_profile_screen.dart';
 import 'package:UniSync/features/profile/profile_screen.dart';
+import 'package:UniSync/features/admin/view/admin_panel_screen.dart';
 import 'package:UniSync/features/webview/view/unisync_webview_screen.dart';
 
 final loggedOutRoutes = RouteMap(routes: {
@@ -61,6 +62,9 @@ final loggedInRoutes = RouteMap(routes: {
   "/userInterviewDetails": (_) => MaterialPage(child: UserInterviewDetails()),
   "/opportunities": (_) => MaterialPage(child: OpportunitiesScreen()),
   "/webview": (_) => const MaterialPage(child: WebViewPage()),
+  // Gated inside the screen itself: a route anyone can type is fine so
+  // long as the screen refuses to render for non-super-users.
+  "/admin": (_) => const MaterialPage(child: AdminPanelScreen()),
   "/opportunity/:id": (route) => MaterialPage(
         child: OpportunityDetailsScreen(
           opportunityId: route.pathParameters['id'] ?? '',

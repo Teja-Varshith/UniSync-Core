@@ -154,7 +154,7 @@ class SubjectDetailsScreen extends ConsumerWidget {
                 color: _ui(context).textMuted, size: 36),
             SizedBox(height: 12),
             Text(
-              'Unable to load attendance.',
+              'Time Flies and things chnage log out and signin again :).',
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: _ui(context).textSecondary, fontSize: 13),

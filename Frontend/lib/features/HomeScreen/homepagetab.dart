@@ -19,19 +19,14 @@
 //  â€¢ QuickActionTileScheme, QuickActionGraphic, TileSchemes, all painters
 //  â€¢ HomeQuickActionConfig, FeaturedProjectConfig factories
 //  â€¢ _mergeQuickActions, _toQuickTiles, _resolvedRoute
-//  â€¢ _NeoInterviewCard, _SpotlightHeader, _HomeCarouselSection
+//  â€¢ _NeoInterviewCard, _HomeCarouselSection
 //  â€¢ _FeaturedProjectsSection, _HomeFooter, admin sheets
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:card_swiper/card_swiper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:lottie/lottie.dart';
 import 'package:neopop/neopop.dart';
@@ -43,7 +38,12 @@ import 'package:UniSync/app/providers.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/coins/coin_purchase_service.dart';
 import 'package:UniSync/features/HomeScreen/controllers/home_carousel_controller.dart';
+import 'package:UniSync/features/HomeScreen/controllers/home_hero_banner_controller.dart';
+import 'package:UniSync/features/HomeScreen/models/home_hero_banner.dart';
 import 'package:UniSync/features/HomeScreen/models/home_carousel_item.dart';
+import 'package:UniSync/features/HomeScreen/widgets/hero_banner/hero_banner_carousel.dart';
+import 'package:UniSync/features/admin/view/secret_admin_gesture.dart';
+import 'package:UniSync/features/HomeScreen/widgets/hero_banner/hero_surface.dart';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  QUICK ACTION TILE SYSTEM  (data model unchanged)
@@ -160,160 +160,75 @@ class QuickActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!visible) return const SizedBox.shrink();
-    final palette = _HomePalette.of(context);
-    final accent = scheme.accent;
-    final cardColor = Color.alphaBlend(
-      accent.withValues(alpha: palette.isDark ? 0.14 : 0.08),
-      palette.card,
-    );
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _handleTap(context),
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          height: 186,
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: palette.border.withValues(alpha: 0.85),
-              width: 1,
+    // Anatomy, top to bottom: uppercase title, grey subtitle, then the arrow
+    // pinned to the bottom-left with the icon opposite it. Pinning the arrow
+    // rather than letting it follow the text means every tile in a row has
+    // its affordance on the same baseline, however long its title runs.
+    return HeroSurface(
+      height: 176,
+      onTap: () => _handleTap(context),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title.toUpperCase(),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: HeroSurface.onSurface(context),
+                height: 1.12,
+                letterSpacing: -0.2,
+              ),
             ),
-            boxShadow: [
-              BoxShadow(
-                color:
-                    Colors.black.withValues(alpha: palette.isDark ? 0.24 : 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+            const SizedBox(height: 7),
+            Text(
+              _subtitle(),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: HeroSurface.onSurfaceMuted(context),
+                height: 1.35,
               ),
-              BoxShadow(
-                color: accent.withValues(alpha: palette.isDark ? 0.08 : 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.hardEdge,
-          child: Stack(
-            children: [
-              Positioned(
-                top: -24,
-                right: -20,
-                child: Container(
-                  width: 92,
-                  height: 92,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: accent.withValues(alpha: 0.08),
-                  ),
+            ),
+            const Spacer(),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const HeroArrow(size: 36),
+                const Spacer(),
+                // The icon is the tile's only non-neutral mark besides the
+                // arrow, and it is held back to a tint so it reads as a
+                // quiet label rather than a second call to action.
+                Icon(
+                  icon,
+                  size: 42,
+                  color: scheme.accent.withValues(alpha: 0.42),
                 ),
-              ),
-              if (graphic != QuickActionGraphic.none)
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: _buildGraphic(graphic, accent),
-                ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(11),
-                        border: Border.all(
-                          color: accent.withValues(alpha: 0.28),
-                          width: 1,
-                        ),
-                      ),
-                      child: Icon(icon, size: 18, color: accent),
-                    ),
-                    const Spacer(),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: palette.textPrimary,
-                        height: 1.15,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: accent.withValues(alpha: 0.24),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Text(
-                        chipLabel,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: accent,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                    if (creatorCredit != null &&
-                        creatorCredit!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        'By ${creatorCredit!.trim()}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: palette.textMuted.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 10),
-                    Container(
-                      height: 0.7,
-                      color: palette.divider.withValues(alpha: 0.9),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Text(
-                          ctaLabel,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: accent,
-                            letterSpacing: 0.1,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 12,
-                          color: accent,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  /// The tile has a chip label and a creator credit but no real subtitle
+  /// field, so the chip becomes the supporting line — it is the only one of
+  /// the two that describes the destination.
+  String _subtitle() {
+    final chip = chipLabel.trim();
+    final credit = creatorCredit?.trim() ?? '';
+    if (chip.isNotEmpty && credit.isNotEmpty) return '$chip · by $credit';
+    if (chip.isNotEmpty) return chip;
+    if (credit.isNotEmpty) return 'By $credit';
+    return ctaLabel.trim();
   }
 
   // Tap logic unchanged â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -336,335 +251,8 @@ class QuickActionTile extends StatelessWidget {
       Routemaster.of(context).push(appRoute);
     }
   }
-
-  // â”€â”€ Graphics builder (unchanged) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  static Widget _buildGraphic(QuickActionGraphic graphic, Color accent) {
-    switch (graphic) {
-      case QuickActionGraphic.network:
-        return _NetworkGraphic(accent: accent);
-      case QuickActionGraphic.resume:
-        return _ResumeGraphic(accent: accent);
-      case QuickActionGraphic.rings:
-        return _RingsGraphic(accent: accent);
-      case QuickActionGraphic.dots:
-        return _DotsGraphic(accent: accent);
-      case QuickActionGraphic.circuit:
-        return _CircuitGraphic(accent: accent);
-      case QuickActionGraphic.wave:
-        return _WaveGraphic(accent: accent);
-      case QuickActionGraphic.spark:
-        return _SparkGraphic(accent: accent);
-      case QuickActionGraphic.none:
-        return const SizedBox.shrink();
-    }
-  }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-//  BUILT-IN GRAPHICS  (all unchanged, 72Ã—72)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-class _NetworkGraphic extends StatelessWidget {
-  const _NetworkGraphic({required this.accent});
-  final Color accent;
-  @override
-  Widget build(BuildContext context) => Opacity(
-        opacity: 0.18,
-        child: SizedBox(
-          width: 72,
-          height: 72,
-          child: CustomPaint(painter: _NetworkPainter(accent: accent)),
-        ),
-      );
-}
-
-class _NetworkPainter extends CustomPainter {
-  const _NetworkPainter({required this.accent});
-  final Color accent;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = accent
-      ..strokeWidth = 1.4
-      ..style = PaintingStyle.stroke;
-    final dotPaint = Paint()
-      ..color = accent
-      ..style = PaintingStyle.fill;
-    final nodes = [
-      Offset(size.width * .50, size.height * .18),
-      Offset(size.width * .15, size.height * .55),
-      Offset(size.width * .85, size.height * .50),
-      Offset(size.width * .40, size.height * .85),
-      Offset(size.width * .75, size.height * .80),
-    ];
-    for (final e in [
-      [0, 1],
-      [0, 2],
-      [1, 3],
-      [2, 4],
-      [1, 2],
-      [3, 4]
-    ]) {
-      canvas.drawLine(nodes[e[0]], nodes[e[1]], linePaint);
-    }
-    for (final n in nodes) canvas.drawCircle(n, 4, dotPaint);
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
-}
-
-class _ResumeGraphic extends StatelessWidget {
-  const _ResumeGraphic({required this.accent});
-  final Color accent;
-  @override
-  Widget build(BuildContext context) => Opacity(
-        opacity: 0.16,
-        child: Container(
-          width: 52,
-          height: 64,
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(
-            color: accent,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                    width: 14,
-                    height: 14,
-                    decoration: const BoxDecoration(
-                        color: Colors.white, shape: BoxShape.circle)),
-                const SizedBox(height: 5),
-                _line(28, 3),
-                const SizedBox(height: 3),
-                _line(18, 2),
-                const SizedBox(height: 5),
-                ...List.generate(
-                    4,
-                    (_) => Padding(
-                          padding: const EdgeInsets.only(bottom: 3),
-                          child: _line(double.infinity, 2),
-                        )),
-              ]),
-        ),
-      );
-
-  Widget _line(double w, double h) => Container(
-        width: w,
-        height: h,
-        decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(2)),
-      );
-}
-
-class _RingsGraphic extends StatelessWidget {
-  const _RingsGraphic({required this.accent});
-  final Color accent;
-  @override
-  Widget build(BuildContext context) => Opacity(
-        opacity: 0.18,
-        child: SizedBox(
-          width: 72,
-          height: 72,
-          child: CustomPaint(painter: _RingsPainter(accent: accent)),
-        ),
-      );
-}
-
-class _RingsPainter extends CustomPainter {
-  const _RingsPainter({required this.accent});
-  final Color accent;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = accent
-      ..strokeWidth = 1.2
-      ..style = PaintingStyle.stroke;
-    final center = Offset(size.width, 0);
-    for (final r in [14.0, 28.0, 42.0, 56.0, 70.0]) {
-      canvas.drawCircle(center, r, paint);
-    }
-    canvas.drawCircle(
-        center,
-        3.5,
-        Paint()
-          ..color = accent
-          ..style = PaintingStyle.fill);
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
-}
-
-class _DotsGraphic extends StatelessWidget {
-  const _DotsGraphic({required this.accent});
-  final Color accent;
-  @override
-  Widget build(BuildContext context) => Opacity(
-        opacity: 0.20,
-        child: SizedBox(
-          width: 72,
-          height: 72,
-          child: CustomPaint(painter: _DotsPainter(accent: accent)),
-        ),
-      );
-}
-
-class _DotsPainter extends CustomPainter {
-  const _DotsPainter({required this.accent});
-  final Color accent;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = accent
-      ..style = PaintingStyle.fill;
-    const cols = 5;
-    const rows = 5;
-    const spacing = 14.0;
-    const r = 2.0;
-    for (var c = 0; c < cols; c++) {
-      for (var row = 0; row < rows; row++) {
-        canvas.drawCircle(
-            Offset(c * spacing + 4, row * spacing + 4), r, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
-}
-
-class _CircuitGraphic extends StatelessWidget {
-  const _CircuitGraphic({required this.accent});
-  final Color accent;
-  @override
-  Widget build(BuildContext context) => Opacity(
-        opacity: 0.18,
-        child: SizedBox(
-          width: 72,
-          height: 72,
-          child: CustomPaint(painter: _CircuitPainter(accent: accent)),
-        ),
-      );
-}
-
-class _CircuitPainter extends CustomPainter {
-  const _CircuitPainter({required this.accent});
-  final Color accent;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = accent
-      ..strokeWidth = 1.4
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.square;
-    final dotPaint = Paint()
-      ..color = accent
-      ..style = PaintingStyle.fill;
-    final paths = [
-      [Offset(72, 8), Offset(44, 8), Offset(44, 24)],
-      [Offset(72, 28), Offset(56, 28), Offset(56, 44), Offset(36, 44)],
-      [Offset(72, 50), Offset(60, 50), Offset(60, 64), Offset(40, 64)],
-      [Offset(52, 8), Offset(52, 20), Offset(32, 20), Offset(32, 36)],
-    ];
-    for (final seg in paths) {
-      final path = Path()..moveTo(seg[0].dx, seg[0].dy);
-      for (final pt in seg.skip(1)) path.lineTo(pt.dx, pt.dy);
-      canvas.drawPath(path, linePaint);
-      canvas.drawCircle(seg.last, 3, dotPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
-}
-
-class _WaveGraphic extends StatelessWidget {
-  const _WaveGraphic({required this.accent});
-  final Color accent;
-  @override
-  Widget build(BuildContext context) => Opacity(
-        opacity: 0.18,
-        child: SizedBox(
-          width: 72,
-          height: 72,
-          child: CustomPaint(painter: _WavePainter(accent: accent)),
-        ),
-      );
-}
-
-class _WavePainter extends CustomPainter {
-  const _WavePainter({required this.accent});
-  final Color accent;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = accent
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-    for (var i = 0; i < 4; i++) {
-      final y = 16.0 + (i * 12);
-      final path = Path()
-        ..moveTo(2, y)
-        ..quadraticBezierTo(18, y - 8, 34, y)
-        ..quadraticBezierTo(50, y + 8, 66, y);
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
-}
-
-class _SparkGraphic extends StatelessWidget {
-  const _SparkGraphic({required this.accent});
-  final Color accent;
-  @override
-  Widget build(BuildContext context) => Opacity(
-        opacity: 0.20,
-        child: SizedBox(
-          width: 72,
-          height: 72,
-          child: CustomPaint(painter: _SparkPainter(accent: accent)),
-        ),
-      );
-}
-
-class _SparkPainter extends CustomPainter {
-  const _SparkPainter({required this.accent});
-  final Color accent;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = accent
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-    final dotPaint = Paint()
-      ..color = accent
-      ..style = PaintingStyle.fill;
-    final center = Offset(size.width * 0.72, size.height * 0.28);
-    for (var i = 0; i < 8; i++) {
-      final angle = (math.pi / 4) * i;
-      final inner = Offset(
-        center.dx + math.cos(angle) * 8,
-        center.dy + math.sin(angle) * 8,
-      );
-      final outer = Offset(
-        center.dx + math.cos(angle) * 20,
-        center.dy + math.sin(angle) * 20,
-      );
-      canvas.drawLine(inner, outer, linePaint);
-    }
-    canvas.drawCircle(center, 4, dotPaint);
-    canvas.drawCircle(Offset(16, 54), 3, dotPaint);
-    canvas.drawCircle(Offset(30, 44), 2.5, dotPaint);
-  }
-
-  @override
-  bool shouldRepaint(_) => false;
-}
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  PALETTE  (unchanged)
@@ -927,7 +515,7 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
 
   Future<void> _refreshHomeData() async {
     await Future.wait([
-      ref.read(homeCarouselControllerProvider.notifier).refresh(),
+      ref.read(homeHeroBannerControllerProvider.notifier).refresh(),
       ref.read(homeQuickActionsProvider.notifier).refresh(),
       ref.read(homeFeaturedProjectsProvider.notifier).refresh(),
     ]);
@@ -2093,13 +1681,9 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
   Widget build(BuildContext context) {
     final palette = _HomePalette.of(context);
     final user = ref.watch(userProvider);
-    final carouselState = ref.watch(homeCarouselControllerProvider);
+    final bannerState = ref.watch(homeHeroBannerControllerProvider);
     final quickActionsState = ref.watch(homeQuickActionsProvider);
     final featuredProjectsState = ref.watch(homeFeaturedProjectsProvider);
-    final userName = user?.name.trim();
-    final firstName = (userName == null || userName.isEmpty)
-        ? 'there'
-        : userName.split(' ').first;
 
     ref.listen(userProvider, (previous, next) {
       AdManager.instance.setAdFree(next?.hasAdFreeAccess ?? false);
@@ -2116,78 +1700,80 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
           ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     return Scaffold(
-      backgroundColor: palette.background,
+      // Same ground the card groups sit on, so there is no seam where a
+      // section ends and the scaffold shows through.
+      backgroundColor: HeroSurface.pageTint(context),
+      // The hero banner starts at y = 0: no AppBar, and `top: false` so the
+      // SafeArea never pads above it. The banner runs under the status bar
+      // and gives that height back itself.
       body: SafeArea(
+        top: false,
         child: RefreshIndicator(
           color: palette.accent,
           onRefresh: _refreshHomeData,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-               SliverAppBar(
-                floating: true,
-                snap: true,
-                pinned: false,
-                elevation: 0,
-                toolbarHeight: 60,
-                backgroundColor: palette.sectionBackground,
-                titleSpacing: 0,
-                automaticallyImplyLeading: false,
-                shape: Border(
-                  bottom: BorderSide(
-                    color: palette.divider,
-                    width: 0.8,
-                  ),
-                ),
-                title: _TopBar(
-                  userPhotoUrl: user?.photoUrl,
-                  coins: user?.coins ?? 0,
-                  onCoinTap: _openCoinPurchaseSheet,
-                  onProfileTap: () {
-                    if (widget.onInternalRouteTap != null) {
-                      widget.onInternalRouteTap!('/settings');
-                      return;
-                    }
-                    Routemaster.of(context).push('/settings');
-                  },
-                ),
-              ),
-
               SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // â”€â”€ 2. GREETING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-                    _GreetingSection(firstName: firstName),
+                    // â”€â”€ 1. HERO BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // First child of the body, flush to the top, zero padding
+                    // above it. The banner carries the top bar that the
+                    // SliverAppBar used to.
+                    _HomeHeroBannerSection(
+                      bannerState: bannerState,
+                      coins: user?.coins ?? 0,
+                      onCoinTap: _openCoinPurchaseSheet,
+                    ),
 
-                    // â”€â”€ 3. CAROUSEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-                    _HomeCarouselSection(carouselState: carouselState),
-
-                    // â”€â”€ 4. QUICK ACTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                    // â”€â”€ 2. GREETING + QUICK ACTIONS (one section) â”€â”€â”€â”€â”€â”€â”€â”€
+                    // These used to be two blocks: a standalone greeting,
+                    // then a "#BUILT FOR YOU / Level up your game" header.
+                    // Two intros stacked cost ~150px before any content, and
+                    // the generic header said less than the greeting does.
+                    // The greeting is now the section's own heading.
+                    // Cards are grouped inside one white container on a
+                    // faintly tinted ground rather than floating loose on the
+                    // page. The group is what makes a set of plain white
+                    // cards read as deliberate instead of unstyled.
                     Container(
-                      color: palette.sectionBackground,
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 24, 16, 28),
+                      color: HeroSurface.pageTint(context),
+                      padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const _SpotlightHeader(
-                              eyebrow: '#BUILT FOR YOU',
-                              title: 'Level up',
-                              highlight: 'your game'),
-                          const SizedBox(height: 20),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: HeroSurface.groupSurface(context),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            padding:
+                                const EdgeInsets.fromLTRB(14, 18, 14, 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Padding(
+                                  padding:
+                                      EdgeInsets.only(left: 2, bottom: 14),
+                                  child: HeroSectionTitle('Built for you'),
+                                ),
 
-                          // Interview card
-                          _NeoInterviewCard(
-                            parentContext: context,
-                            onInternalRouteTap:
-                                widget.onInternalRouteTap,
+                                // Wide lead tile
+                                _NeoInterviewCard(
+                                  parentContext: context,
+                                  onInternalRouteTap:
+                                      widget.onInternalRouteTap,
+                                ),
+                                const SizedBox(height: 12),
+
+                                // 2-column tile grid
+                                if (visibleTiles.isNotEmpty)
+                                  _TileGrid(tiles: visibleTiles),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 14),
-
-                          // 2-column tile grid
-                          if (visibleTiles.isNotEmpty)
-                            _TileGrid(tiles: visibleTiles),
                         ],
                       ),
                     ),
@@ -2248,225 +1834,6 @@ class _HomePageTabState extends ConsumerState<HomePageTab> {
 //  Layout: [Logo (extreme left)]  Â·Â·Â·  [Coins pill]  [Avatar]
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-class _TopBar extends StatelessWidget {
-  const _TopBar({
-    required this.userPhotoUrl,
-    required this.coins,
-    required this.onCoinTap,
-    required this.onProfileTap,
-  });
-
-  final String? userPhotoUrl;
-  final int coins;
-  final VoidCallback onCoinTap;
-  final VoidCallback onProfileTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = _HomePalette.of(context);
-    final coinAccent = palette.success;
-    final logoAsset = palette.isDark
-        ? 'assets/svg/unisync_svgremove1.svg'
-        : 'assets/svg/unisyncd.svg';
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          SvgPicture.asset(
-            logoAsset,
-            height: 30,
-          ),
-          const Spacer(),
-          InkWell(
-            onTap: onCoinTap,
-            borderRadius: BorderRadius.circular(999),
-            child: Ink(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                gradient: LinearGradient(
-                  colors: [
-                    coinAccent.withValues(alpha: palette.isDark ? 0.22 : 0.16),
-                    coinAccent.withValues(alpha: palette.isDark ? 0.10 : 0.08),
-                  ],
-                ),
-                border: Border.all(
-                  color: coinAccent.withValues(alpha: 0.38),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: palette.isDark ? 0.25 : 0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: coinAccent.withValues(alpha: 0.18),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: coinAccent.withValues(alpha: 0.36),
-                        ),
-                      ),
-                      child: Icon(
-                        Iconsax.coin_1,
-                        size: 13,
-                        color: coinAccent,
-                      ),
-                    ),
-                    const SizedBox(width: 7),
-                    Text(
-                      '$coins',
-                      style: TextStyle(
-                        color: palette.textPrimary,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      'coins',
-                      style: TextStyle(
-                        color: palette.textPrimary.withValues(alpha: 0.78),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 14,
-                      color: palette.textMuted,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          InkWell(
-            onTap: onProfileTap,
-            borderRadius: BorderRadius.circular(999),
-            child: Stack(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: palette.accent.withValues(alpha: 0.9),
-                      width: 1.6,
-                    ),
-                  ),
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: palette.cardAlt,
-                    child: ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl: userPhotoUrl ?? '',
-                        fit: BoxFit.cover,
-                        width: 36,
-                        height: 36,
-                        placeholder: (_, __) => const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        errorWidget: (_, __, ___) => Icon(
-                          Icons.person,
-                          color: palette.textMuted,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 1,
-                  top: 1,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: palette.accent,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: palette.sectionBackground,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-//  â‘¡ GREETING SECTION  â€” "Hey, FIRSTNAME ðŸ‘‹"
-//  Sits between app bar and carousel. Clean, minimal.
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-class _GreetingSection extends StatelessWidget {
-  const _GreetingSection({required this.firstName});
-  final String firstName;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = _HomePalette.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Hey, ',
-                style: GoogleFonts.poppins(
-                  color: palette.textSecondary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                firstName,
-                style: GoogleFonts.poppins(
-                  color: palette.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.4,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Text('👋', style: TextStyle(fontSize: 22)),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            "You are Awesome, YES!",
-            style: GoogleFonts.poppins(
-              color: palette.textMuted,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  GRID WRAPPER  (unchanged)
@@ -2502,634 +1869,155 @@ class _TileGrid extends StatelessWidget {
 //   _FeaturedProjectApplySheet, _FaqPoint, _HomeFooter, etc.)
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-class _SpotlightHeader extends StatelessWidget {
-  const _SpotlightHeader({
-    required this.eyebrow,
-    required this.title,
-    required this.highlight,
-    this.actionLabel,
-    this.onAction,
+
+
+class _HomeHeroBannerSection extends ConsumerWidget {
+  const _HomeHeroBannerSection({
+    required this.bannerState,
+    required this.coins,
+    required this.onCoinTap,
   });
-  final String eyebrow, title, highlight;
-  final String? actionLabel;
-  final VoidCallback? onAction;
+
+  final AsyncValue<List<HomeHeroBanner>> bannerState;
+  final int coins;
+  final VoidCallback onCoinTap;
 
   @override
-  Widget build(BuildContext context) {
-    final palette = _HomePalette.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                eyebrow.toUpperCase(),
-                style: GoogleFonts.dmSans(
-                  color: palette.accent,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 2.4,
-                ),
-              ),
-              const SizedBox(height: 6),
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '$title ',
-                      style: GoogleFonts.playfairDisplay(
-                        color: palette.textPrimary,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                        height: 1.15,
-                      ),
-                    ),
-                    TextSpan(
-                      text: highlight,
-                      style: GoogleFonts.playfairDisplay(
-                        color: palette.accent,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        fontStyle: FontStyle.italic,
-                        letterSpacing: -0.3,
-                        height: 1.15,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (actionLabel != null && onAction != null)
-          GestureDetector(
-            onTap: onAction,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    actionLabel!,
-                    style: GoogleFonts.dmSans(
-                      color: palette.accent,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const SizedBox(width: 3),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 13,
-                    color: palette.accent,
-                  ),
-                ],
-              ),
-            ),
-          ),
-      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    // The controller already guarantees a non-empty list — it substitutes the
+    // bundled defaults whenever Firestore answers with nothing — so the only
+    // case left here is the very first frame, before the future resolves.
+    final banners = bannerState.valueOrNull ?? HomeHeroBanner.defaults;
+
+    return HeroBannerCarousel(
+      banners: banners,
+      coins: coins,
+      onCoinTap: onCoinTap,
+      onBannerTap: (banner) => ref
+          .read(homeHeroBannerControllerProvider.notifier)
+          .onBannerTap(context, banner),
     );
   }
 }
 
-
-
-class _FeatureTag extends StatelessWidget {
-  const _FeatureTag({required this.label, required this.accent});
-  final String label;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = _HomePalette.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: accent.withValues(alpha: 0.24)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: palette.textSecondary,
-          letterSpacing: 0.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeCarouselSection extends ConsumerStatefulWidget {
-  const _HomeCarouselSection({required this.carouselState});
-  final AsyncValue<List<HomeCarouselItem>> carouselState;
-
-  @override
-  ConsumerState<_HomeCarouselSection> createState() =>
-      _HomeCarouselSectionState();
-}
-
-class _HomeCarouselSectionState
-    extends ConsumerState<_HomeCarouselSection> {
-  int _currentIndex = 0;
-  final SwiperController _swiperController = SwiperController();
-
-  @override
-  void dispose() {
-    _swiperController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.carouselState.when(
-      data: (items) {
-        if (items.isEmpty) {
-          return _fallback(
-            title: 'Yup!! we just broke our servers...',
-            subtitle: 'We are fixing it, u can bet on us!!.',
-            icon: Icons.photo_library_outlined,
-          );
-        }
-        return Column(
-          children: [
-            SizedBox(
-              height: 198,
-              child: Swiper(
-                controller: _swiperController,
-                itemCount: items.length,
-                autoplay: items.length > 1,
-                autoplayDelay: 3800,
-                duration: 650,
-                loop: items.length > 1,
-                viewportFraction: 0.92,
-                scale: 0.965,
-                onIndexChanged: (i) =>
-                    setState(() => _currentIndex = i),
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return RepaintBoundary(
-                    child: _CarouselCard(
-                      item: item,
-                      onTap: () => ref
-                          .read(homeCarouselControllerProvider.notifier)
-                          .onBannerTap(context, item),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-            _PageIndicator(
-              count: items.length,
-              currentIndex: _currentIndex,
-            ),
-            const SizedBox(height: 14),
-          ],
-        );
-      },
-      loading: () => _fallback(
-        title: 'Loading highlights',
-        subtitle: 'Pulling fresh cards for you...',
-        icon: Icons.hourglass_top_rounded,
-      ),
-      error: (_, __) => _fallback(
-        title: 'Could not load',
-        subtitle: 'Check your connection and try again.',
-        icon: Icons.wifi_off_rounded,
-        showRetry: true,
-      ),
-    );
-  }
-
-  Widget _fallback({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    bool showRetry = false,
-  }) {
-    final palette = _HomePalette.of(context);
-    return Container(
-      height: 186,
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: palette.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: palette.border.withValues(alpha: 0.75),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: palette.cardAlt,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: palette.textMuted, size: 20),
-          ),
-          const SizedBox(height: 12),
-          Text(title,
-              style: TextStyle(
-                  color: palette.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.1)),
-          const SizedBox(height: 4),
-          Text(subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: palette.textSecondary,
-                  fontSize: 12,
-                  height: 1.4)),
-          if (showRetry) ...[
-            const SizedBox(height: 14),
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: palette.accent,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                    color: palette.accent.withValues(alpha: 0.4),
-                  ),
-                ),
-              ),
-              onPressed: () => ref
-                  .read(homeCarouselControllerProvider.notifier)
-                  .refresh(),
-              child: const Text('Try again',
-                  style: TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w600)),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _CarouselCard extends StatelessWidget {
-  const _CarouselCard({required this.item, required this.onTap});
-  final HomeCarouselItem item;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = _HomePalette.of(context);
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: palette.isDark ? 0.24 : 0.10),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CachedNetworkImage(
-                  imageUrl: item.imageUrl,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 1400,
-                  placeholder: (_, __) => Container(
-                    color: palette.card,
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                  errorWidget: (_, __, ___) => Container(
-                    color: palette.card,
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.image_not_supported_outlined,
-                      color: palette.textMuted,
-                      size: 28,
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      // gradient: LinearGradient(
-                      //   begin: Alignment.topCenter,
-                      //   end: Alignment.bottomCenter,
-                      //   colors: [
-                      //     Colors.black.withValues(alpha: 0.12),
-                      //     Colors.black.withValues(alpha: 0.70),
-                      //   ],
-                      //   stops: const [0.45, 1.0],
-                      // ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 14,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                          height: 1.2,
-                        ),
-                      ),
-                      if (item.subtitle.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          item.subtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.84),
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PageIndicator extends StatelessWidget {
-  const _PageIndicator(
-      {required this.count, required this.currentIndex});
-  final int count;
-  final int currentIndex;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = _HomePalette.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(count, (i) {
-        final active = i == currentIndex;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeInOut,
-          margin: const EdgeInsets.symmetric(horizontal: 3),
-          height: 6,
-          width: active ? 24 : 7,
-          decoration: BoxDecoration(
-            color: active
-                ? palette.accent
-                : palette.border.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(8),
-          ),
-        );
-      }),
-    );
-  }
-}
-
+/// Compact sign-off that closes the page like an app, not a website.
+///
+/// The old footer was a tall editorial column — headline, subhead, byline,
+/// links, status dot — which read as a marketing site someone had scrolled to
+/// the bottom of. This is one screen-width card instead: soft overlapping
+/// clouds in the brand colors, an oversized line of copy sitting on them, and
+/// the legal bits shrunk to a single row.
+/// Compact sign-off that closes the page like an app, not a website.
+///
+/// The old footer was a tall editorial column — headline, subhead, byline,
+/// links, status dot — which read as a marketing site someone had scrolled to
+/// the bottom of. This is the same information at a glance: one line of copy,
+/// one attribution, one row of legal text.
 class _HomeFooter extends StatelessWidget {
   const _HomeFooter();
 
   @override
   Widget build(BuildContext context) {
     final palette = _HomePalette.of(context);
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(22, 26, 22, 15),
-          decoration: BoxDecoration(
-            color: palette.card,
-            border: Border(
-              top: BorderSide(color: palette.divider),
+
+    // Sits on the same tinted ground as the sections above, with its top
+    // corners rounded so the page closes on a curve instead of a hard edge —
+    // the footer reads as the last card in the stack rather than a strip
+    // bolted to the bottom.
+    return Container(
+      width: double.infinity,
+      color: HeroSurface.pageTint(context),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: HeroSurface.groupSurface(context),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(28),
+            topRight: Radius.circular(28),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 26, 20, 26),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The whole footer is carried by this one line, the way an app
+            // signs off with a remark instead of a sitemap.
+            Text(
+              'Made in college chaos.',
+              style: TextStyle(
+                color: HeroSurface.onSurface(context),
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+                height: 1.1,
+              ),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Uni',
-                      style: GoogleFonts.poppins(
-                        color: palette.textPrimary,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w800,
-                        height: 1,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'Sync',
-                      style: GoogleFonts.poppins(
-                        color: palette.accent,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w800,
-                        height: 1,
-                      ),
-                    ),
-                  ],
-                ),
+            const SizedBox(height: 6),
+            Text(
+              'A product by UniApps (Team Aavishkaar)',
+              style: TextStyle(
+                color: HeroSurface.onSurfaceMuted(context),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
               ),
-              const SizedBox(height: 3),
-              Text(
-                'The Super App for your College Life.',
-                style: TextStyle(
-                  color: palette.textSecondary,
-                  fontSize: 11.5,
-                  letterSpacing: 0.3,
+            ),
+
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                // Hidden route to the admin panel: six quick taps, or a
+                // long press. The copyright line is a good host because
+                // nobody taps it on purpose, so the gesture cannot fire by
+                // accident during normal use.
+                SecretAdminGesture(
+                  child: Text(
+                    '© 2026 UniSync',
+                    style: TextStyle(
+                      color: HeroSurface.onSurfaceMuted(context),
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              RichText(
-                text: TextSpan(
+                const SizedBox(width: 9),
+                Container(
+                  width: 3,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: HeroSurface.onSurfaceMuted(context),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 9),
+                InkWell(
+                  onTap: () => launchUrl(
+                    Uri.parse('https://unisyncapp.in'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  child: Text(
+                    'unisyncapp.in',
+                    style: TextStyle(
+                      color: palette.accent,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'Made in India',
                   style: TextStyle(
-                    fontSize: 14,
-                    height: 1.65,
-                    color: palette.textPrimary,
+                    color: HeroSurface.onSurfaceMuted(context),
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w500,
                   ),
-                  children: [
-                    TextSpan(
-                      text: 'Hackathons, internships, mock interviews, networking\nand many more - ',
-                      style: TextStyle(color: palette.textSecondary),
-                    ),
-                    TextSpan(
-                      text: 'all at one place.',
-                      style: TextStyle(
-                        color: palette.success,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
-        Divider(),
-        Container(
-          width: double.infinity,
-          color: palette.sectionBackground,
-          padding: const EdgeInsets.fromLTRB(22, 2, 22, 22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Built in college chaos.',
-                style: TextStyle(
-                  color: palette.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  height: 1.15,
-                ),
-              ),
-              Text(
-                'Crafted by real problems and experiences.',
-                style: GoogleFonts.playfairDisplay(
-                  color: palette.textMuted,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  fontStyle: FontStyle.italic,
-                  height: 1.3,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                '~ A build by Team Aavishkaar',
-                style: TextStyle(
-                  color: palette.textSecondary,
-                  fontSize: 11.5,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '© 2026 UniSync',
-                        style: TextStyle(
-                          color: palette.textSecondary,
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Made in India',
-                        style: TextStyle(
-                          color: palette.textMuted,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      NeoPopButton(
-                        color: palette.isDark ? palette.background : palette.textPrimary,
-                        bottomShadowColor: palette.success,
-                        rightShadowColor: palette.success,
-                        depth: 3,
-                        onTapDown: () {},
-                        onTapUp: () {
-                          launchUrl(
-                            Uri.parse('https://unisyncapp.in'),
-                            mode: LaunchMode.externalApplication,
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Visit website',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Icon(
-                                Icons.arrow_forward_rounded,
-                                size: 13,
-                                color: palette.success,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: palette.accent,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'still in dev',
-                            style: TextStyle(
-                              color: palette.textMuted,
-                              fontSize: 9.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -3153,59 +2041,36 @@ class _FeaturedProjectsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = _HomePalette.of(context);
-    final sectionBg = palette.isDark ? palette.card : const Color(0xFFF5F5F1);
-    final headingColor = palette.isDark ? palette.textPrimary : const Color(0xFF111111);
-    final italicColor = palette.isDark ? palette.textMuted : const Color(0xFFAAAAAA);
-    final bodyColor = palette.isDark ? palette.textSecondary : const Color(0xFF111111);
 
     return Container(
       width: double.infinity,
-      color: sectionBg,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 26, 22, 18),
+      color: HeroSurface.pageTint(context),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: HeroSurface.groupSurface(context),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '#FEATURED PROJECTS',
-                  style: GoogleFonts.dmSans(
-                    color: palette.success,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2.4,
-                  ),
-                ),
+                // The same plain, heavy, left-aligned title as the group
+                // above — one heading style for the whole page.
+                const HeroSectionTitle('Built by fellow students'),
                 const SizedBox(height: 6),
                 Text(
-                  'Built by',
+                  'Turn your project into a product with real users.',
                   style: TextStyle(
-                    color: headingColor,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    height: 1.1,
-                  ),
-                ),
-                Text(
-                  'fellow students.',
-                  style: GoogleFonts.playfairDisplay(
-                    color: italicColor,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    fontStyle: FontStyle.italic,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'Your opportunity to convert your project into a product with real users.',
-                  style: GoogleFonts.poppins(
-                    color: bodyColor,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
+                    color: HeroSurface.onSurfaceMuted(context),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    height: 1.35,
                   ),
                 ),
               ],
@@ -3224,180 +2089,120 @@ class _FeaturedProjectsSection extends StatelessWidget {
                 final creator = (project.creatorName ?? '').trim();
                 final desc = (project.description ?? '').trim();
                 final chipLabel = (project.chipLabel ?? 'Student build').trim();
-                final ctaLabel = (project.ctaLabel ?? 'Visit').trim();
 
-                return GestureDetector(
-                  onTap: () {
-                    final url = project.websiteUrl.trim();
-                    if (url.isNotEmpty) {
-                      final uri = Uri.tryParse(url);
-                      if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
-                        launchUrl(uri, mode: LaunchMode.externalApplication);
+                return SizedBox(
+                  width: 175,
+                  // Same plain white card as the quick-action tiles: the
+                  // project's own accent survives only in the small icon, so
+                  // a scrolling row of them stays calm.
+                  child: HeroSurface(
+                    radius: 16,
+                    onTap: () {
+                      final url = project.websiteUrl.trim();
+                      if (url.isNotEmpty) {
+                        final uri = Uri.tryParse(url);
+                        if (uri != null &&
+                            (uri.scheme == 'http' || uri.scheme == 'https')) {
+                          launchUrl(uri, mode: LaunchMode.externalApplication);
+                        }
                       }
-                    }
-                  },
-                  child: Container(
-                    width: 175,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: palette.isDark ? palette.cardAlt : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: palette.isDark
-                            ? palette.border.withValues(alpha: 0.8)
-                            : Colors.black.withValues(alpha: 0.06),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            project.title.toUpperCase(),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              color: HeroSurface.onSurface(context),
+                              height: 1.15,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Expanded(
+                            child: Text(
+                              desc.isEmpty ? chipLabel : desc,
+                              overflow: TextOverflow.fade,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: HeroSurface.onSurfaceMuted(context),
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                          if (creator.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
-                                project.title,
-                                maxLines: 3,
+                                'By $creator',
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: headingColor,
-                                  height: 1.3,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: HeroSurface.onSurfaceMuted(context)
+                                      .withValues(alpha: 0.75),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: accent.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                Icons.travel_explore_rounded,
-                                size: 17,
-                                color: accent,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: accent.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            chipLabel,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: accent,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Expanded(
-                          child: Text(
-                            desc,
-                            overflow: TextOverflow.fade,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: palette.isDark
-                                  ? palette.textSecondary
-                                  : Colors.black.withValues(alpha: 0.42),
-                              height: 1.6,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 10),
-                          padding: const EdgeInsets.only(top: 10),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              top: BorderSide(
-                                color: palette.isDark
-                                    ? palette.divider
-                                    : Colors.black.withValues(alpha: 0.05),
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              if (creator.isNotEmpty)
-                                Expanded(
-                                  child: Text(
-                                    'By $creator',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                      color: palette.isDark
-                                          ? palette.textMuted
-                                          : Colors.black.withValues(alpha: 0.32),
-                                    ),
-                                  ),
-                                ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    ctaLabel,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: accent,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Icon(Icons.arrow_forward_rounded, size: 11, color: accent),
-                                ],
+                              const HeroArrow(size: 34),
+                              const Spacer(),
+                              Icon(
+                                Icons.travel_explore_rounded,
+                                size: 34,
+                                color: accent.withValues(alpha: 0.42),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: onSubmitTap,
-                behavior: HitTestBehavior.opaque,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Submit your project',
-                      style: TextStyle(
-                        color: palette.success,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: onSubmitTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Submit your project',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 13,
-                      color: palette.success,
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 13,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -3547,266 +2352,102 @@ class _NeoInterviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final palette = _HomePalette.of(context);
-    final accent = palette.success;
-    final footerColor =
-        palette.isDark ? const Color(0xFF18202E) : const Color(0xFFF3F4F6);
-    const headerGradient = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [Color(0xFF0A0A0A), Color(0xFF111827)],
-    );
-    const headerTitleColor = Colors.white;
-    final headerSubtitleColor = Colors.white.withValues(alpha: 0.56);
-    final cardBorderColor = palette.isDark
-        ? Colors.white.withValues(alpha: 0.26)
-        : Colors.black.withValues(alpha: 0.09);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _openInterview,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: footerColor,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: cardBorderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: palette.isDark ? 0.30 : 0.08),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Dark header ──────────────────────────────────────
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(19),
-                  topRight: Radius.circular(19),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: headerGradient,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
-                    ),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // UniCoins badge
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: accent.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: accent.withValues(alpha: 0.28),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 5,
-                                        height: 5,
-                                        decoration: BoxDecoration(
-                                          color: accent,
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        'Powered by UniCoins',
-                                        style: (theme.textTheme.labelSmall ??
-                                                const TextStyle())
-                                            .copyWith(
-                                          fontSize: 10,
-                                          color: accent,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 14),
-                                Text(
-                                  'AI Mock\nInterviews',
-                                  style: (theme.textTheme.headlineSmall ??
-                                          const TextStyle())
-                                      .copyWith(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w600,
-                                    color: headerTitleColor,
-                                    letterSpacing: -0.6,
-                                    height: 1.15,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Practice live rounds. Improve fast.',
-                                  style: (theme.textTheme.bodySmall ??
-                                          const TextStyle())
-                                      .copyWith(
-                                    fontSize: 11.5,
-                                    color: headerSubtitleColor,
-                                    height: 1.25,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          // ── Lottie tile ──────────────────────────
-                          Container(
-                            width: 76,
-                            height: 76,
-                            decoration: BoxDecoration(
-                              color: accent.withValues(alpha: 0.09),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: accent.withValues(alpha: 0.22),
-                              ),
-                            ),
-                            child: Center(
-                              child: Lottie.asset(
-                                'assets/animations/span.json',
-                                width: 52,
-                                height: 52,
-                              )
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      // ── Stat pills ───────────────────────────────
-                      Row(
-                        children: [
-                          _StatPill(
-                            label: 'Templates',
-                            value: '100+',
-                            accent: accent,
-                          ),
-                          const SizedBox(width: 8),
-                          _StatPill(
-                            label: 'Domains',
-                            value: '20+',
-                            accent: accent,
-                          ),
-                          const SizedBox(width: 8),
-                          _StatPill(
-                            label: 'AI Feedback',
-                            value: 'Live',
-                            accent: accent,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── Light / themed bottom ────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Feature tags
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        _NeoTag(label: 'Instant feedback', isDark: palette.isDark),
-                        // _NeoTag(label: 'Trending domains'),
-                        _NeoTag(label: 'Real-time scoring', isDark: palette.isDark),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    // CTA button
-                    SizedBox(
-                      width: double.infinity,
-                      child: _NeoShimmerCtaButton(
-                        label: 'Start interview',
-                        icon: Icons.play_arrow_rounded,
-                        onTapUp: _openInterview,
-                        accent: accent,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-class _StatPill extends StatelessWidget {
-  const _StatPill({
-    required this.label,
-    required this.value,
-    required this.accent,
-  });
-  final String label;
-  final String value;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    // The wide tile at the top of the group: copy on the left, art bleeding
+    // off the right, arrow on the bottom-left in line with the tiles below.
+    // It is the same card as the others, only twice as wide — which is what
+    // makes it read as the section's lead item rather than a second banner.
+    return HeroSurface(
+      onTap: _openInterview,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 18, 0, 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              value,
-              style: (theme.textTheme.titleMedium ?? const TextStyle())
-                  .copyWith(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: accent,
-                height: 1,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // The one gradient on the page below the banner, and it is
+                  // on type rather than on a surface — a coloured headline
+                  // costs no visual weight, a coloured panel costs a lot.
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [AppColors.secondary, AppColors.tertiary],
+                    ).createShader(bounds),
+                    child: const Text(
+                      'AI MOCK INTERVIEWS',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.3,
+                        height: 1.15,
+                        // Painted over by the shader; must be opaque white.
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    'Practice live rounds. Get feedback instantly.',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                      color: HeroSurface.onSurfaceMuted(context),
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // A NeoPop button rather than the plain arrow the small
+                  // tiles use: this is the section's primary action, and the
+                  // pressed-edge shell gives it weight the others don't have.
+                  NeoPopButton(
+                    color: AppColors.secondary,
+                    bottomShadowColor: AppColors.tertiary,
+                    rightShadowColor: AppColors.tertiary,
+                    depth: 4,
+                    onTapUp: _openInterview,
+                    child: const Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Start interview',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          Icon(
+                            Icons.play_arrow_rounded,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: (theme.textTheme.labelSmall ?? const TextStyle())
-                  .copyWith(
-                fontSize: 10,
-                color: Colors.white.withValues(alpha: 0.58),
-                fontWeight: FontWeight.w500,
+            const SizedBox(width: 8),
+            // Sized generously and allowed to run to the card edge, the way
+            // the reference lets its illustrations touch the boundary.
+            SizedBox(
+              width: 108,
+              height: 108,
+              child: Lottie.asset(
+                'assets/animations/span.json',
+                fit: BoxFit.contain,
               ),
             ),
           ],
@@ -3816,36 +2457,9 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-class _NeoTag extends StatelessWidget {
-  const _NeoTag({required this.label, required this.isDark});
-  final String label;
-  final bool isDark;
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2A3447) : const Color(0xFFE7EBEF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.09),
-        ),
-      ),
-      child: Text(
-        label,
-        style: (theme.textTheme.labelMedium ?? const TextStyle()).copyWith(
-          fontSize: 10.5,
-          color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF4B5563),
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
+
 
 class _NeoShimmerCtaButton extends StatelessWidget {
   const _NeoShimmerCtaButton({

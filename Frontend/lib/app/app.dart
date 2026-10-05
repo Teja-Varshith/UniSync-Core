@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/constants/constant.dart';
+import 'package:UniSync/ads%20Manager/add_manager.dart';
 import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/features/admin/controllers/admin_controllers.dart';
 import 'package:UniSync/app/routes.dart';
 import 'package:UniSync/app/theme/app_theme.dart';
 import 'package:UniSync/app/theme/theme_provider.dart';
@@ -19,14 +21,69 @@ class App extends ConsumerStatefulWidget{
   ConsumerState<App> createState() => _AppState();
 }
 
-class _AppState extends ConsumerState<App> {
+class _AppState extends ConsumerState<App> with WidgetsBindingObserver {
   String? _lastAnalyticsUserId;
   late Future<void> _startupFuture;
+
+  /// When the app was last backgrounded, or null if it never has been.
+  ///
+  /// App-open ads fire only on a return from background, never on launch —
+  /// opening the app should put the user on the home screen, not in front of
+  /// an ad. A null value means this process has not been backgrounded yet,
+  /// which is exactly the cold-start case, so the check below covers launch
+  /// without needing a separate flag.
+  DateTime? _pausedAt;
+
+  /// Firestore-backed providers must not be read before
+  /// [Firebase.initializeApp] has run. `build()` executes on the first frame,
+  /// well before [_startupFuture] resolves, so watching the ads flag there
+  /// unconditionally threw "No Firebase App '[DEFAULT]' has been created".
+  /// Flipped once startup finishes, which also rebuilds and subscribes.
+  bool _firebaseReady = false;
+
+  /// How long the app must have been in the background before a return
+  /// counts as a new session. Flicking to another app for a few seconds and
+  /// coming straight back should not be monetised.
+  static const _minBackgroundForAppOpen = Duration(seconds: 30);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _startupFuture = _runStartup();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _pausedAt = DateTime.now();
+      return;
+    }
+
+    if (state != AppLifecycleState.resumed) return;
+
+    final pausedAt = _pausedAt;
+    _pausedAt = null;
+
+    // Never on launch: no pause means this is the cold start.
+    if (pausedAt == null) return;
+
+    // Nor on a brief task-switch.
+    if (DateTime.now().difference(pausedAt) < _minBackgroundForAppOpen) return;
+
+    // This is where app-open actually earns: a real return to the app. The
+    // manager's own cooldown, cache window and full-screen guard stop it
+    // firing too often or colliding with an interstitial.
+    AdManager.instance.showAppOpenAd();
   }
 
   Future<void> _runStartup() async {
@@ -34,13 +91,27 @@ class _AppState extends ConsumerState<App> {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     await FirebaseService.initialize();
-  
+
+    // Without this the Mobile Ads SDK is never started and no format can
+    // fill. It was missing on this branch entirely, which is why ads earned
+    // nothing here regardless of placement.
+    await AdManager.initialize();
+
+    // Pre-load both full-screen formats so the first opportunity to show one
+    // isn't wasted warming the cache.
+    AdManager.instance
+      ..loadInterstitialAd(reset: true)
+      ..loadAppOpenAd();
+
     ref.invalidate(appInitProvider);
     await ref.read(appInitProvider.future);
+
+    if (mounted) setState(() => _firebaseReady = true);
   }
 
   void _retryStartup() {
     setState(() {
+      _firebaseReady = false;
       _startupFuture = _runStartup();
     });
   }
@@ -58,8 +129,25 @@ class _AppState extends ConsumerState<App> {
 
   
 
+  /// Pushes the remote ads flag into [AdManager].
+  ///
+  /// Lives in its own widget, mounted only after startup finishes, because
+  /// reading the flag touches `FirebaseFirestore.instance`. Called from
+  /// `build()` directly it ran on the very first frame — before
+  /// `Firebase.initializeApp()` in [_runStartup] had completed — and threw
+  /// "No Firebase App '[DEFAULT]' has been created".
+  ///
+  /// Kept outside [AdManager] so the manager stays free of Riverpod, and
+  /// above the router so the switch applies app-wide the moment it flips.
+
   @override
   Widget build(BuildContext context) {
+    // Conditional on purpose: the subscription is created only once Firebase
+    // is up, and the setState that flips the flag rebuilds us to do it.
+    if (_firebaseReady) {
+      AdManager.instance.setAdsEnabled(ref.watch(adsEnabledProvider));
+    }
+
     final userState = ref.watch(userProvider);
     final themeMode = ref.watch(themeModeProvider);
 
@@ -325,3 +413,4 @@ class _AppState extends ConsumerState<App> {
     );
   }
 }
+

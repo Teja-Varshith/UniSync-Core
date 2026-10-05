@@ -13,9 +13,16 @@ class HomeCarouselRepository {
         .orderBy('order')
         .get();
 
+    // Keep a doc if it has anything to show at all. Artwork now comes from
+    // the `art` enum, so an imageless banner is valid — but so is an
+    // image-only one with no title, which an earlier title-only filter was
+    // wrongly discarding.
     final items = snapshot.docs
         .map(HomeCarouselItem.fromFirestore)
-        .where((item) => item.imageUrl.isNotEmpty)
+        .where((item) =>
+            item.title.trim().isNotEmpty ||
+            item.subtitle.trim().isNotEmpty ||
+            item.imageUrl.trim().isNotEmpty)
         .toList();
 
     items.sort((a, b) => a.order.compareTo(b.order));
