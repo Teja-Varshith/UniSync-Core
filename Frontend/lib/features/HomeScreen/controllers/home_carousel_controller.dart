@@ -43,6 +43,7 @@ const _knownRoutes = <String>{
   '/userInterviewDetails',
   '/opportunities',
   '/webview',
+  '/examsync',
 };
 
 class HomeCarouselController extends AsyncNotifier<List<HomeCarouselItem>> {

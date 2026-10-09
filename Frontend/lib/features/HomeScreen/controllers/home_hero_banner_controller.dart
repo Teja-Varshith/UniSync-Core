@@ -44,6 +44,7 @@ const _knownRoutes = <String>{
   '/userInterviewDetails',
   '/opportunities',
   '/webview',
+  '/examsync',
 };
 
 class HomeHeroBannerController extends AsyncNotifier<List<HomeHeroBanner>> {
