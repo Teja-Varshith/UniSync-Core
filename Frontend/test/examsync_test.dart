@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:UniSync/features/examsync/controller/examsync_controller.dart';
+import 'package:UniSync/features/examsync/controller/study_progress.dart';
 import 'package:UniSync/features/examsync/models/exam_data.dart';
 import 'package:UniSync/features/examsync/models/subject.dart';
 import 'package:UniSync/features/examsync/utils/hash.dart';
@@ -87,7 +88,9 @@ void main() {
     });
 
     test('ordered tags include defaults and empty custom tags', () {
-      final tags = orderedTags(['Extra'], const [
+      final tags = orderedTags([
+        'Extra'
+      ], const [
         ImpQuestion(question: 'q', answerHtml: '', tag: 'Other'),
       ]);
       expect(tags, [...kDefaultTags, 'Extra', 'Other']);
@@ -108,7 +111,7 @@ void main() {
         'customTags': ['A', ' ', 'B'],
       });
       expect(s.courseCode, '23CS015');
-      expect(s.price, kDefaultPakkaPassPrice);
+      expect(s.price, kDefaultPrepPackPrice);
       expect(s.courseType, CourseType.elective);
       expect(s.customTags, ['A', 'B']);
     });
@@ -130,5 +133,64 @@ void main() {
       expect(ExamSyncFilters.decode('{"year":3,"semester":2}'), isNull);
       expect(ExamSyncFilters.decode('garbage'), isNull);
     });
+  });
+
+  group('branch', () {
+    test('filters persist branch and reject unknown codes', () {
+      final f = const ExamSyncFilters(year: 3, semester: 5).copyWith(
+        branch: 'ECE',
+      );
+      expect(ExamSyncFilters.decode(f.encode())?.branch, 'ECE');
+      expect(ExamSyncFilters.decode('{"year":3,"semester":5}')?.branch,
+          kDefaultBranch);
+      expect(
+          ExamSyncFilters.decode('{"year":3,"semester":5,"branch":"xyz"}')
+              ?.branch,
+          kDefaultBranch);
+      expect(f.withYear(4).branch, 'ECE');
+    });
+
+    test('subjects without a branch count as CSE', () {
+      final legacy = Subject.fromMap('A', const {'courseCode': 'A'});
+      expect(legacy.isForBranch('CSE'), isTrue);
+      expect(legacy.isForBranch('ECE'), isFalse);
+
+      final list = Subject.fromMap('B', const {
+        'branches': ['ece', ' EEE '],
+      });
+      expect(list.branches, ['ECE', 'EEE']);
+      expect(list.isForBranch('eee'), isTrue);
+      expect(list.isForBranch('CSE'), isFalse);
+
+      final csv = Subject.fromMap('C', const {'branch': 'CSE, IT'});
+      expect(csv.isForBranch('IT'), isTrue);
+    });
+  });
+
+  group('study progress', () {
+    const q = ImpQuestion(question: 'What is X?', answerHtml: '', tag: 't');
+
+    test('question keys are stable and exam-scoped', () {
+      expect(questionKey('Mid 1', q), questionKey('Mid 1', q));
+      expect(questionKey('Mid 1', q), isNot(questionKey('Sem', q)));
+    });
+
+    test('round-trips marks and saves', () {
+      final k = questionKey('Mid 1', q);
+      final p =
+          const StudyProgress().withMark(k, QuestionMark.known).toggleSaved(k);
+      final back = StudyProgress.decode(p.encode());
+      expect(back.markOf(k), QuestionMark.known);
+      expect(back.isSaved(k), isTrue);
+      expect(back.knownIn([k, 'other']), 1);
+      expect(back.withMark(k, null).markOf(k), isNull);
+      expect(back.toggleSaved(k).isSaved(k), isFalse);
+      expect(StudyProgress.decode('nope').marks, isEmpty);
+    });
+  });
+
+  test('default tags get neutral display labels', () {
+    expect(tagLabel(kDefaultTag), isNot(contains('Pakka')));
+    expect(tagLabel('Unit 3 long answers'), 'Unit 3 long answers');
   });
 }

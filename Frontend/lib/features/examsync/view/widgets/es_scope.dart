@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,19 +36,35 @@ class _ExamSyncScopeState extends State<ExamSyncScope> {
   @override
   void initState() {
     super.initState();
-    if (_activeCount == 0) {
-      ScreenProtector.preventScreenshotOn();
-    }
+    if (_activeCount == 0) _setProtection(true);
     _activeCount++;
   }
 
   @override
   void dispose() {
     _activeCount--;
-    if (_activeCount == 0) {
-      ScreenProtector.preventScreenshotOff();
-    }
+    if (_activeCount == 0) _setProtection(false);
     super.dispose();
+  }
+
+  /// Android: FLAG_SECURE blocks screenshots, screen recording and the
+  /// recent-apps preview. iOS: content is hidden from screenshots and
+  /// recordings, and blurred in the app switcher. Web has no equivalent.
+  static void _setProtection(bool on) {
+    if (kIsWeb) return;
+    Future<void> guard(Future<void> Function() call) =>
+        call().catchError((Object _) {});
+    if (on) {
+      guard(ScreenProtector.preventScreenshotOn);
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        guard(ScreenProtector.protectDataLeakageWithBlur);
+      }
+    } else {
+      guard(ScreenProtector.preventScreenshotOff);
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        guard(ScreenProtector.protectDataLeakageWithBlurOff);
+      }
+    }
   }
 
   @override

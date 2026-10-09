@@ -7,11 +7,11 @@ import 'package:UniSync/features/examsync/controller/examsync_controller.dart';
 import 'package:UniSync/features/examsync/models/exam_data.dart';
 import 'package:UniSync/features/examsync/models/subject.dart';
 import 'package:UniSync/features/examsync/theme/es_theme.dart';
-import 'package:UniSync/features/examsync/view/pakka_pass_tab.dart';
+import 'package:UniSync/features/examsync/view/prep_pack_tab.dart';
 import 'package:UniSync/features/examsync/view/widgets/es_scope.dart';
 import 'package:UniSync/features/examsync/widgets/es_widgets.dart';
 
-enum _Tab { syllabus, notes, pyqs, pakkaPass }
+enum _Tab { syllabus, notes, pyqs, prepPack }
 
 class SubjectDetailScreen extends ConsumerWidget {
   const SubjectDetailScreen({super.key, required this.courseCode});
@@ -91,8 +91,8 @@ class _DetailBody extends ConsumerWidget {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 40),
               sliver: SliverToBoxAdapter(
-                child: tab == _Tab.pakkaPass
-                    ? PakkaPassTab(subject: subject)
+                child: tab == _Tab.prepPack
+                    ? PrepPackTab(subject: subject)
                     : content.when(
                         loading: () => const _ListSkeleton(),
                         error: (_, __) => EsErrorState(
@@ -111,7 +111,7 @@ class _DetailBody extends ConsumerWidget {
                               items: c.pyqs,
                               emptyTitle: 'PYQs coming soon',
                             ),
-                          _Tab.pakkaPass => const SizedBox.shrink(),
+                          _Tab.prepPack => const SizedBox.shrink(),
                         },
                       ),
               ),
@@ -221,7 +221,7 @@ class _TabsHeader extends SliverPersistentHeaderDelegate {
             _tabButton(_Tab.syllabus, 'Syllabus', null),
             _tabButton(_Tab.notes, 'Notes', notesCount),
             _tabButton(_Tab.pyqs, 'PYQs', pyqsCount),
-            _tabButton(_Tab.pakkaPass, 'Pakka Pass', null, premium: true),
+            _tabButton(_Tab.prepPack, 'Prep Pack', null, premium: true),
           ],
         ),
       ),

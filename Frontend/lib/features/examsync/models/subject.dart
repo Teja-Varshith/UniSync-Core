@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Coins needed to unlock Pakka Pass when a subject has no `price`.
-const int kDefaultPakkaPassPrice = 50;
+/// Coins needed to unlock Prep Pack when a subject has no `price`.
+const int kDefaultPrepPackPrice = 50;
+
+/// Branch assumed for subjects saved without one.
+const String kLegacyBranch = 'CSE';
 
 enum CourseType {
   core('Core'),
@@ -25,6 +28,7 @@ class Subject {
     required this.noOfUnits,
     required this.customTags,
     required this.price,
+    this.branches = const [],
     this.description,
     this.createdAt,
   });
@@ -38,11 +42,21 @@ class Subject {
   final int noOfUnits;
   final List<String> customTags;
   final int price;
+
+  /// Upper-case branch codes (`branch` string or `branches` list in
+  /// Firestore). Empty for subjects added before branches existed; those
+  /// were all CSE.
+  final List<String> branches;
   final String? description;
   final DateTime? createdAt;
 
   CourseType get courseType => CourseType.fromRaw(courseTypeLabel);
   bool get isFree => price <= 0;
+
+  bool isForBranch(String branch) {
+    final b = branch.toUpperCase();
+    return branches.isEmpty ? b == kLegacyBranch : branches.contains(b);
+  }
 
   factory Subject.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) =>
       Subject.fromMap(doc.id, doc.data() ?? const {});
@@ -66,11 +80,21 @@ class Subject {
               .where((e) => e.isNotEmpty)
               .toList()
           : const [],
-      price: _int(data['price']) ?? kDefaultPakkaPassPrice,
+      price: _int(data['price']) ?? kDefaultPrepPackPrice,
+      branches: _branches(data['branches'] ?? data['branch']),
       description: desc.isEmpty ? null : desc,
       createdAt: _date(data['createdAt']),
     );
   }
+}
+
+List<String> _branches(Object? v) {
+  final raw = v is List ? v : (v is String ? v.split(',') : const []);
+  return raw
+      .map((e) => e.toString().trim().toUpperCase())
+      .where((e) => e.isNotEmpty)
+      .toSet()
+      .toList();
 }
 
 String _str(Object? v) => v == null ? '' : v.toString().trim();

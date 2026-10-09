@@ -1,12 +1,23 @@
 import 'package:UniSync/features/examsync/utils/numeric_keys.dart';
 
-/// Pakka Pass exam keys, in display order. Stored exactly as these strings.
+/// Prep Pack exam keys, in display order. Stored exactly as these strings.
 const List<String> kExamKeys = ['Mid 1', 'Mid 2', 'Sem'];
 
 String examLabel(String key) => key == 'Sem' ? 'Semester' : key;
 
+/// Tag keys as stored in Firestore. Kept unchanged so existing questions
+/// still match; students see [tagLabel] instead.
 const String kDefaultTag = 'Pakka Chadavali Amma';
-const List<String> kDefaultTags = [kDefaultTag, 'Evi kooda chudali'];
+const String kSecondaryTag = 'Evi kooda chudali';
+const List<String> kDefaultTags = [kDefaultTag, kSecondaryTag];
+
+/// Display name for a tag. The two default keys read like a promise of
+/// marks, so they are shown with neutral study wording.
+String tagLabel(String tag) => switch (tag) {
+      kDefaultTag => 'High-priority revision',
+      kSecondaryTag => 'Also worth revising',
+      _ => tag,
+    };
 
 /// Every `exam_data` document wraps its payload in `data`. Older documents
 /// put the map at the root instead.

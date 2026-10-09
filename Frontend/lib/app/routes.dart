@@ -24,7 +24,7 @@ import 'package:UniSync/features/profile/edit_profile_screen.dart';
 import 'package:UniSync/features/profile/profile_screen.dart';
 import 'package:UniSync/features/admin/view/admin_panel_screen.dart';
 import 'package:UniSync/features/examsync/view/examsync_home_screen.dart';
-import 'package:UniSync/features/examsync/view/pakka_pass_screen.dart';
+import 'package:UniSync/features/examsync/view/prep_pack_screen.dart';
 import 'package:UniSync/features/examsync/view/pdf_viewer_screen.dart';
 import 'package:UniSync/features/examsync/view/subject_detail_screen.dart';
 
@@ -74,8 +74,8 @@ final loggedInRoutes = RouteMap(routes: {
           courseCode: route.pathParameters['code'] ?? '',
         ),
       ),
-  "/examsync/subject/:code/pakka-pass": (route) => MaterialPage(
-        child: PakkaPassScreen(
+  "/examsync/subject/:code/prep-pack": (route) => MaterialPage(
+        child: PrepPackScreen(
           courseCode: route.pathParameters['code'] ?? '',
         ),
       ),

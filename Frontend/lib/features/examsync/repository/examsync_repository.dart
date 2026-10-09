@@ -28,7 +28,7 @@ class UnlockException implements Exception {
 }
 
 /// Read-mostly access to `examsync/{collegeId}`. The only write is
-/// [unlockPakkaPass]. Never reads the college document itself: it holds
+/// [unlockPrepPack]. Never reads the college document itself: it holds
 /// `admins` / `examites` with passwords.
 class ExamSyncRepository {
   ExamSyncRepository(this._db);
@@ -100,7 +100,7 @@ class ExamSyncRepository {
   /// free subject.
   ///
   /// If the user already has a `paid_users` record nothing is charged.
-  Future<int?> unlockPakkaPass({
+  Future<int?> unlockPrepPack({
     required String collegeId,
     required String code,
     required String uid,

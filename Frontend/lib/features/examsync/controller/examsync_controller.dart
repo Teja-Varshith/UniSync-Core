@@ -34,15 +34,31 @@ const Map<int, List<int>> kSemestersByYear = {
 
 const String kFiltersPrefsKey = 'examsync_filters';
 
+/// Branch codes students can pick, in display order.
+const List<String> kBranches = [
+  'CSE',
+  'AIML',
+  'AIDS',
+  'IT',
+  'ECE',
+  'EEE',
+  'MECH',
+  'CIVIL',
+];
+
+const String kDefaultBranch = 'CSE';
+
 class ExamSyncFilters {
   const ExamSyncFilters({
     required this.year,
     required this.semester,
+    this.branch = kDefaultBranch,
     this.courseType = CourseType.core,
   });
 
   final int year;
   final int semester;
+  final String branch;
   final CourseType courseType;
 
   /// Changing year keeps the semester when it belongs to the new year,
@@ -52,23 +68,36 @@ class ExamSyncFilters {
     return ExamSyncFilters(
       year: newYear,
       semester: options.contains(semester) ? semester : options.first,
+      branch: branch,
       courseType: courseType,
     );
   }
 
-  ExamSyncFilters copyWith({int? semester, CourseType? courseType}) =>
+  ExamSyncFilters copyWith({
+    int? semester,
+    String? branch,
+    CourseType? courseType,
+  }) =>
       ExamSyncFilters(
         year: year,
         semester: semester ?? this.semester,
+        branch: branch ?? this.branch,
         courseType: courseType ?? this.courseType,
       );
 
-  /// Accepts only a consistent year/semester pair.
-  static ExamSyncFilters? tryCreate(int? year, int? semester) {
+  /// Accepts only a consistent year/semester pair. Unknown branches fall
+  /// back to [kDefaultBranch].
+  static ExamSyncFilters? tryCreate(int? year, int? semester,
+      [String? branch]) {
     if (year == null || semester == null) return null;
     final options = kSemestersByYear[year];
     if (options == null || !options.contains(semester)) return null;
-    return ExamSyncFilters(year: year, semester: semester);
+    final b = branch?.trim().toUpperCase();
+    return ExamSyncFilters(
+      year: year,
+      semester: semester,
+      branch: kBranches.contains(b) ? b! : kDefaultBranch,
+    );
   }
 
   static ExamSyncFilters? decode(String? raw) {
@@ -79,13 +108,15 @@ class ExamSyncFilters {
       return tryCreate(
         (map['year'] as num?)?.toInt(),
         (map['semester'] as num?)?.toInt(),
+        map['branch'] as String?,
       );
     } catch (_) {
       return null;
     }
   }
 
-  String encode() => jsonEncode({'year': year, 'semester': semester});
+  String encode() =>
+      jsonEncode({'year': year, 'semester': semester, 'branch': branch});
 }
 
 final examSyncFiltersProvider =
@@ -122,6 +153,7 @@ class ExamSyncFiltersNotifier extends StateNotifier<ExamSyncFilters> {
 
   void setYear(int year) => _set(state.withYear(year));
   void setSemester(int semester) => _set(state.copyWith(semester: semester));
+  void setBranch(String branch) => _set(state.copyWith(branch: branch));
 
   /// Course type is a view toggle and isn't persisted.
   void setCourseType(CourseType type) =>
@@ -143,6 +175,15 @@ final examSyncSubjectsProvider =
   return ref
       .watch(examSyncRepositoryProvider)
       .subjectsForSemester(ref.watch(examSyncCollegeIdProvider), semester);
+});
+
+/// Subjects for the selected semester, narrowed to the selected branch.
+/// Filtering happens on the client so no new Firestore index is needed.
+final examSyncBranchSubjectsProvider =
+    Provider.autoDispose<AsyncValue<List<Subject>>>((ref) {
+  final filters = ref.watch(examSyncFiltersProvider);
+  return ref.watch(examSyncSubjectsProvider(filters.semester)).whenData(
+      (all) => all.where((s) => s.isForBranch(filters.branch)).toList());
 });
 
 final examSyncSubjectProvider =
@@ -180,7 +221,7 @@ final examSyncSubjectContentProvider = FutureProvider.autoDispose
   );
 });
 
-/// Whether the student has unlocked Pakka Pass for a subject.
+/// Whether the student has unlocked Prep Pack for a subject.
 final examSyncHasAccessProvider =
     FutureProvider.autoDispose.family<bool, String>((ref, code) async {
   final uid = ref.watch(examSyncUidProvider);
@@ -203,10 +244,10 @@ final examSyncLastTabProvider = StateProvider<Map<String, int>>((ref) => {});
 
 /// Runs the unlock and keeps UniSync's cached user in step with the new
 /// balance so the rest of the app shows the same number.
-Future<void> unlockPakkaPass(WidgetRef ref, Subject subject) async {
+Future<void> unlockPrepPack(WidgetRef ref, Subject subject) async {
   final uid = ref.read(examSyncUidProvider);
   if (uid == null) throw const UnlockException(UnlockFailure.other);
-  final after = await ref.read(examSyncRepositoryProvider).unlockPakkaPass(
+  final after = await ref.read(examSyncRepositoryProvider).unlockPrepPack(
         collegeId: ref.read(examSyncCollegeIdProvider),
         code: subject.courseCode,
         uid: uid,
