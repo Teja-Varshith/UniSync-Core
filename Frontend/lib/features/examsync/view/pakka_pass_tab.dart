@@ -120,6 +120,8 @@ class _PakkaPassTabState extends ConsumerState<PakkaPassTab> {
         ),
         const SizedBox(height: 20),
         _PriceBox(price: price, free: free, coins: uid == null ? null : coins),
+        const SizedBox(height: 14),
+        const _Disclaimer(),
         const SizedBox(height: 20),
         EsButton(
           label: free ? 'Unlock for free' : 'Unlock for $price coins',
@@ -227,6 +229,8 @@ class _PakkaPassTabState extends ConsumerState<PakkaPassTab> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 14),
+                const _Disclaimer(),
                 const SizedBox(height: 20),
                 Row(
                   children: [
@@ -254,6 +258,37 @@ class _PakkaPassTabState extends ConsumerState<PakkaPassTab> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Plain-language liability disclaimer shown wherever a student is about to
+/// pay for or view Pakka Pass content: this is student-compiled exam prep,
+/// not an official or guaranteed paper.
+class _Disclaimer extends StatelessWidget {
+  const _Disclaimer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.info_outline, size: 14, color: EsColors.textMuted),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'Pakka Pass is exam-prep material compiled by students and '
+            'volunteers for guidance only. It is not an official question '
+            'paper and UniSync does not guarantee it will match your exam '
+            'or improve your result.',
+            style: EsText.body(
+              size: 11.5,
+              color: EsColors.textMuted,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -81,6 +81,7 @@ dependencies:
   # 3.3.0 pulls in_app_purchase_android 0.5.x = Google Play Billing Library 8.0.0
   # (required by Play from 31 Aug 2026).
   in_app_purchase: ^3.3.0
+  screen_protector: ^1.5.1
 
   #voice
   flutter_tts:

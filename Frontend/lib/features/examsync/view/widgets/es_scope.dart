@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:screen_protector/screen_protector.dart';
 import 'package:UniSync/features/coins/coin_purchase_service.dart';
 import 'package:UniSync/features/examsync/brand/brand.dart';
 import 'package:UniSync/features/examsync/controller/examsync_controller.dart';
@@ -10,11 +11,44 @@ import 'package:UniSync/features/examsync/widgets/es_toast.dart';
 import 'package:UniSync/features/examsync/widgets/es_widgets.dart';
 
 /// Applies ExamSync's dark NeoPOP theme to a screen, whatever UniSync's own
-/// theme mode is.
-class ExamSyncScope extends StatelessWidget {
+/// theme mode is, and keeps screenshots/screen-recording blocked for as long
+/// as any ExamSync screen is on the stack.
+///
+/// Screens below this one in the navigation stack stay mounted (not
+/// disposed) while a new one is pushed, so a plain on-in-initState /
+/// off-in-dispose pair would turn protection off as soon as the *top*
+/// ExamSync screen is popped, even if another ExamSync screen is still
+/// showing underneath it. A static ref count fixes that: protection only
+/// turns off once the last ExamSync screen leaves the tree.
+class ExamSyncScope extends StatefulWidget {
   const ExamSyncScope({super.key, required this.child});
 
   final Widget child;
+
+  @override
+  State<ExamSyncScope> createState() => _ExamSyncScopeState();
+}
+
+class _ExamSyncScopeState extends State<ExamSyncScope> {
+  static int _activeCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_activeCount == 0) {
+      ScreenProtector.preventScreenshotOn();
+    }
+    _activeCount++;
+  }
+
+  @override
+  void dispose() {
+    _activeCount--;
+    if (_activeCount == 0) {
+      ScreenProtector.preventScreenshotOff();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +59,7 @@ class ExamSyncScope extends StatelessWidget {
           statusBarColor: Colors.transparent,
           systemNavigationBarColor: EsColors.bg,
         ),
-        child: child,
+        child: widget.child,
       ),
     );
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:UniSync/app/providers.dart';
 import 'package:UniSync/features/examsync/brand/brand.dart';
 import 'package:UniSync/features/examsync/controller/examsync_controller.dart';
@@ -9,9 +8,7 @@ import 'package:UniSync/features/examsync/models/subject.dart';
 import 'package:UniSync/features/examsync/theme/es_theme.dart';
 import 'package:UniSync/features/examsync/view/widgets/es_scope.dart';
 import 'package:UniSync/features/examsync/view/widgets/subject_card.dart';
-import 'package:UniSync/features/examsync/widgets/es_toast.dart';
 import 'package:UniSync/features/examsync/widgets/es_widgets.dart';
-import 'package:UniSync/features/webview/view/unisync_webview_screen.dart';
 
 class ExamSyncHomeScreen extends ConsumerWidget {
   const ExamSyncHomeScreen({super.key});
@@ -40,11 +37,6 @@ class ExamSyncHomeScreen extends ConsumerWidget {
                       const _Greeting(),
                       const SizedBox(height: 20),
                       const _FiltersCard(),
-                      const SizedBox(height: 14),
-                      const EsAlertBanner(
-                        message:
-                            'Live for GMRIT 3rd-year CSE right now. More colleges and branches are coming soon.',
-                      ),
                       const SizedBox(height: 20),
                       _CourseTypeSwitch(subjects: subjects.valueOrNull),
                       const SizedBox(height: 16),
@@ -52,7 +44,7 @@ class ExamSyncHomeScreen extends ConsumerWidget {
                   ),
                 ),
                 ..._subjectSlivers(context, ref, subjects, filters),
-                const SliverToBoxAdapter(child: _Footer()),
+                const SliverToBoxAdapter(child: SizedBox(height: 28)),
               ],
             ),
           ),
@@ -173,11 +165,22 @@ class _Greeting extends ConsumerWidget {
   }
 }
 
-class _FiltersCard extends ConsumerWidget {
+/// Collapsed by default to a single summary row ("Year 3 · Sem 5 · CSE").
+/// Tapping it expands the pickers in place; tapping "Done" (or the row
+/// again) collapses them back so the subject list isn't pushed down by
+/// controls most visits don't need to touch.
+class _FiltersCard extends ConsumerStatefulWidget {
   const _FiltersCard();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FiltersCard> createState() => _FiltersCardState();
+}
+
+class _FiltersCardState extends ConsumerState<_FiltersCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
     final filters = ref.watch(examSyncFiltersProvider);
     final notifier = ref.read(examSyncFiltersProvider.notifier);
     final semesters = kSemestersByYear[filters.year] ?? const [1];
@@ -187,55 +190,95 @@ class _FiltersCard extends ConsumerWidget {
       rightColor: EsColors.borderLight,
       bottomColor: EsColors.border,
       border: EsColors.border,
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const EsEyebrow('Year'),
-          const SizedBox(height: 8),
-          EsSegmented<int>(
-            segments: [
-              for (final y in kSemestersByYear.keys)
-                EsSegment(value: y, label: '$y'),
-            ],
-            value: filters.year,
-            onChanged: notifier.setYear,
-          ),
-          const SizedBox(height: 14),
-          const EsEyebrow('Semester'),
-          const SizedBox(height: 8),
-          EsSegmented<int>(
-            segments: [
-              for (final s in semesters) EsSegment(value: s, label: 'Sem $s'),
-            ],
-            value: filters.semester,
-            onChanged: notifier.setSemester,
-          ),
-          const SizedBox(height: 14),
-          const EsEyebrow('Branch'),
-          const SizedBox(height: 8),
-          EsSegmented<String>(
-            segments: const [
-              EsSegment(value: 'CSE', label: 'CSE'),
-              EsSegment(value: 'ECE', label: 'ECE', enabled: false),
-              EsSegment(value: 'EEE', label: 'EEE', enabled: false),
-              EsSegment(value: 'MECH', label: 'MECH', enabled: false),
-            ],
-            value: 'CSE',
-            onChanged: (_) => showEsToast(
-              context,
-              'Other branches are coming soon.',
-              type: EsToastType.warning,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'ECE, EEE and MECH are coming soon.',
-            style: EsText.body(size: 11.5, color: EsColors.textMuted),
-          ),
+          _summaryRow(filters),
+          if (_expanded) ..._expandedPickers(filters, notifier, semesters),
         ],
       ),
     );
+  }
+
+  Widget _summaryRow(ExamSyncFilters filters) {
+    return Semantics(
+      button: true,
+      label:
+          'Year ${filters.year}, semester ${filters.semester}, CSE. Tap to change.',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => setState(() => _expanded = !_expanded),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              const Icon(Icons.tune_rounded,
+                  size: 18, color: EsColors.textSecondary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Year ${filters.year} · Sem ${filters.semester} · CSE',
+                  style: EsText.body(size: 14, weight: FontWeight.w800),
+                ),
+              ),
+              AnimatedRotation(
+                turns: _expanded ? 0.5 : 0,
+                duration: const Duration(milliseconds: 150),
+                child: const Icon(Icons.keyboard_arrow_down_rounded,
+                    color: EsColors.textMuted),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _expandedPickers(
+    ExamSyncFilters filters,
+    ExamSyncFiltersNotifier notifier,
+    List<int> semesters,
+  ) {
+    return [
+      const Divider(height: 1, color: EsColors.border),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const EsEyebrow('Year'),
+            const SizedBox(height: 8),
+            EsSegmented<int>(
+              segments: [
+                for (final y in kSemestersByYear.keys)
+                  EsSegment(value: y, label: '$y'),
+              ],
+              value: filters.year,
+              onChanged: notifier.setYear,
+            ),
+            const SizedBox(height: 14),
+            const EsEyebrow('Semester'),
+            const SizedBox(height: 8),
+            EsSegmented<int>(
+              segments: [
+                for (final s in semesters)
+                  EsSegment(value: s, label: 'Sem $s'),
+              ],
+              value: filters.semester,
+              onChanged: notifier.setSemester,
+            ),
+            const SizedBox(height: 16),
+            EsButton(
+              label: 'Done',
+              variant: EsButtonVariant.secondary,
+              expand: true,
+              onPressed: () => setState(() => _expanded = false),
+            ),
+          ],
+        ),
+      ),
+    ];
   }
 }
 
@@ -256,55 +299,6 @@ class _CourseTypeSwitch extends ConsumerWidget {
       ],
       value: filters.courseType,
       onChanged: ref.read(examSyncFiltersProvider.notifier).setCourseType,
-    );
-  }
-}
-
-class _Footer extends ConsumerWidget {
-  const _Footer();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 28, 16, 32),
-      child: Center(
-        child: TextButton(
-          style: TextButton.styleFrom(
-            foregroundColor: EsColors.textMuted,
-            minimumSize: const Size(44, 44),
-          ),
-          onPressed: () async {
-            String url = '';
-            try {
-              url = await ref.read(webviewUrlProvider.future);
-            } catch (_) {}
-            final uri = Uri.tryParse(url.trim());
-            final ok = uri != null &&
-                uri.hasScheme &&
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-            if (!ok && context.mounted) {
-              showEsToast(context, 'Couldn’t open the staff console.',
-                  type: EsToastType.error);
-            }
-          },
-          child: Text.rich(
-            TextSpan(
-              children: [
-                const TextSpan(text: 'Faculty or content author? '),
-                TextSpan(
-                  text: 'Staff sign in →',
-                  style: EsText.body(
-                    size: 13,
-                    weight: FontWeight.w800,
-                    color: EsColors.accent,
-                  ),
-                ),
-              ],
-            ),
-            style: EsText.body(size: 13, color: EsColors.textMuted),
-          ),
-        ),
-      ),
     );
   }
 }

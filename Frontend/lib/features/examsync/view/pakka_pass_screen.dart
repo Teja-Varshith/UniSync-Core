@@ -135,6 +135,13 @@ class _PakkaPassScreenState extends ConsumerState<PakkaPassScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
+        const EsAlertBanner(
+          message:
+              'Exam-prep material compiled by students and volunteers, not '
+              'an official question paper. Not a guarantee of what will '
+              'appear in your exam.',
+        ),
+        const SizedBox(height: 16),
         EsSegmented<String>(
           segments: [
             for (final e in kExamKeys)
