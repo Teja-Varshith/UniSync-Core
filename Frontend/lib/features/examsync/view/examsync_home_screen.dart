@@ -55,7 +55,7 @@ class ExamSyncHomeScreen extends ConsumerWidget {
                   const SliverFillRemaining(
                     hasScrollBody: false,
                     child: Align(
-                      alignment: Alignment.bottomCenter,
+                      alignment: Alignment.bottomLeft,
                       child: EsFooter(),
                     ),
                   ),
