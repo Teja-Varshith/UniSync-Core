@@ -8,7 +8,7 @@ import 'package:UniSync/features/examsync/models/subject.dart';
 import 'package:UniSync/features/examsync/theme/es_theme.dart';
 import 'package:UniSync/features/examsync/view/widgets/es_scope.dart';
 import 'package:UniSync/features/examsync/view/widgets/subject_card.dart';
-import 'package:UniSync/features/examsync/widgets/es_disclaimer.dart';
+import 'package:UniSync/features/examsync/widgets/es_footer.dart';
 import 'package:UniSync/features/examsync/widgets/es_widgets.dart';
 
 class ExamSyncHomeScreen extends ConsumerWidget {
@@ -50,10 +50,7 @@ class ExamSyncHomeScreen extends ConsumerWidget {
                     ),
                   ),
                   ..._subjectSlivers(context, ref, subjects, filters),
-                  const SliverPadding(
-                    padding: EdgeInsets.fromLTRB(16, 24, 16, 28),
-                    sliver: SliverToBoxAdapter(child: EsDisclaimerNote()),
-                  ),
+                  const SliverToBoxAdapter(child: EsFooter()),
                 ],
               ),
             ),
