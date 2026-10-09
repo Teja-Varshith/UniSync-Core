@@ -2,15 +2,20 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:UniSync/features/examsync/theme/es_theme.dart';
+import 'package:UniSync/features/examsync/utils/doc_links.dart';
 import 'package:UniSync/features/examsync/view/widgets/es_scope.dart';
 import 'package:UniSync/features/examsync/widgets/es_toast.dart';
 import 'package:UniSync/features/examsync/widgets/es_widgets.dart';
 
-/// Full-screen PDF viewer for notes and PYQs. The web app needs a CORS
-/// proxy for this; a native download doesn't.
+/// Full-screen viewer for notes and PYQs, kept inside the app.
+///
+/// Direct PDF links (Supabase storage) and Google Drive / Docs links that
+/// export to PDF are rendered natively. Anything else (a large Drive file,
+/// a web page) opens in an in-app web view on its preview page.
 class PdfViewerScreen extends StatefulWidget {
   const PdfViewerScreen({
     super.key,
@@ -30,6 +35,10 @@ class PdfViewerScreen extends StatefulWidget {
 class _PdfViewerScreenState extends State<PdfViewerScreen> {
   PdfControllerPinch? _controller;
   bool _failed = false;
+
+  /// Set when the link isn't a PDF and is shown in the web view instead.
+  String? _webUrl;
+  bool _webLoading = false;
   int _page = 1;
   int _pages = 0;
   CancelToken? _cancel;
@@ -45,26 +54,39 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     final cancel = _cancel = CancelToken();
     setState(() {
       _failed = false;
+      _webUrl = null;
       _controller?.dispose();
       _controller = null;
     });
+    final uri = Uri.tryParse(widget.url);
+    if (uri == null || !uri.hasScheme) {
+      setState(() => _failed = true);
+      return;
+    }
+    final link = DocLink.resolve(widget.url);
     try {
-      final uri = Uri.parse(widget.url);
-      if (!uri.hasScheme) throw const FormatException('bad url');
       final res = await Dio().get<List<int>>(
-        widget.url,
+        link.pdfUrl,
         cancelToken: cancel,
         options: Options(responseType: ResponseType.bytes),
       );
       final bytes = Uint8List.fromList(res.data ?? const []);
-      if (bytes.isEmpty) throw const FormatException('empty');
       if (!mounted || cancel.isCancelled) return;
-      setState(() {
-        _controller = PdfControllerPinch(document: PdfDocument.openData(bytes));
-      });
+      if (looksLikePdf(bytes)) {
+        setState(() {
+          _controller =
+              PdfControllerPinch(document: PdfDocument.openData(bytes));
+        });
+        return;
+      }
     } catch (_) {
-      if (mounted && !cancel.isCancelled) setState(() => _failed = true);
+      if (!mounted || cancel.isCancelled) return;
     }
+    // Not a PDF (or the download was refused): show the page in-app.
+    setState(() {
+      _webUrl = link.previewUrl;
+      _webLoading = true;
+    });
   }
 
   Future<void> _openInBrowser() async {
@@ -157,7 +179,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
             const Icon(Icons.picture_as_pdf_outlined,
                 size: 40, color: EsColors.error),
             const SizedBox(height: 12),
-            Text('Couldn’t open this PDF here',
+            Text('Couldn’t open this file here',
                 style: EsText.body(size: 16, weight: FontWeight.w800)),
             const SizedBox(height: 6),
             Text(
@@ -184,8 +206,45 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     );
   }
 
+  Widget _web(String url) {
+    return Stack(
+      children: [
+        InAppWebView(
+          initialUrlRequest: URLRequest(url: WebUri(url)),
+          initialSettings: InAppWebViewSettings(
+            useHybridComposition: true,
+            javaScriptEnabled: true,
+            domStorageEnabled: true,
+            supportZoom: true,
+            builtInZoomControls: true,
+            displayZoomControls: false,
+            transparentBackground: true,
+          ),
+          onLoadStop: (_, __) {
+            if (mounted) setState(() => _webLoading = false);
+          },
+          onReceivedError: (_, request, __) {
+            if (request.isForMainFrame == true && mounted) {
+              setState(() => _failed = true);
+            }
+          },
+          onReceivedHttpError: (_, request, response) {
+            if (request.isForMainFrame == true &&
+                (response.statusCode ?? 0) >= 400 &&
+                mounted) {
+              setState(() => _failed = true);
+            }
+          },
+        ),
+        if (_webLoading) const Center(child: CircularProgressIndicator()),
+      ],
+    );
+  }
+
   Widget _viewer() {
     if (_failed) return _fallback();
+    final web = _webUrl;
+    if (web != null) return _web(web);
     final controller = _controller;
     if (controller == null) {
       return const Center(child: CircularProgressIndicator());

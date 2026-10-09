@@ -50,7 +50,15 @@ class ExamSyncHomeScreen extends ConsumerWidget {
                     ),
                   ),
                   ..._subjectSlivers(context, ref, subjects, filters),
-                  const SliverToBoxAdapter(child: EsFooter()),
+                  // Fills any space left under a short subject list so the
+                  // footer always sits at the bottom of the screen.
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: EsFooter(),
+                    ),
+                  ),
                 ],
               ),
             ),
