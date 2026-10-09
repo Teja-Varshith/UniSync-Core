@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:routemaster/routemaster.dart';
-import 'package:neopop/neopop.dart';
-import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/features/interview/controllers/reports_controller.dart';
+import 'package:UniSync/features/interview/view/interview_palette.dart';
 import 'package:UniSync/models/interview_report_model.dart';
+
+InterviewPalette _ui(BuildContext context) => InterviewPalette.of(context);
 
 class InterviewResultsScreen extends ConsumerStatefulWidget {
   const InterviewResultsScreen({super.key});
@@ -22,19 +22,19 @@ class _InterviewResultsScreenState
     final rprts = ref.watch(ReportsControllerProvider);
 
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
       body: SafeArea(
         child: Column(children: [
 
           // ── App bar ────────────────────────────────────────────
           Container(
-            color: UniSyncColors.backgroundSecondary,
+            color: _ui(context).backgroundSecondary,
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Row(children: [
               // NeoPopButton(
-              //   color: UniSyncColors.surfaceCard,
-              //   bottomShadowColor: UniSyncColors.border,
-              //   rightShadowColor: UniSyncColors.border,
+              //   color: _ui(context).surfaceCard,
+              //   bottomShadowColor: _ui(context).border,
+              //   rightShadowColor: _ui(context).border,
               //   depth: 3,
               //   onTapUp: () => Routemaster.of(context)
               //       .replace('/startInterviewScreen'),
@@ -43,26 +43,26 @@ class _InterviewResultsScreenState
               //     width: 40, height: 40,
               //     child: Center(
               //       child: Icon(Icons.arrow_back_ios_new_rounded,
-              //           size: 16, color: UniSyncColors.textPrimary),
+              //           size: 16, color: _ui(context).textPrimary),
               //     ),
               //   ),
               // ),
               // const SizedBox(width: 14),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('#PERFORMANCE', style: TextStyle(
-                  color: UniSyncColors.accent, fontSize: 9,
+                Text('#PERFORMANCE', style: TextStyle(
+                  color: _ui(context).accent, fontSize: 9,
                   fontWeight: FontWeight.w700, letterSpacing: 1.8,
                 )),
                 const SizedBox(height: 2),
-                RichText(text: const TextSpan(children: [
+                RichText(text: TextSpan(children: [
                   TextSpan(text: 'Interview ',
                       style: TextStyle(
-                        color: UniSyncColors.textPrimary, fontSize: 18,
+                        color: _ui(context).textPrimary, fontSize: 18,
                         fontWeight: FontWeight.w800, letterSpacing: -0.4,
                       )),
                   TextSpan(text: 'reports',
                       style: TextStyle(
-                        color: UniSyncColors.accent, fontSize: 18,
+                        color: _ui(context).accent, fontSize: 18,
                         fontWeight: FontWeight.w800, letterSpacing: -0.4,
                       )),
                 ])),
@@ -70,27 +70,27 @@ class _InterviewResultsScreenState
             ]),
           ),
 
-          Container(height: 0.8, color: UniSyncColors.divider),
+          Container(height: 0.8, color: _ui(context).divider),
 
           // ── Content ────────────────────────────────────────────
           Expanded(
             child: rprts.when(
-              loading: () => const Center(
+              loading: () => Center(
                 child: SizedBox(width: 24, height: 24,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: UniSyncColors.accent)),
+                        strokeWidth: 2, color: _ui(context).accent)),
               ),
               error: (error, _) => Center(
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.error_outline_rounded,
-                      color: UniSyncColors.textMuted, size: 36),
+                  Icon(Icons.error_outline_rounded,
+                      color: _ui(context).textMuted, size: 36),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Could not fetch interview reports.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: UniSyncColors.textSecondary, fontSize: 13),
+                        color: _ui(context).textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 12),
                   TextButton.icon(
@@ -100,7 +100,7 @@ class _InterviewResultsScreenState
                     icon: const Icon(Icons.refresh_rounded, size: 16),
                     label: const Text('Refresh'),
                     style: TextButton.styleFrom(
-                      foregroundColor: UniSyncColors.accent,
+                      foregroundColor: _ui(context).accent,
                     ),
                   ),
                 ]),
@@ -113,20 +113,20 @@ class _InterviewResultsScreenState
                         children: [
                       Container(
                         width: 60, height: 60,
-                        color: UniSyncColors.surfaceCard,
-                        child: const Icon(Icons.description_outlined,
-                            color: UniSyncColors.textMuted, size: 26),
+                        color: _ui(context).surfaceCard,
+                        child: Icon(Icons.description_outlined,
+                            color: _ui(context).textMuted, size: 26),
                       ),
                       const SizedBox(height: 16),
-                      const Text('No reports yet',
+                      Text('No reports yet',
                           style: TextStyle(
-                            color: UniSyncColors.textPrimary, fontSize: 15,
+                            color: _ui(context).textPrimary, fontSize: 15,
                             fontWeight: FontWeight.w700,
                           )),
                       const SizedBox(height: 6),
-                      const Text('Complete an interview to see your report',
+                      Text('Complete an interview to see your report',
                           style: TextStyle(
-                            color: UniSyncColors.textSecondary, fontSize: 12,
+                            color: _ui(context).textSecondary, fontSize: 12,
                           )),
                     ]),
                   );
@@ -181,12 +181,12 @@ class _ReportCardState extends State<ReportCard> {
     return DateFormat('hh:mm a').format(date.toLocal());
   }
 
-  Color _getStatusColor() {
+  Color _getStatusColorWithContext(BuildContext context) {
     switch (widget.session.status.toLowerCase()) {
       case 'completed':   return const Color(0xFF3ECF8E);
       case 'in_progress': return const Color(0xFF4A90E2);
       case 'failed':      return const Color(0xFFE05252);
-      default:            return UniSyncColors.textMuted;
+      default:            return _ui(context).textMuted;
     }
   }
 
@@ -200,15 +200,15 @@ class _ReportCardState extends State<ReportCard> {
   @override
   Widget build(BuildContext context) {
     final report       = widget.session.finalReport;
-    final statusColor  = _getStatusColor();
+    final statusColor  = _getStatusColorWithContext(context);
     final scoreColor   = report != null
         ? _getScoreColor(report.overallScore ?? 0) : null;
 
     return Container(
       decoration: BoxDecoration(
-        color: UniSyncColors.surfaceCard,
+        color: _ui(context).surfaceCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: UniSyncColors.borderSubtle),
+        border: Border.all(color: _ui(context).borderSubtle),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(children: [
@@ -228,17 +228,17 @@ class _ReportCardState extends State<ReportCard> {
                 Row(children: [
                   // Session number
                   Text('Session #${widget.sessionNumber}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w800,
-                        color: UniSyncColors.textPrimary, letterSpacing: -0.2,
+                        color: _ui(context).textPrimary, letterSpacing: -0.2,
                       )),
                   const Spacer(),
                   // Expand chevron
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.keyboard_arrow_down_rounded,
-                        size: 20, color: UniSyncColors.textMuted),
+                    child: Icon(Icons.keyboard_arrow_down_rounded,
+                        size: 20, color: _ui(context).textMuted),
                   ),
                 ]),
 
@@ -246,20 +246,20 @@ class _ReportCardState extends State<ReportCard> {
 
                 // Date + time
                 Row(children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      size: 12, color: UniSyncColors.textMuted),
+                  Icon(Icons.calendar_today_outlined,
+                      size: 12, color: _ui(context).textMuted),
                   const SizedBox(width: 5),
                   Text(_formatDate(widget.session.startedAt),
-                      style: const TextStyle(
-                        fontSize: 12, color: UniSyncColors.textMuted,
+                      style: TextStyle(
+                        fontSize: 12, color: _ui(context).textMuted,
                       )),
                   const SizedBox(width: 14),
-                  const Icon(Icons.access_time_rounded,
-                      size: 12, color: UniSyncColors.textMuted),
+                  Icon(Icons.access_time_rounded,
+                      size: 12, color: _ui(context).textMuted),
                   const SizedBox(width: 5),
                   Text(_formatTime(widget.session.startedAt),
-                      style: const TextStyle(
-                        fontSize: 12, color: UniSyncColors.textMuted,
+                      style: TextStyle(
+                        fontSize: 12, color: _ui(context).textMuted,
                       )),
                 ]),
 
@@ -287,9 +287,9 @@ class _ReportCardState extends State<ReportCard> {
         // ── Expanded detail ────────────────────────────────────
         if (_expanded && report != null)
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                  top: BorderSide(color: UniSyncColors.divider)),
+                  top: BorderSide(color: _ui(context).divider)),
             ),
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             child: Column(
@@ -371,8 +371,8 @@ class _EyebrowLabel extends StatelessWidget {
   const _EyebrowLabel({required this.text});
   final String text;
   @override
-  Widget build(_) => Text(text.toUpperCase(), style: const TextStyle(
-    color: UniSyncColors.accent, fontSize: 9,
+  Widget build(BuildContext context) => Text(text.toUpperCase(), style: TextStyle(
+    color: _ui(context).accent, fontSize: 9,
     fontWeight: FontWeight.w700, letterSpacing: 1.6,
   ));
 }
@@ -383,14 +383,14 @@ class _DetailSection extends StatelessWidget {
   final String title, content;
 
   @override
-  Widget build(_) => Column(
+  Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       _EyebrowLabel(text: title),
       const SizedBox(height: 8),
-      Text(content, style: const TextStyle(
+      Text(content, style: TextStyle(
         fontSize: 13, height: 1.55,
-        color: UniSyncColors.textSecondary,
+        color: _ui(context).textSecondary,
       )),
     ],
   );
@@ -402,7 +402,7 @@ class _SkillsSection extends StatelessWidget {
   final SkillBreakdown skills;
 
   @override
-  Widget build(_) => Column(
+  Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const _EyebrowLabel(text: 'Skill Breakdown'),
@@ -427,19 +427,19 @@ class _SkillBar extends StatelessWidget {
   }
 
   @override
-  Widget build(_) => Padding(
+  Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 10),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Expanded(child: Text(label, style: const TextStyle(
+        Expanded(child: Text(label, style: TextStyle(
           fontSize: 12, fontWeight: FontWeight.w500,
-          color: UniSyncColors.textSecondary,
+          color: _ui(context).textSecondary,
         ))),
         Text('$value', style: TextStyle(
           fontSize: 12, fontWeight: FontWeight.w700, color: _barColor,
         )),
-        const Text('/100', style: TextStyle(
-          fontSize: 11, color: UniSyncColors.textMuted,
+        Text('/100', style: TextStyle(
+          fontSize: 11, color: _ui(context).textMuted,
         )),
       ]),
       const SizedBox(height: 5),
@@ -449,7 +449,7 @@ class _SkillBar extends StatelessWidget {
         child: LinearProgressIndicator(
           value: value / 100,
           minHeight: 5,
-          backgroundColor: UniSyncColors.border,
+          backgroundColor: _ui(context).border,
           valueColor: AlwaysStoppedAnimation(_barColor),
         ),
       ),
@@ -464,7 +464,7 @@ class _QaSection extends StatelessWidget {
   final List<Answer>   answers;
 
   @override
-  Widget build(_) => Column(
+  Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const _EyebrowLabel(text: 'Questions & Answers'),
@@ -472,34 +472,34 @@ class _QaSection extends StatelessWidget {
       ...List.generate(questions.length, (i) => Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: UniSyncColors.backgroundSecondary,
+          color: _ui(context).backgroundSecondary,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: UniSyncColors.borderSubtle),
+          border: Border.all(color: _ui(context).borderSubtle),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Question
           Container(
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: UniSyncColors.divider)),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: _ui(context).divider)),
             ),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Container(
                 margin: const EdgeInsets.only(top: 1),
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
-                  color: UniSyncColors.accent.withOpacity(0.1),
+                  color: _ui(context).accent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text('Q${i + 1}', style: const TextStyle(
+                child: Text('Q${i + 1}', style: TextStyle(
                   fontSize: 9, fontWeight: FontWeight.w800,
-                  color: UniSyncColors.accent,
+                  color: _ui(context).accent,
                 )),
               ),
               const SizedBox(width: 8),
-              Expanded(child: Text(questions[i].text, style: const TextStyle(
+              Expanded(child: Text(questions[i].text, style: TextStyle(
                 fontSize: 12, fontWeight: FontWeight.w600,
-                color: UniSyncColors.textPrimary, height: 1.4,
+                color: _ui(context).textPrimary, height: 1.4,
               ))),
             ]),
           ),
@@ -510,8 +510,8 @@ class _QaSection extends StatelessWidget {
               i < answers.length
                   ? answers[i].transcript
                   : 'No response recorded',
-              style: const TextStyle(
-                fontSize: 12, color: UniSyncColors.textSecondary, height: 1.45,
+              style: TextStyle(
+                fontSize: 12, color: _ui(context).textSecondary, height: 1.45,
               ),
             ),
           ),
@@ -531,7 +531,7 @@ class _BulletSection extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(_) => Column(
+  Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       _EyebrowLabel(text: title),
@@ -545,8 +545,8 @@ class _BulletSection extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Text(e, style: const TextStyle(
-            fontSize: 13, color: UniSyncColors.textSecondary, height: 1.45,
+          Expanded(child: Text(e, style: TextStyle(
+            fontSize: 13, color: _ui(context).textSecondary, height: 1.45,
           ))),
         ]),
       )),
@@ -560,7 +560,7 @@ class _ImprovementSection extends StatelessWidget {
   final List<ImprovementItem> items;
 
   @override
-  Widget build(_) => Column(
+  Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const _EyebrowLabel(text: 'Improvement Plan'),
@@ -569,28 +569,28 @@ class _ImprovementSection extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: UniSyncColors.backgroundSecondary,
+          color: _ui(context).backgroundSecondary,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: UniSyncColors.borderSubtle),
+          border: Border.all(color: _ui(context).borderSubtle),
         ),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Container(
             width: 6, height: 6,
             margin: const EdgeInsets.only(top: 5),
-            decoration: const BoxDecoration(
-              color: UniSyncColors.accent, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: _ui(context).accent, shape: BoxShape.circle),
           ),
           const SizedBox(width: 10),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.area, style: const TextStyle(
+              Text(item.area, style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w700,
-                color: UniSyncColors.textPrimary,
+                color: _ui(context).textPrimary,
               )),
               const SizedBox(height: 4),
-              Text(item.suggestion, style: const TextStyle(
-                fontSize: 12, color: UniSyncColors.textSecondary, height: 1.45,
+              Text(item.suggestion, style: TextStyle(
+                fontSize: 12, color: _ui(context).textSecondary, height: 1.45,
               )),
             ],
           )),
@@ -599,3 +599,8 @@ class _ImprovementSection extends StatelessWidget {
     ],
   );
 }
+
+
+
+
+

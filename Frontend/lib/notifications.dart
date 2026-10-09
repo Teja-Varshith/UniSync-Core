@@ -71,9 +71,26 @@ class FirebaseNotificationService {
     }
   }
 
+  /// Topic every user is subscribed to, so the admin panel can broadcast
+  /// with a single send instead of fanning out over stored tokens.
+  static const broadcastTopic = 'all_users';
+
   Future<void> _syncCurrentToken() async {
     final token = await _firebaseMessaging.getToken();
     await _storeToken(token);
+    await _subscribeToBroadcastTopic();
+  }
+
+  Future<void> _subscribeToBroadcastTopic() async {
+    try {
+      await _firebaseMessaging.subscribeToTopic(broadcastTopic);
+    } catch (error) {
+      // Non-fatal: the user still receives anything addressed to their
+      // token directly, they just miss broadcasts until the next launch.
+      if (kDebugMode) {
+        debugPrint('[Notifications] topic subscribe failed: $error');
+      }
+    }
   }
 
   Future<void> initLocalNotifications() async {

@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/features/interview/controllers/interview_controller.dart';
+import 'package:UniSync/features/interview/view/interview_palette.dart';
 import 'package:UniSync/models/interview_state.dart';
 import 'package:UniSync/sockets/socket_methods.dart';
+
+InterviewPalette _ui(BuildContext context) => InterviewPalette.of(context);
 
 class CoreInterviewScreen extends ConsumerStatefulWidget {
   const CoreInterviewScreen({super.key});
 
   @override
-  ConsumerState<CoreInterviewScreen> createState() =>
-      _CoreInterviewScreenState();
+  ConsumerState<CoreInterviewScreen> createState() => _CoreInterviewScreenState();
 }
 
-class _CoreInterviewScreenState
-    extends ConsumerState<CoreInterviewScreen> {
+class _CoreInterviewScreenState extends ConsumerState<CoreInterviewScreen> {
   Future<bool> _confirmExitInterview() async {
     final shouldExit = await showExitInterviewDialog(context);
     if (shouldExit && mounted) {
@@ -39,183 +40,142 @@ class _CoreInterviewScreenState
     });
 
     final interview = ref.watch(interviewControllerProvider);
-    final controller =
-        ref.read(interviewControllerProvider.notifier);
+    final controller = ref.read(interviewControllerProvider.notifier);
 
     final micEnabled =
-        interview.interviewState ==
-                InterviewState.waitingForAnswer ||
-            interview.isRecording;
-
+        interview.interviewState == InterviewState.waitingForAnswer || interview.isRecording;
     final isRecording = interview.isRecording;
 
     return WillPopScope(
       onWillPop: _confirmExitInterview,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0B0B0B),
+        backgroundColor: _ui(context).backgroundPrimary,
         body: SafeArea(
           child: Column(
-          children: [
-            // ───────── TOP BAR ─────────
-            Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(12, 12, 12, 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      _confirmExitInterview();
-                    },
-                    icon: const Icon(Icons.close,
-                        color: Colors.white70),
-                  ),
-                  const Spacer(),
-                  const Text(
-                    'UniSync',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      letterSpacing: 0.6,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: _confirmExitInterview,
+                      icon: Icon(Icons.close, color: _ui(context).textSecondary),
+                    ),
+                    const Spacer(),
+                    Text(
+                      'UniSync',
+                      style: TextStyle(
+                        color: _ui(context).textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => showInterviewHelpDialog(context),
+                      icon: Icon(Icons.help_outline, color: _ui(context).textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(color: _ui(context).divider),
+              const SizedBox(height: 24),
+              _Avatar(interview),
+              const SizedBox(height: 20),
+              _InterviewStatus(interview),
+              const SizedBox(height: 20),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Text(
+                      interview.questionreceived ?? 'Waiting for interviewer...',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: _ui(context).textSecondary,
+                        fontSize: 18,
+                        height: 1.6,
+                      ),
                     ),
                   ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () {
-                      showInterviewHelpDialog(context);
-                    },
-                    icon: const Icon(Icons.help_outline,
-                        color: Colors.white54),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Column(
+                children: [
+                  GestureDetector(
+                    onTap: micEnabled
+                        ? () {
+                            if (!isRecording) {
+                              controller.startRecording();
+                            } else {
+                              controller.stopRecordingAndSend();
+                            }
+                          }
+                        : null,
+                    child: Opacity(
+                      opacity: micEnabled ? 1 : 0.4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: isRecording ? _ui(context).error : _ui(context).accent,
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isRecording ? Icons.stop : Icons.mic,
+                              color:
+                                  isRecording ? _ui(context).onError : _ui(context).buttonPrimaryFg,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              isRecording ? 'Stop & Submit' : 'Speak Now',
+                              style: TextStyle(
+                                color: isRecording
+                                    ? _ui(context).onError
+                                    : _ui(context).buttonPrimaryFg,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _helperText(interview),
+                    style: TextStyle(
+                      color: _ui(context).textMuted,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
-            ),
-
-            Divider(color: Colors.white10),
-
-            const SizedBox(height: 24),
-
-            // ───────── AVATAR ─────────
-            _Avatar(interview),
-
-            const SizedBox(height: 20),
-
-            // ───────── STATUS ─────────
-            _InterviewStatus(interview),
-
-            const SizedBox(height: 20),
-
-            // ───────── QUESTION ─────────
-            Expanded(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24),
-                child: SingleChildScrollView(
-                  physics:
-                      const BouncingScrollPhysics(),
-                  child: Text(
-                    interview.questionreceived ??
-                        "Waiting for interviewer…",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 18,
-                      height: 1.6,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ───────── MIC CONTROLS ─────────
-            Column(
-              children: [
-                GestureDetector(
-                  onTap: micEnabled
-                      ? () {
-                          if (!isRecording) {
-                            controller.startRecording();
-                          } else {
-                            controller
-                                .stopRecordingAndSend();
-                          }
-                        }
-                      : null,
-                  child: Opacity(
-                    opacity: micEnabled ? 1 : 0.4,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: isRecording
-                            ? Colors.redAccent
-                            : Colors.white,
-                        borderRadius:
-                            BorderRadius.circular(32),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isRecording
-                                ? Icons.stop
-                                : Icons.mic,
-                            color: isRecording
-                                ? Colors.white
-                                : Colors.black,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            isRecording
-                                ? "Stop & Submit"
-                                : "Speak Now",
-                            style: TextStyle(
-                              color: isRecording
-                                  ? Colors.white
-                                  : Colors.black,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  _helperText(interview),
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-          ],
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 
   String _helperText(InterviewStateModel interview) {
-    if (interview.interviewState ==
-        InterviewState.evaluating) {
-      return "Evaluating your answer…";
+    if (interview.interviewState == InterviewState.evaluating) {
+      return 'Evaluating your answer...';
     }
     if (interview.isRecording) {
-      return "Speak clearly. Tap stop when finished.";
+      return 'Speak clearly. Tap stop when finished.';
     }
-    if (interview.interviewState ==
-        InterviewState.waitingForAnswer) {
-      return "Tap to start answering";
+    if (interview.interviewState == InterviewState.waitingForAnswer) {
+      return 'Tap to start answering';
     }
-    return "Listen carefully to the interviewer";
+    return 'Listen carefully to the interviewer';
   }
 
   @override
@@ -225,7 +185,6 @@ class _CoreInterviewScreenState
   }
 }
 
-// ───────── AVATAR ─────────
 class _Avatar extends StatelessWidget {
   final InterviewStateModel interview;
   const _Avatar(this.interview);
@@ -235,16 +194,16 @@ class _Avatar extends StatelessWidget {
     Color ringColor;
     switch (interview.interviewState) {
       case InterviewState.asking:
-        ringColor = Colors.blueAccent;
+        ringColor = _ui(context).info;
         break;
       case InterviewState.waitingForAnswer:
-        ringColor = Colors.grey;
+        ringColor = _ui(context).accent;
         break;
       case InterviewState.evaluating:
-        ringColor = Colors.orangeAccent;
+        ringColor = _ui(context).warning;
         break;
       default:
-        ringColor = Colors.grey.shade800;
+        ringColor = _ui(context).borderSubtle;
     }
 
     return Stack(
@@ -256,22 +215,19 @@ class _Avatar extends StatelessWidget {
           height: 200,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border:
-                Border.all(color: ringColor, width: 2),
+            border: Border.all(color: ringColor, width: 2),
           ),
         ),
-        const CircleAvatar(
+        CircleAvatar(
           radius: 64,
-          backgroundColor: Colors.black,
-          child: Icon(Icons.smart_toy,
-              color: Colors.white, size: 56),
+          backgroundColor: _ui(context).surfaceCard,
+          child: Icon(Icons.smart_toy, color: _ui(context).accent, size: 56),
         ),
       ],
     );
   }
 }
 
-// ───────── STATUS TEXT ─────────
 class _InterviewStatus extends StatelessWidget {
   final InterviewStateModel interview;
   const _InterviewStatus(this.interview);
@@ -283,20 +239,20 @@ class _InterviewStatus extends StatelessWidget {
 
     switch (interview.interviewState) {
       case InterviewState.asking:
-        text = "Interviewer is speaking";
-        color = Colors.blueAccent;
+        text = 'Interviewer is speaking';
+        color = _ui(context).info;
         break;
       case InterviewState.waitingForAnswer:
-        text = "Your turn to answer";
-        color = Colors.white70;
+        text = 'Your turn to answer';
+        color = _ui(context).accent;
         break;
       case InterviewState.evaluating:
-        text = "Evaluating your response";
-        color = Colors.orangeAccent;
+        text = 'Evaluating your response';
+        color = _ui(context).warning;
         break;
       default:
-        text = "Preparing interview";
-        color = Colors.white54;
+        text = 'Preparing interview';
+        color = _ui(context).textMuted;
     }
 
     return Row(
@@ -327,29 +283,40 @@ class _InterviewStatus extends StatelessWidget {
 void showInterviewHelpDialog(BuildContext context) {
   showDialog(
     context: context,
-    builder: (context) {
+    builder: (dialogContext) {
       return AlertDialog(
+        backgroundColor: _ui(dialogContext).backgroundSecondary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
+        title: Text(
           'Interview Help',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: _ui(dialogContext).textPrimary,
+          ),
         ),
-        content: const Text(
-          '• Listen carefully to the interviewer.\n\n'
-          '• When it is your turn, tap "Speak Now" and answer clearly.\n\n'
-          '• Tap "Stop & Submit" once you finish your answer.\n\n'
-          '• While evaluating, please wait. This may take a few seconds.\n\n'
-          '• Avoid background noise for best results.',
-          style: TextStyle(fontSize: 15, height: 1.4),
+        content: Text(
+          '- Listen carefully to the interviewer.\n\n'
+          '- When it is your turn, tap "Speak Now" and answer clearly.\n\n'
+          '- Tap "Stop & Submit" once you finish your answer.\n\n'
+          '- While evaluating, please wait. This may take a few seconds.\n\n'
+          '- Avoid background noise for best results.',
+          style: TextStyle(
+            color: _ui(dialogContext).textSecondary,
+            fontSize: 15,
+            height: 1.4,
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
               'Got it',
-              style: TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: _ui(dialogContext).accent,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -358,38 +325,42 @@ void showInterviewHelpDialog(BuildContext context) {
   );
 }
 
-
 Future<bool> showExitInterviewDialog(BuildContext context) async {
   final shouldExit = await showDialog<bool>(
     context: context,
-    builder: (context) {
+    builder: (dialogContext) {
       return AlertDialog(
+        backgroundColor: _ui(dialogContext).backgroundSecondary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
+        title: Text(
           'Exit Interview?',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: _ui(dialogContext).textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        content: const Text(
+        content: Text(
           "Don't worry we will save your progress",
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(
+            color: _ui(dialogContext).textSecondary,
+            fontSize: 16,
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
               'Stay',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: _ui(dialogContext).textMuted),
             ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context, true);
-            },
-            child: const Text(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
               'Exit',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(color: _ui(dialogContext).error),
             ),
           ),
         ],
@@ -398,4 +369,3 @@ Future<bool> showExitInterviewDialog(BuildContext context) async {
   );
   return shouldExit ?? false;
 }
-

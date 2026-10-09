@@ -4,11 +4,87 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/ads%20Manager/add_manager.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/firebase_service.dart';
 import 'package:UniSync/features/opputunities/oppurtunities_controller.dart';
 import 'package:UniSync/features/opputunities/oppurtunity_model.dart';
+
+_OpportunityPalette _ui(BuildContext context) => _OpportunityPalette.of(context);
+
+class _OpportunityPalette {
+  _OpportunityPalette({
+    required this.isDark,
+    required this.backgroundPrimary,
+    required this.backgroundSecondary,
+    required this.surfaceCard,
+    required this.surfaceElevated,
+    required this.divider,
+    required this.border,
+    required this.borderSubtle,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.textDisabled,
+    required this.accent,
+    required this.accentSoft,
+    required this.buttonPrimaryFg,
+    required this.success,
+    required this.warning,
+    required this.error,
+  });
+
+  final bool isDark;
+  final Color backgroundPrimary;
+  final Color backgroundSecondary;
+  final Color surfaceCard;
+  final Color surfaceElevated;
+  final Color divider;
+  final Color border;
+  final Color borderSubtle;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color textDisabled;
+  final Color accent;
+  final Color accentSoft;
+  final Color buttonPrimaryFg;
+  final Color success;
+  final Color warning;
+  final Color error;
+
+  factory _OpportunityPalette.of(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return _OpportunityPalette(
+      isDark: isDark,
+      backgroundPrimary: isDark ? AppColors.darkBg : AppColors.lightBg,
+      backgroundSecondary: isDark ? AppColors.darkSurface : AppColors.lightCardAlt,
+      surfaceCard: isDark ? AppColors.darkCard : AppColors.lightCard,
+      surfaceElevated: isDark ? AppColors.darkCardAlt : AppColors.lightSurface,
+      divider: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.9)
+          : AppColors.lightBorder.withValues(alpha: 0.9),
+      border: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+      borderSubtle: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.8)
+          : AppColors.lightBorder.withValues(alpha: 0.8),
+      textPrimary: theme.colorScheme.onSurface,
+      textSecondary: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      textMuted: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+      textDisabled: isDark
+          ? AppColors.darkTextMuted.withValues(alpha: 0.7)
+          : AppColors.lightTextMuted.withValues(alpha: 0.8),
+      accent: AppColors.primary,
+      accentSoft: AppColors.primary.withValues(alpha: 0.14),
+      buttonPrimaryFg: theme.colorScheme.onPrimary,
+      success: AppColors.success,
+      warning: AppColors.warning,
+      error: theme.colorScheme.error,
+    );
+  }
+}
 
 // ── Apply tap counter (persists for the lifetime of the screen) ───────────────
 int _applyTapCount = 0;
@@ -16,7 +92,7 @@ int _applyTapCount = 0;
 class OpportunityDetailsScreen extends ConsumerStatefulWidget {
   final String opportunityId;
 
-  const OpportunityDetailsScreen({
+  OpportunityDetailsScreen({
     super.key,
     required this.opportunityId,
   });
@@ -41,17 +117,17 @@ class _OpportunityDetailsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
       body: FutureBuilder<OpportunityModel?>(
         future: _opportunityFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
               child: SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2, color: UniSyncColors.accent),
+                    strokeWidth: 2, color: _ui(context).accent),
               ),
             );
           }
@@ -63,16 +139,16 @@ class _OpportunityDetailsScreenState
               child: Column(
                 children: [
                   Container(
-                    color: UniSyncColors.backgroundSecondary,
+                    color: _ui(context).backgroundSecondary,
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                     child: Row(
                       children: [
                         _BackButton(onTap: () => Routemaster.of(context).pop()),
-                        const SizedBox(width: 14),
-                        const Text(
+                        SizedBox(width: 14),
+                        Text(
                           'Details',
                           style: TextStyle(
-                            color: UniSyncColors.textPrimary,
+                            color: _ui(context).textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                           ),
@@ -80,19 +156,19 @@ class _OpportunityDetailsScreenState
                       ],
                     ),
                   ),
-                  Container(height: 0.8, color: UniSyncColors.divider),
+                  Container(height: 0.8, color: _ui(context).divider),
                   Expanded(
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline_rounded,
-                              color: UniSyncColors.textMuted, size: 36),
-                          const SizedBox(height: 12),
-                          const Text(
+                          Icon(Icons.error_outline_rounded,
+                              color: _ui(context).textMuted, size: 36),
+                          SizedBox(height: 12),
+                          Text(
                             'Opportunity not found',
                             style: TextStyle(
-                              color: UniSyncColors.textSecondary,
+                              color: _ui(context).textSecondary,
                               fontSize: 13,
                             ),
                           ),
@@ -119,7 +195,7 @@ class _OpportunityDetailsScreenState
 class OpportunityDetailsView extends StatefulWidget {
   final OpportunityModel opportunity;
 
-  const OpportunityDetailsView({super.key, required this.opportunity});
+  OpportunityDetailsView({super.key, required this.opportunity});
 
   @override
   State<OpportunityDetailsView> createState() => _OpportunityDetailsViewState();
@@ -152,13 +228,13 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
       body: SafeArea(
         child: Column(
           children: [
             // ── Header ──────────────────────────────────────────
             _buildHeader(context),
-            Container(height: 0.8, color: UniSyncColors.divider),
+            Container(height: 0.8, color: _ui(context).divider),
 
           
 
@@ -172,32 +248,32 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
 
                       // ── BANNER AD below header ───────────────────────────
             if (!AdManager.instance.isAdFree) ...[
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Center(child: AdManager.instance.buildBannerAd()),
-              const SizedBox(height: 6),
-              Container(height: 0.8, color: UniSyncColors.divider),
+              SizedBox(height: 6),
+              Container(height: 0.8, color: _ui(context).divider),
             ],
 
                     // ── Hero card ──────────────────────────────
                     _HeroCard(opportunity: opportunity),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
                     // ── Quick info card ────────────────────────
                     _buildSectionLabel('#QUICK INFO'),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     _QuickInfoCard(opportunity: opportunity),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
 
                     // ── Description ────────────────────────────
                     _buildSectionLabel('#DETAILS'),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     _ContentCard(
                       child: Text(
                         opportunity.description,
-                        style: const TextStyle(
-                          color: UniSyncColors.textSecondary,
+                        style: TextStyle(
+                          color: _ui(context).textSecondary,
                           fontSize: 13,
                           height: 1.7,
                         ),
@@ -206,15 +282,15 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
 
                     // ── NATIVE AD between description and requirements ──
                     if (!AdManager.instance.isAdFree) ...[
-                      const SizedBox(height: 20),
-                      const _NativeAdCard(),
+                      SizedBox(height: 20),
+                      _NativeAdCard(),
                     ],
 
                     // ── Requirements ───────────────────────────
                     if (opportunity.requirements.isNotEmpty) ...[
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildSectionLabel('#REQUIREMENTS'),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       _ContentCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,9 +303,9 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
 
                     // ── Skills ─────────────────────────────────
                     if (opportunity.skills.isNotEmpty) ...[
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildSectionLabel('#SKILLS'),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       _ContentCard(
                         child: Wrap(
                           spacing: 8,
@@ -242,9 +318,9 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
                     ],
 
                     // ── Additional details ─────────────────────
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     _buildSectionLabel('#MORE INFO'),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
                     _AdditionalDetailsCard(opportunity: opportunity),
                   ],
                 ),
@@ -286,32 +362,32 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      color: UniSyncColors.backgroundSecondary,
+      color: _ui(context).backgroundSecondary,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Row(
         children: [
           _BackButton(onTap: () => Routemaster.of(context).pop()),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   '#OPPORTUNITY',
                   style: TextStyle(
-                    color: UniSyncColors.accent,
+                    color: _ui(context).accent,
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.8,
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3),
                 Text(
                   opportunity.company,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: UniSyncColors.textPrimary,
+                  style: TextStyle(
+                    color: _ui(context).textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.4,
@@ -324,19 +400,19 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: _isExpired
-                  ? UniSyncColors.error.withValues(alpha: 0.12)
-                  : UniSyncColors.accent.withValues(alpha: 0.12),
+                  ? _ui(context).error.withValues(alpha: 0.12)
+                  : _ui(context).accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
                 color: _isExpired
-                    ? UniSyncColors.error.withValues(alpha: 0.4)
-                    : UniSyncColors.accent.withValues(alpha: 0.4),
+                    ? _ui(context).error.withValues(alpha: 0.4)
+                    : _ui(context).accent.withValues(alpha: 0.4),
               ),
             ),
             child: Text(
               _isExpired ? 'Closed' : 'Active',
               style: TextStyle(
-                color: _isExpired ? UniSyncColors.error : UniSyncColors.accent,
+                color: _isExpired ? _ui(context).error : _ui(context).accent,
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
@@ -351,8 +427,8 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
   Widget _buildSectionLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
-        color: UniSyncColors.accent,
+      style: TextStyle(
+        color: _ui(context).accent,
         fontSize: 9,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.8,
@@ -384,9 +460,9 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
 
   void _shareOpportunity(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text('Working on it — share coming soon!'),
-        backgroundColor: UniSyncColors.accent,
+        backgroundColor: _ui(context).accent,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -398,7 +474,7 @@ class _OpportunityDetailsViewState extends State<OpportunityDetailsView> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _NativeAdCard extends StatefulWidget {
-  const _NativeAdCard();
+  _NativeAdCard();
   @override
   State<_NativeAdCard> createState() => _NativeAdCardState();
 }
@@ -431,7 +507,7 @@ class _NativeAdCardState extends State<_NativeAdCard> {
           ad.dispose();
         },
       ),
-      request: const AdRequest(),
+      request: AdRequest(),
     )..load();
   }
 
@@ -448,9 +524,9 @@ class _NativeAdCardState extends State<_NativeAdCard> {
     return Container(
       height: 100,
       decoration: BoxDecoration(
-        color: UniSyncColors.surfaceCard,
+        color: _ui(context).surfaceCard,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: UniSyncColors.borderSubtle),
+        border: Border.all(color: _ui(context).borderSubtle),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
@@ -465,7 +541,7 @@ class _NativeAdCardState extends State<_NativeAdCard> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.opportunity});
+  _HeroCard({required this.opportunity});
   final OpportunityModel opportunity;
 
   bool get _isInternship => opportunity.type == OpportunityType.internship;
@@ -482,13 +558,13 @@ class _HeroCard extends StatelessWidget {
                 ? 'Tomorrow'
                 : '$deadlineDiff days left';
     final deadlineColor = deadlineDiff <= 3
-        ? UniSyncColors.error
-        : UniSyncColors.accent;
+        ? _ui(context).error
+        : _ui(context).accent;
 
     return NeoPopButton(
-      color: UniSyncColors.surfaceCard,
-      bottomShadowColor: UniSyncColors.accent,
-      rightShadowColor: UniSyncColors.accent,
+      color: _ui(context).surfaceCard,
+      bottomShadowColor: _ui(context).accent,
+      rightShadowColor: _ui(context).accent,
       depth: 4,
       onTapUp: () {},
       onTapDown: () {},
@@ -505,9 +581,9 @@ class _HeroCard extends StatelessWidget {
                   height: 56,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: UniSyncColors.backgroundSecondary,
+                    color: _ui(context).backgroundSecondary,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: UniSyncColors.border),
+                    border: Border.all(color: _ui(context).border),
                   ),
                   child: opportunity.logoUrl != null
                       ? ClipRRect(
@@ -515,36 +591,36 @@ class _HeroCard extends StatelessWidget {
                           child: Image.network(
                             opportunity.logoUrl!,
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => const Icon(
+                            errorBuilder: (_, __, ___) => Icon(
                               Icons.business_rounded,
-                              color: UniSyncColors.textMuted,
+                              color: _ui(context).textMuted,
                               size: 22,
                             ),
                           ),
                         )
-                      : const Icon(Icons.business_rounded,
-                          color: UniSyncColors.textMuted, size: 22),
+                      : Icon(Icons.business_rounded,
+                          color: _ui(context).textMuted, size: 22),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         opportunity.title,
-                        style: const TextStyle(
-                          color: UniSyncColors.textPrimary,
+                        style: TextStyle(
+                          color: _ui(context).textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.4,
                           height: 1.3,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         opportunity.company,
-                        style: const TextStyle(
-                          color: UniSyncColors.textSecondary,
+                        style: TextStyle(
+                          color: _ui(context).textSecondary,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -554,9 +630,9 @@ class _HeroCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
-            Container(height: 0.8, color: UniSyncColors.divider),
-            const SizedBox(height: 12),
+            SizedBox(height: 14),
+            Container(height: 0.8, color: _ui(context).divider),
+            SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -564,7 +640,7 @@ class _HeroCard extends StatelessWidget {
                 _Badge(
                   label: _isInternship ? 'Internship' : 'Hackathon',
                   icon: Icons.work_outline_rounded,
-                  color: UniSyncColors.accent,
+                  color: _ui(context).accent,
                 ),
                 _Badge(
                   label: deadlineLabel,
@@ -572,10 +648,10 @@ class _HeroCard extends StatelessWidget {
                   color: deadlineColor,
                 ),
                 if (opportunity.isRemote)
-                  const _Badge(
+                  _Badge(
                     label: 'Remote',
                     icon: Icons.home_outlined,
-                    color: UniSyncColors.accent,
+                    color: _ui(context).accent,
                   ),
               ],
             ),
@@ -587,7 +663,7 @@ class _HeroCard extends StatelessWidget {
 }
 
 class _QuickInfoCard extends StatelessWidget {
-  const _QuickInfoCard({required this.opportunity});
+  _QuickInfoCard({required this.opportunity});
   final OpportunityModel opportunity;
 
   @override
@@ -600,7 +676,7 @@ class _QuickInfoCard extends StatelessWidget {
             label: 'Location',
             value: opportunity.isRemote ? 'Remote' : opportunity.location,
           ),
-          Container(height: 0.8, color: UniSyncColors.divider,
+          Container(height: 0.8, color: _ui(context).divider,
               margin: const EdgeInsets.symmetric(vertical: 12)),
           _InfoRow(
             icon: Icons.access_time_rounded,
@@ -608,7 +684,7 @@ class _QuickInfoCard extends StatelessWidget {
             value: opportunity.duration,
           ),
           if (opportunity.stipend != null) ...[
-            Container(height: 0.8, color: UniSyncColors.divider,
+            Container(height: 0.8, color: _ui(context).divider,
                 margin: const EdgeInsets.symmetric(vertical: 12)),
             _InfoRow(
               icon: Icons.currency_rupee_rounded,
@@ -623,7 +699,7 @@ class _QuickInfoCard extends StatelessWidget {
 }
 
 class _AdditionalDetailsCard extends StatelessWidget {
-  const _AdditionalDetailsCard({required this.opportunity});
+  _AdditionalDetailsCard({required this.opportunity});
   final OpportunityModel opportunity;
 
   String _fmt(DateTime d) {
@@ -644,7 +720,7 @@ class _AdditionalDetailsCard extends StatelessWidget {
             label: 'Posted',
             value: _fmt(opportunity.postedDate),
           ),
-          Container(height: 0.8, color: UniSyncColors.divider,
+          Container(height: 0.8, color: _ui(context).divider,
               margin: const EdgeInsets.symmetric(vertical: 12)),
           _InfoRow(
             icon: Icons.event_rounded,
@@ -652,7 +728,7 @@ class _AdditionalDetailsCard extends StatelessWidget {
             value: _fmt(opportunity.deadline),
           ),
           if (opportunity.type == OpportunityType.internship) ...[
-            Container(height: 0.8, color: UniSyncColors.divider,
+            Container(height: 0.8, color: _ui(context).divider,
                 margin: const EdgeInsets.symmetric(vertical: 12)),
             _InfoRow(
               icon: Icons.work_outline_rounded,
@@ -667,7 +743,7 @@ class _AdditionalDetailsCard extends StatelessWidget {
 }
 
 class _ApplyButton extends StatelessWidget {
-  const _ApplyButton({required this.isExpired, required this.onTap});
+  _ApplyButton({required this.isExpired, required this.onTap});
   final bool isExpired;
   final VoidCallback onTap;
 
@@ -678,10 +754,10 @@ class _ApplyButton extends StatelessWidget {
       child: NeoPopTiltedButton(
         isFloating: true,
         decoration: NeoPopTiltedButtonDecoration(
-          color: isExpired ? UniSyncColors.textDisabled : UniSyncColors.accent,
+          color: isExpired ? _ui(context).textDisabled : _ui(context).accent,
           plunkColor:
-              isExpired ? UniSyncColors.textDisabled : UniSyncColors.accent,
-          shadowColor: Colors.black.withOpacity(0.5),
+              isExpired ? _ui(context).textDisabled : _ui(context).accent,
+          shadowColor: Colors.black.withOpacity(_ui(context).isDark ? 0.5 : 0.14),
           showShimmer: !isExpired,
         ),
         onTapUp: isExpired ? () {} : onTap,
@@ -693,18 +769,18 @@ class _ApplyButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (!isExpired)
-                  const Icon(
+                  Icon(
                     Icons.rocket_launch_rounded,
-                    color: UniSyncColors.buttonPrimaryFg,
+                    color: _ui(context).buttonPrimaryFg,
                     size: 18,
                   ),
-                if (!isExpired) const SizedBox(width: 10),
+                if (!isExpired) SizedBox(width: 10),
                 Text(
                   isExpired ? 'Application Closed' : 'Apply Now',
                   style: TextStyle(
                     color: isExpired
-                        ? UniSyncColors.backgroundPrimary
-                        : UniSyncColors.buttonPrimaryFg,
+                        ? _ui(context).backgroundPrimary
+                        : _ui(context).buttonPrimaryFg,
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.3,
@@ -720,7 +796,7 @@ class _ApplyButton extends StatelessWidget {
 }
 
 class _ContentCard extends StatelessWidget {
-  const _ContentCard({required this.child});
+  _ContentCard({required this.child});
   final Widget child;
 
   @override
@@ -729,9 +805,9 @@ class _ContentCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: UniSyncColors.surfaceCard,
+        color: _ui(context).surfaceCard,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: UniSyncColors.border),
+        border: Border.all(color: _ui(context).border),
       ),
       child: child,
     );
@@ -739,7 +815,7 @@ class _ContentCard extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({
+  _InfoRow({
     required this.icon,
     required this.label,
     required this.value,
@@ -752,21 +828,21 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 15, color: UniSyncColors.textMuted),
-        const SizedBox(width: 8),
+        Icon(icon, size: 15, color: _ui(context).textMuted),
+        SizedBox(width: 8),
         Text(
           label,
-          style: const TextStyle(
-            color: UniSyncColors.textMuted,
+          style: TextStyle(
+            color: _ui(context).textMuted,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
         ),
-        const Spacer(),
+        Spacer(),
         Text(
           value,
-          style: const TextStyle(
-            color: UniSyncColors.textPrimary,
+          style: TextStyle(
+            color: _ui(context).textPrimary,
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
@@ -777,7 +853,7 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _Badge extends StatelessWidget {
-  const _Badge({
+  _Badge({
     required this.label,
     required this.icon,
     required this.color,
@@ -799,7 +875,7 @@ class _Badge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: color),
-          const SizedBox(width: 5),
+          SizedBox(width: 5),
           Text(
             label,
             style: TextStyle(
@@ -816,7 +892,7 @@ class _Badge extends StatelessWidget {
 }
 
 class _SkillChip extends StatelessWidget {
-  const _SkillChip({required this.label});
+  _SkillChip({required this.label});
   final String label;
 
   @override
@@ -824,14 +900,14 @@ class _SkillChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
       decoration: BoxDecoration(
-        color: UniSyncColors.backgroundSecondary,
+        color: _ui(context).backgroundSecondary,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: UniSyncColors.border),
+        border: Border.all(color: _ui(context).border),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: UniSyncColors.textSecondary,
+        style: TextStyle(
+          color: _ui(context).textSecondary,
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
@@ -841,7 +917,7 @@ class _SkillChip extends StatelessWidget {
 }
 
 class _RequirementRow extends StatelessWidget {
-  const _RequirementRow({required this.text});
+  _RequirementRow({required this.text});
   final String text;
 
   @override
@@ -855,17 +931,17 @@ class _RequirementRow extends StatelessWidget {
             margin: const EdgeInsets.only(top: 6),
             width: 5,
             height: 5,
-            decoration: const BoxDecoration(
-              color: UniSyncColors.accent,
+            decoration: BoxDecoration(
+              color: _ui(context).accent,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: UniSyncColors.textSecondary,
+              style: TextStyle(
+                color: _ui(context).textSecondary,
                 fontSize: 13,
                 height: 1.6,
               ),
@@ -878,29 +954,30 @@ class _RequirementRow extends StatelessWidget {
 }
 
 class _BackButton extends StatelessWidget {
-  const _BackButton({required this.onTap});
+  _BackButton({required this.onTap});
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return NeoPopButton(
-      color: UniSyncColors.surfaceCard,
-      bottomShadowColor: UniSyncColors.border,
-      rightShadowColor: UniSyncColors.border,
+      color: _ui(context).surfaceCard,
+      bottomShadowColor: _ui(context).border,
+      rightShadowColor: _ui(context).border,
       depth: 3,
       onTapUp: onTap,
       onTapDown: () {},
-      child: const SizedBox(
+      child: SizedBox(
         width: 40,
         height: 40,
         child: Center(
           child: Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 15,
-            color: UniSyncColors.textMuted,
+            color: _ui(context).textMuted,
           ),
         ),
       ),
     );
   }
 }
+

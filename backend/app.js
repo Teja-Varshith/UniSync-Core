@@ -17,6 +17,7 @@ import  router  from "./routes/portfolioPublicRoutes.js";
 import path from "path";
 import portfolioPublicRouter from "./routes/portfolioPublicRoutes.js";
 import { portfolioRouter } from "./routes/portifolioRoutes.js";
+import { adminNotificationRouter } from "./routes/adminNotificationRoutes.js";
 
 
 dotenv.config();
@@ -59,6 +60,7 @@ app.use("/api/progress/", questionProgressRouter);
 app.use("/api/resume", upload.single("file"), documentRouter);
 app.use("/api/portfolio", router);
 app.use("/api/portifolio2", portfolioRouter);
+app.use("/api/admin/notifications", adminNotificationRouter);
 
 initSockets(io);
 

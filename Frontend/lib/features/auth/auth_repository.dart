@@ -67,11 +67,6 @@ class AuthRepository {
       'photoUrl': existing['photoUrl'] ?? firebaseUser.photoURL,
       'profileComplete': existing['profileComplete'] ?? false,
       'collegeName': existing['collegeName'],
-      'tenantId': existing['tenantId'],
-      'cookie': existing['cookie'],
-      'institutionCode': existing['institutionCode'],
-      'campXPassword': existing['campXPassword'],
-      'campXUsername': existing['campXUsername'],
       'year': existing['year'],
       'semester': existing['semester'],
       'about': existing['about'],
@@ -85,7 +80,17 @@ class AuthRepository {
       payload['createdAt'] = FieldValue.serverTimestamp();
     }
 
-    await userRef.set(payload, SetOptions(merge: true));
+    await userRef.set({
+      ...payload,
+      // CampX credentials/session fields are device-local only.
+      'cookie': FieldValue.delete(),
+      'campXPassword': FieldValue.delete(),
+      'campXUsername': FieldValue.delete(),
+      'password': FieldValue.delete(),
+      'accessToken': FieldValue.delete(),
+      'tenantId': FieldValue.delete(),
+      'institutionCode': FieldValue.delete(),
+    }, SetOptions(merge: true));
 
     final latest = await userRef.get();
     final userData = latest.data();

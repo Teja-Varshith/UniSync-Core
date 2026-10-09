@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:icons_flutter/icons_flutter.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/app/providers.dart';
 import 'package:UniSync/features/Campus_Mode/view/home_screen.dart';

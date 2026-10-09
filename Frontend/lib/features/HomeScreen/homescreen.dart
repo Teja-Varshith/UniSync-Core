@@ -10,6 +10,7 @@ import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/ads%20Manager/add_manager.dart';
 import 'package:UniSync/app/providers.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:UniSync/features/admin/controllers/admin_controllers.dart';
 import 'package:UniSync/features/attendance/view/live_attendance_screen.dart';
 import 'package:UniSync/features/HomeScreen/homepagetab.dart';
 import 'package:UniSync/features/interview/view/carrer_interview_screen.dart';
@@ -18,6 +19,7 @@ import 'package:UniSync/features/peer_connect/peers/peer_screen.dart';
 import 'package:UniSync/features/profile/settings_screen.dart';
 import 'package:UniSync/firebase_service.dart';
 import 'package:UniSync/notifications.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 
 
 class NewHomeScreen extends ConsumerStatefulWidget {
@@ -43,11 +45,11 @@ class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
 
   late final List<Widget> _pages = [
     const SizedBox.shrink(),
-    const OpportunitiesScreen(),
+     OpportunitiesScreen(),
     const CarrerInterviewScreen(),
     HomePageTab(onInternalRouteTap: _handleHomeRouteTap),
     const PeerScreen(),
-    const ProfileScreen(),
+     ProfileScreen(),
   ];
 
   int? get _currentNavIndex => _currentPageIndex == 0 ? null : _currentPageIndex - 1;
@@ -93,8 +95,12 @@ class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
 
   Future<void> _openAttendanceScreen() async {
     if (!mounted) return;
+    // The nav entry is already hidden when the flag is off, but routes can
+    // still be reached from a deep link or a banner, so the switch is
+    // enforced here too rather than only in the UI that exposes it.
+    if (!ref.read(attendanceEnabledProvider)) return;
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const LiveAttendence()),
+      MaterialPageRoute(builder: (_) =>  LiveAttendence()),
     );
   }
 
@@ -142,18 +148,28 @@ class _NewHomeScreenState extends ConsumerState<NewHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
+    final theme = Theme.of(context);
+    // Remotely switchable from the admin panel. Passing null removes the
+    // widget entirely rather than disabling it — a greyed-out button still
+    // tells the user the feature exists.
+    final attendanceEnabled = ref.watch(attendanceEnabledProvider);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0D),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: IndexedStack(index: _currentPageIndex, children: _pages),
       bottomNavigationBar: _CircleNavBar(
         items: _navItems,
         currentIndex: _currentNavIndex,
         onIndexChanged: _onNavIndexChanged,
-        leftEdgeWidget: _NavAttendanceWidget(
-          isActive: _currentPageIndex == 0,
-          onTap: () => unawaited(_openAttendanceScreen()),
-        ),
+        // An empty box, not nothing: the slot's width feeds the nav bar's
+        // scroll extent and snap targets, so collapsing it shifts every chip
+        // and changes how the bar scrolls.
+        leftEdgeWidget: attendanceEnabled
+            ? _NavAttendanceWidget(
+                isActive: _currentPageIndex == 0,
+                onTap: () => unawaited(_openAttendanceScreen()),
+              )
+            : const SizedBox.shrink(),
         rightEdgeWidget: const _NavFollowWidget(),
       ),
     );
@@ -301,12 +317,15 @@ class _CircleNavBarState extends State<_CircleNavBar> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).padding.bottom;
     final barH   = _chipSize + _labelH + _vPad * 2 + bottom + 6;
+    final theme = Theme.of(context);
+    final surface = theme.bottomNavigationBarTheme.backgroundColor ??
+        theme.colorScheme.surface;
 
     return Container(
       height: barH,
-      decoration: const BoxDecoration(
-        color: Color(0xFF121212),
-        border: Border(top: BorderSide(color: Color(0xFF2A2A2A), width: 0.8)),
+      decoration: BoxDecoration(
+        color: surface,
+        border: Border(top: BorderSide(color: theme.dividerColor, width: 0.8)),
       ),
       child: LayoutBuilder(builder: (ctx, box) {
         // exact width of each edge zone — same as old padding value
@@ -370,6 +389,15 @@ class _NavAttendanceWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = theme.colorScheme.primary;
+    final muted = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final inactiveBg = isDark ? AppColors.darkCardAlt : AppColors.lightCardAlt;
+    final inactiveBorder = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final surface = theme.bottomNavigationBarTheme.backgroundColor ??
+        theme.colorScheme.surface;
+
     return Center(
       child: GestureDetector(
         onTap: () {
@@ -387,9 +415,11 @@ class _NavAttendanceWidget extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isActive ? const Color(0x2AFFD72F) : const Color(0xFF2A2A2A),
+                    color: isActive
+                        ? accent.withValues(alpha: isDark ? 0.2 : 0.14)
+                        : inactiveBg,
                     border: Border.all(
-                      color: isActive ? const Color(0xFFFFD72F) : const Color(0xFF343434),
+                      color: isActive ? accent : inactiveBorder,
                       width: 1.5,
                     ),
                   ),
@@ -397,7 +427,7 @@ class _NavAttendanceWidget extends StatelessWidget {
                     child: Icon(
                       Iconsax.calendar_1,
                       size: 18,
-                      color: isActive ? const Color(0xFFFFD72F) : const Color(0xFFA09D95),
+                      color: isActive ? accent : muted,
                     ),
                   ),
                 ),
@@ -409,8 +439,8 @@ class _NavAttendanceWidget extends StatelessWidget {
                     height: 10,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isActive ? const Color(0xFFFFD72F) : const Color(0xFF343434),
-                      border: Border.all(color: const Color(0xFF121212), width: 1.5),
+                      color: isActive ? accent : inactiveBorder,
+                      border: Border.all(color: surface, width: 1.5),
                     ),
                   ),
                 ),
@@ -422,7 +452,7 @@ class _NavAttendanceWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: isActive ? const Color(0xFFFFD72F) : const Color(0xFFA09D95),
+                color: isActive ? accent : muted,
                 letterSpacing: 0.2,
               ),
             ),
@@ -443,16 +473,19 @@ class _NavFollowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final muted = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             'Follow us on',
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.w700,
-              color: Color(0xFFA09D95),
+              color: muted,
               letterSpacing: 0.2,
             ),
           ),
@@ -491,6 +524,12 @@ class _SocialIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bg = isDark ? AppColors.darkCardAlt : AppColors.lightCardAlt;
+    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final iconColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -498,14 +537,14 @@ class _SocialIcon extends StatelessWidget {
         height: 34,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFF1E1E1E),
+          color: bg,
           border: Border.all(
-            color: const Color(0xFF343434),
+            color: border,
             width: 1.2,
           ),
         ),
         child: Center(
-          child: Icon(icon, size: 16, color: const Color(0xFFA09D95)),
+          child: Icon(icon, size: 16, color: iconColor),
         ),
       ),
     );
@@ -528,20 +567,25 @@ class _CircleChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final active = isActive;
     final isHome = item.isHome;
-
-    const yellow     = Color(0xFFFFD72F);
-    const yellowSoft = Color(0x2AFFD72F);
-    const darkBg     = Color(0xFF0B0B0D);
-    const chipBg     = Color(0xFF1E1E1E);
-    const muted      = Color(0xFFA09D95);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = theme.colorScheme.primary;
+    final accentSoft = accent.withValues(alpha: isDark ? 0.2 : 0.14);
+    final onAccent = isDark ? AppColors.darkBg : Colors.white;
+    final chipBg = isDark ? AppColors.darkCardAlt : AppColors.lightCardAlt;
+    final muted =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final inactiveBorder = isDark ? AppColors.darkBorder : AppColors.lightBorder;
     const dur        = Duration(milliseconds: 280);
     const curve      = Curves.easeOutCubic;
 
-    final circleBg    = isHome && active ? yellow : active ? yellowSoft : chipBg;
-    final borderColor = active ? yellow
-        : isHome ? yellow.withValues(alpha: 0.35)
-        : const Color(0xFF343434);
-    final iconColor   = isHome && active ? darkBg : active ? yellow : muted;
+    final circleBg = isHome && active ? accent : active ? accentSoft : chipBg;
+    final borderColor = active
+        ? accent
+        : isHome
+            ? accent.withValues(alpha: 0.35)
+            : inactiveBorder;
+    final iconColor = isHome && active ? onAccent : active ? accent : muted;
 
     return GestureDetector(
       onTap: onTap,
@@ -562,7 +606,7 @@ class _CircleChip extends StatelessWidget {
                   border: Border.all(color: borderColor, width: active ? 2.0 : 1.2),
                   boxShadow: active
                       ? [BoxShadow(
-                          color: yellow.withValues(alpha: isHome ? 0.42 : 0.24),
+                          color: accent.withValues(alpha: isHome ? 0.42 : 0.24),
                           blurRadius: isHome ? 20 : 12,
                         )]
                       : null,
@@ -586,7 +630,7 @@ class _CircleChip extends StatelessWidget {
                   fontFamily: 'Poppins',
                   fontSize: 9.5,
                   fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                  color: active ? yellow : muted,
+                  color: active ? accent : muted,
                   letterSpacing: 0.15,
                   height: 1.3,
                 ),

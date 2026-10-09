@@ -19,15 +19,18 @@ class AttendanceRepository {
 
   AttendanceRepository({required Ref ref}): _ref = ref;
 
-  Future<void> _syncCampXToFirebase(UserModel user) async {
-    if (user.id == null || user.id!.isEmpty) return;
+  Future<void> _clearCampXSecretsFromFirebase(String? userId) async {
+    if (userId == null || userId.isEmpty) return;
     final firestore = _ref.read(firebaseFirestoreProvider) as FirebaseFirestore;
-    await firestore.collection('users').doc(user.id).set({
-      'cookie': user.cookie,
-      'tenantId': user.tenantId,
-      'institutionCode': user.institutionCode,
-      'campXUsername': user.campXUsername,
-      'campXPassword': user.campXPassword,
+    await firestore.collection('users').doc(userId).set({
+      // CampX credentials/session fields are device-local only.
+      'cookie': FieldValue.delete(),
+      'campXUsername': FieldValue.delete(),
+      'campXPassword': FieldValue.delete(),
+      'password': FieldValue.delete(),
+      'accessToken': FieldValue.delete(),
+      'tenantId': FieldValue.delete(),
+      'institutionCode': FieldValue.delete(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -61,7 +64,7 @@ class AttendanceRepository {
     );
 
     _ref.read(userProvider.notifier).state = newUser;
-    await _syncCampXToFirebase(newUser);
+    await _clearCampXSecretsFromFirebase(newUser.id);
 
     try {
       final dioClient = Dio();
@@ -69,9 +72,7 @@ class AttendanceRepository {
         '$BASE_URI/auth/updateTenantDetails',
         data: {
           'emailId': newUser.emailId,
-          'accessToken': accessToken,
           'tenantId': tenantId,
-          'password': password,
           'institutionCode': institutionCode,
         },
       );
@@ -196,6 +197,6 @@ class AttendanceRepository {
     );
 
     _ref.read(userProvider.notifier).state = updated;
-    await _syncCampXToFirebase(updated);
+    await _clearCampXSecretsFromFirebase(updated.id);
   }
 }

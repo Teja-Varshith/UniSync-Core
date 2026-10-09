@@ -22,6 +22,11 @@ import 'package:UniSync/features/opputunities/oppurtunities_screen.dart';
 import 'package:UniSync/features/opputunities/oppurtunity_detail_screen.dart';
 import 'package:UniSync/features/profile/edit_profile_screen.dart';
 import 'package:UniSync/features/profile/profile_screen.dart';
+import 'package:UniSync/features/admin/view/admin_panel_screen.dart';
+import 'package:UniSync/features/examsync/view/examsync_home_screen.dart';
+import 'package:UniSync/features/examsync/view/prep_pack_screen.dart';
+import 'package:UniSync/features/examsync/view/pdf_viewer_screen.dart';
+import 'package:UniSync/features/examsync/view/subject_detail_screen.dart';
 
 final loggedOutRoutes = RouteMap(routes: {
   "/": (_) => MaterialPage(child: LoginScreen()),
@@ -59,6 +64,31 @@ final loggedInRoutes = RouteMap(routes: {
   "/nextUpdatePromo": (_) => MaterialPage(child: NextUpdatePromoScreen()),
   "/userInterviewDetails": (_) => MaterialPage(child: UserInterviewDetails()),
   "/opportunities": (_) => MaterialPage(child: OpportunitiesScreen()),
+  // ExamSync used to open its web app in a WebView here; it is native now.
+  // `/webview` stays as an alias so existing home tiles and banners keep
+  // working.
+  "/webview": (_) => const MaterialPage(child: ExamSyncHomeScreen()),
+  "/examsync": (_) => const MaterialPage(child: ExamSyncHomeScreen()),
+  "/examsync/subject/:code": (route) => MaterialPage(
+        child: SubjectDetailScreen(
+          courseCode: route.pathParameters['code'] ?? '',
+        ),
+      ),
+  "/examsync/subject/:code/prep-pack": (route) => MaterialPage(
+        child: PrepPackScreen(
+          courseCode: route.pathParameters['code'] ?? '',
+        ),
+      ),
+  "/examsync/subject/:code/pdf": (route) => MaterialPage(
+        child: PdfViewerScreen(
+          url: route.queryParameters['url'] ?? '',
+          title: route.queryParameters['title'] ?? 'PDF',
+          isPyq: route.queryParameters['kind'] == 'pyq',
+        ),
+      ),
+  // Gated inside the screen itself: a route anyone can type is fine so
+  // long as the screen refuses to render for non-super-users.
+  "/admin": (_) => const MaterialPage(child: AdminPanelScreen()),
   "/opportunity/:id": (route) => MaterialPage(
         child: OpportunityDetailsScreen(
           opportunityId: route.pathParameters['id'] ?? '',

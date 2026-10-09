@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 
 class CarouselItem extends StatelessWidget {
   final String imagePath;
@@ -13,16 +14,17 @@ class CarouselItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // Check if image is SVG or PNG/other format
     final isSvg = imagePath.toLowerCase().endsWith('.svg');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: 90,
       height: 90,
       margin: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: const Color(0xFF2A2A2A),
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
           width: 1,
         ),
       ),

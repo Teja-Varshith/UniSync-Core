@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:UniSync/app/providers.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/features/auth/auth_repository.dart';
 import 'package:UniSync/models/user_model.dart';
 
@@ -27,17 +28,31 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
   int _currentPage = 0;
   bool _isLoading = false;
 
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  Color get _bg => _isDark ? AppColors.darkBg : AppColors.lightBg;
+  Color get _card => _isDark ? AppColors.darkCard : AppColors.lightCard;
+  Color get _cardAlt => _isDark ? AppColors.darkCardAlt : AppColors.lightCardAlt;
+  Color get _textPrimary =>
+      _isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+  Color get _textSecondary =>
+      _isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+  Color get _textMuted =>
+      _isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+  Color get _border => _isDark ? AppColors.darkBorder : AppColors.lightBorder;
+  Color get _accent => Theme.of(context).colorScheme.primary;
+  Color get _onAccent => Theme.of(context).colorScheme.onPrimary;
+
   InputDecoration _buildInputDecoration({
     required String hintText,
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(
-        color: Color(0xFF8F8F8F),
+      hintStyle: TextStyle(
+        color: _textMuted,
         fontSize: 14,
       ),
       filled: true,
-      fillColor: const Color(0xFF141414),
+      fillColor: _cardAlt,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
@@ -45,11 +60,11 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF2C2C2C)),
+        borderSide: BorderSide(color: _border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Colors.white70),
+        borderSide: BorderSide(color: _accent.withValues(alpha: 0.75)),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
@@ -59,7 +74,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Colors.redAccent),
       ),
-      counterStyle: const TextStyle(color: Color(0xFF8F8F8F)),
+      counterStyle: TextStyle(color: _textMuted),
     );
   }
 
@@ -221,7 +236,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: _bg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.only(bottom: keyboardInset),
@@ -240,20 +255,20 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                  color: const Color(0xFF222222),
+                  color: _card,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(32),
                     topRight: Radius.circular(32),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: _isDark ? 0.6 : 0.14),
                       blurRadius: 20,
                       spreadRadius: 5,
                       offset: const Offset(0, -10),
                     ),
                     BoxShadow(
-                      color: Colors.white.withOpacity(0.05),
+                      color: _border.withValues(alpha: _isDark ? 0.25 : 0.5),
                       blurRadius: 20,
                       spreadRadius: 2,
                       offset: const Offset(0, -5),
@@ -267,12 +282,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
+                            Text(
                               'Fill Your Tank! ⛽',
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: _textPrimary,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -280,7 +295,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                               'Faster than getting your attendance signed!',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: const Color(0xFFB3B3B3),
+                                color: _textSecondary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 12,
                               ),
@@ -295,7 +310,9 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                                   width: _currentPage == index ? 24 : 6,
                                   height: 6,
                                   decoration: BoxDecoration(
-                                    color: _currentPage == index ? Colors.black : Colors.grey.shade300,
+                                    color: _currentPage == index
+                                        ? _accent
+                                        : _border.withValues(alpha: 0.8),
                                     borderRadius: BorderRadius.circular(3),
                                   ),
                                 ),
@@ -324,16 +341,20 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                                     child: OutlinedButton(
                                       onPressed: _previousPage,
                                       style: OutlinedButton.styleFrom(
-                                        foregroundColor: Colors.black,
-                                        side: const BorderSide(color: Colors.black, width: 1.5),
+                                        foregroundColor: _accent,
+                                        side: BorderSide(color: _accent, width: 1.5),
                                         padding: const EdgeInsets.symmetric(vertical: 14),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(10),
                                         ),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         'Go Back',
-                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,color: Colors.white),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: _accent,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -348,8 +369,8 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.black,
-                                      foregroundColor: Colors.white,
+                                      backgroundColor: _accent,
+                                      foregroundColor: _onAccent,
                                       elevation: 3,
                                       padding: const EdgeInsets.symmetric(vertical: 14),
                                       shape: RoundedRectangleBorder(
@@ -357,12 +378,13 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                                       ),
                                     ),
                                     child: _isLoading
-                                        ? const SizedBox(
+                                        ? SizedBox(
                                             height: 20,
                                             width: 20,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(_onAccent),
                                             ),
                                           )
                                         : Text(
@@ -394,25 +416,25 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'What do your friends call you? 🙋',
-          style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 18, color: _textPrimary, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 6),
         Text(
           'No nicknames like "Chotu" or "Bhai" please 😅',
-          style: TextStyle(fontSize: 11, color: const Color(0xFFB3B3B3),),
+          style: TextStyle(fontSize: 11, color: _textSecondary),
         ),
         const SizedBox(height: 18),
         TextFormField(
           controller: _nameController,
           textCapitalization: TextCapitalization.words,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: _textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
-          cursorColor: Colors.white,
+          cursorColor: _accent,
           decoration: _buildInputDecoration(
             hintText: 'Your awesome name',
           ),
@@ -451,14 +473,14 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Where\'s your brain factory? 🏫',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _textPrimary),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Where you\'re professionally confused 📚',
-              style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
+              style: TextStyle(fontSize: 11, color: _textSecondary),
             ),
             const SizedBox(height: 18),
             CustomDropdown(
@@ -485,7 +507,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
             //       foregroundColor: Colors.white70,
             //       padding: const EdgeInsets.symmetric(horizontal: 0),
             //     ),
-            //     child: const Text(
+            //     child: Text(
             //       'Temp Seed Firebase',
             //       style: TextStyle(
             //         fontSize: 11,
@@ -498,12 +520,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
               const SizedBox(height: 14),
               TextFormField(
                 controller: _customCollegeController,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: _textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
-                cursorColor: Colors.white,
+                cursorColor: _accent,
                 textCapitalization: TextCapitalization.words,
                 decoration: _buildInputDecoration(
                   hintText: 'Enter your college name',
@@ -517,9 +539,9 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                 },
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'We will save this college for future users too.',
-                style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
+                style: TextStyle(fontSize: 11, color: _textSecondary),
               ),
             ],
             if (_selectedCollege == null) ...[
@@ -546,14 +568,14 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Which semester? 📖',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,color: Colors.white),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _textPrimary),
         ),
         const SizedBox(height: 6),
         Text(
           'How deep into the rabbit hole? 🐰',
-          style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
+          style: TextStyle(fontSize: 11, color: _textSecondary),
         ),
         const SizedBox(height: 18),
         GridView.builder(
@@ -573,7 +595,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
               onTap: () => setState(() => _selectedSemester = semester),
               child: Container(
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.black : Colors.grey.shade100,
+                  color: isSelected ? _accent : _cardAlt,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
@@ -584,7 +606,7 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: isSelected ? Colors.white : Colors.black,
+                        color: isSelected ? _onAccent : _textPrimary,
                       ),
                     ),
                     Text(
@@ -592,7 +614,9 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white70 : Colors.grey.shade600,
+                        color: isSelected
+                            ? _onAccent.withValues(alpha: 0.75)
+                            : _textSecondary,
                       ),
                     ),
                   ],
@@ -642,14 +666,14 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Spill the beans! ☕',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,color: Colors.white),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _textPrimary),
         ),
         const SizedBox(height: 6),
         Text(
           'What makes you YOU? (totally optional! 😌)',
-          style: TextStyle(fontSize: 11, color: Color(0xFFB3B3B3)),
+          style: TextStyle(fontSize: 11, color: _textSecondary),
         ),
         const SizedBox(height: 18),
         TextFormField(
@@ -657,12 +681,12 @@ class _FillTankScreenState extends ConsumerState<FillTank> {
           maxLines: 5,
           maxLength: 200,
           textCapitalization: TextCapitalization.sentences,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: _textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
-          cursorColor: Colors.white,
+          cursorColor: _accent,
           decoration: _buildInputDecoration(
             hintText: 'Tech geek? Coffee addict? Meme lord?',
           ),
@@ -693,14 +717,23 @@ class CustomDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardAlt = isDark ? AppColors.darkCardAlt : AppColors.lightCardAlt;
+    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textMuted =
+        isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+
     return GestureDetector(
       onTap: enabled ? () => _showDropdownSheet(context) : null,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF141414),
+          color: cardAlt,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFF2C2C2C)),
+          border: Border.all(color: border),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -711,14 +744,18 @@ class CustomDropdown extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   color: value == null
-                      ? (enabled ? const Color(0xFF8F8F8F) : Colors.white38)
-                      : Colors.white,
+                      ? (enabled
+                          ? textMuted
+                          : textMuted.withValues(alpha: 0.55))
+                      : textPrimary,
                 ),
               ),
             ),
             Icon(
               Icons.keyboard_arrow_down,
-              color: enabled ? Colors.white70 : Colors.white38,
+              color: enabled
+                  ? textPrimary.withValues(alpha: 0.7)
+                  : textMuted.withValues(alpha: 0.55),
             ),
           ],
         ),
@@ -727,6 +764,19 @@ class CustomDropdown extends StatelessWidget {
   }
 
   void _showDropdownSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardAlt = isDark ? AppColors.darkCardAlt : AppColors.lightCardAlt;
+    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textMuted =
+        isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+    final accent = theme.colorScheme.primary;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -750,8 +800,8 @@ class CustomDropdown extends StatelessWidget {
 
             return Container(
               height: MediaQuery.of(context).size.height * 0.78,
-              decoration: const BoxDecoration(
-                color: Color(0xFF121212),
+              decoration: BoxDecoration(
+                color: surface,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(25),
                   topRight: Radius.circular(25),
@@ -764,7 +814,7 @@ class CustomDropdown extends StatelessWidget {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white24,
+                      color: border.withValues(alpha: 0.75),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -773,10 +823,10 @@ class CustomDropdown extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Text(
                       hint,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: textPrimary,
                       ),
                     ),
                   ),
@@ -785,31 +835,36 @@ class CustomDropdown extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: TextField(
                       onChanged: (value) => setModalState(() => query = value),
-                      style: const TextStyle(color: Colors.white),
-                      cursorColor: Colors.white,
+                      style: TextStyle(color: textPrimary),
+                      cursorColor: accent,
                       decoration: InputDecoration(
                         hintText: 'Search college',
-                        hintStyle: const TextStyle(color: Colors.white38),
-                        prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                        hintStyle: TextStyle(
+                          color: textMuted.withValues(alpha: 0.7),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: textMuted.withValues(alpha: 0.85),
+                        ),
                         filled: true,
-                        fillColor: const Color(0xFF1B1B1B),
+                        fillColor: cardAlt,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF2C2C2C)),
+                          borderSide: BorderSide(color: border),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.white54),
+                          borderSide: BorderSide(color: accent.withValues(alpha: 0.75)),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Container(height: 1, color: Colors.white12),
+                  Container(height: 1, color: border.withValues(alpha: 0.75)),
                   Expanded(
                     child: visibleItems.isEmpty
                         ? Center(
@@ -818,8 +873,8 @@ class CustomDropdown extends StatelessWidget {
                               child: Text(
                                 emptyMessage,
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white54,
+                                style: TextStyle(
+                                  color: textSecondary,
                                   fontSize: 13,
                                 ),
                               ),
@@ -830,7 +885,7 @@ class CustomDropdown extends StatelessWidget {
                             separatorBuilder: (context, index) => Divider(
                               height: 1,
                               thickness: 1,
-                              color: Colors.white12,
+                              color: border.withValues(alpha: 0.75),
                             ),
                             itemBuilder: (context, index) {
                               final item = visibleItems[index];
@@ -847,8 +902,8 @@ class CustomDropdown extends StatelessWidget {
                                     vertical: 16,
                                   ),
                                   color: isSelected
-                                      ? const Color(0xFF1E1E1E)
-                                      : const Color(0xFF121212),
+                                      ? accent.withValues(alpha: 0.14)
+                                      : surface,
                                   child: Row(
                                     children: [
                                       Expanded(
@@ -860,15 +915,15 @@ class CustomDropdown extends StatelessWidget {
                                                 ? FontWeight.w600
                                                 : FontWeight.w400,
                                             color: isSelected
-                                                ? Colors.white
-                                                : Colors.white70,
+                                                ? textPrimary
+                                                : textSecondary,
                                           ),
                                         ),
                                       ),
                                       if (isSelected)
-                                        const Icon(
+                                        Icon(
                                           Icons.check_circle,
-                                          color: Colors.greenAccent,
+                                          color: accent,
                                           size: 20,
                                         ),
                                     ],

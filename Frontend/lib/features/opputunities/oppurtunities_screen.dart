@@ -4,13 +4,89 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:neopop/neopop.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:UniSync/ads%20Manager/add_manager.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/constants/constant.dart';
 import 'package:UniSync/firebase_service.dart';
 import 'package:UniSync/features/opputunities/oppurtunities_controller.dart';
 import 'package:UniSync/features/opputunities/oppurtunity_model.dart';
 
+_OpportunityPalette _ui(BuildContext context) => _OpportunityPalette.of(context);
+
+class _OpportunityPalette {
+  _OpportunityPalette({
+    required this.isDark,
+    required this.backgroundPrimary,
+    required this.backgroundSecondary,
+    required this.surfaceCard,
+    required this.surfaceElevated,
+    required this.divider,
+    required this.border,
+    required this.borderSubtle,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.textDisabled,
+    required this.accent,
+    required this.accentSoft,
+    required this.buttonPrimaryFg,
+    required this.success,
+    required this.warning,
+    required this.error,
+  });
+
+  final bool isDark;
+  final Color backgroundPrimary;
+  final Color backgroundSecondary;
+  final Color surfaceCard;
+  final Color surfaceElevated;
+  final Color divider;
+  final Color border;
+  final Color borderSubtle;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color textDisabled;
+  final Color accent;
+  final Color accentSoft;
+  final Color buttonPrimaryFg;
+  final Color success;
+  final Color warning;
+  final Color error;
+
+  factory _OpportunityPalette.of(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return _OpportunityPalette(
+      isDark: isDark,
+      backgroundPrimary: isDark ? AppColors.darkBg : AppColors.lightBg,
+      backgroundSecondary: isDark ? AppColors.darkSurface : AppColors.lightCardAlt,
+      surfaceCard: isDark ? AppColors.darkCard : AppColors.lightCard,
+      surfaceElevated: isDark ? AppColors.darkCardAlt : AppColors.lightSurface,
+      divider: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.9)
+          : AppColors.lightBorder.withValues(alpha: 0.9),
+      border: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+      borderSubtle: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.8)
+          : AppColors.lightBorder.withValues(alpha: 0.8),
+      textPrimary: theme.colorScheme.onSurface,
+      textSecondary: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+      textMuted: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+      textDisabled: isDark
+          ? AppColors.darkTextMuted.withValues(alpha: 0.7)
+          : AppColors.lightTextMuted.withValues(alpha: 0.8),
+      accent: AppColors.primary,
+      accentSoft: AppColors.primary.withValues(alpha: 0.14),
+      buttonPrimaryFg: theme.colorScheme.onPrimary,
+      success: AppColors.success,
+      warning: AppColors.warning,
+      error: theme.colorScheme.error,
+    );
+  }
+}
+
 class OpportunitiesScreen extends ConsumerStatefulWidget {
-  const OpportunitiesScreen({super.key});
+  OpportunitiesScreen({super.key});
 
   @override
   ConsumerState<OpportunitiesScreen> createState() =>
@@ -59,14 +135,14 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
             'Work with the mobile team on real Flutter features, testing, and release workflows.',
         location: 'Hyderabad',
         duration: '3 months',
-        requirements: const [
+        requirements: [
           'Basic Flutter knowledge',
           'Dart fundamentals',
           'Git basics'
         ],
-        skills: const ['Flutter', 'Dart', 'Firebase'],
+        skills: ['Flutter', 'Dart', 'Firebase'],
         applicationLink: 'https://example.com/apply/flutter-intern',
-        deadline: now.add(const Duration(days: 20)),
+        deadline: now.add(Duration(days: 20)),
         postedDate: now,
         type: OpportunityType.internship,
         stipend: '15000/month',
@@ -81,14 +157,14 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
             '48-hour hackathon to build student-focused tools with mentoring and demo day.',
         location: 'Bengaluru',
         duration: '48 hours',
-        requirements: const [
+        requirements: [
           'Team of 1-4',
           'Laptop',
           'Problem statement submission'
         ],
-        skills: const ['Problem Solving', 'Flutter', 'AI'],
+        skills: ['Problem Solving', 'Flutter', 'AI'],
         applicationLink: 'https://example.com/apply/buildsprint-2026',
-        deadline: now.add(const Duration(days: 12)),
+        deadline: now.add(Duration(days: 12)),
         postedDate: now,
         type: OpportunityType.hackathon,
         stipend: null,
@@ -113,7 +189,7 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor:
-              isFullSuccess ? Colors.green.shade700 : Colors.orange.shade800,
+              isFullSuccess ? _ui(context).success : _ui(context).warning,
           content: Text(
             isFullSuccess
                 ? 'Sample opportunities added (internship + hackathon).'
@@ -130,22 +206,22 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
     final controller = ref.read(opportunityControllerProvider.notifier);
 
     return Scaffold(
-      backgroundColor: UniSyncColors.backgroundPrimary,
+      backgroundColor: _ui(context).backgroundPrimary,
       // floatingActionButton: FloatingActionButton.extended(
       //   heroTag: 'seedOppFab',
-      //   backgroundColor: UniSyncColors.accent,
-      //   foregroundColor: UniSyncColors.backgroundPrimary,
+      //   backgroundColor: _ui(context).accent,
+      //   foregroundColor: _ui(context).backgroundPrimary,
       //   onPressed: _seedSampleOpportunities,
       //   icon: _isSeedingSamples
-      //       ? const SizedBox(
+      //       ? SizedBox(
       //           width: 16,
       //           height: 16,
       //           child: CircularProgressIndicator(
       //             strokeWidth: 2,
-      //             color: UniSyncColors.backgroundPrimary,
+      //             color: _ui(context).backgroundPrimary,
       //           ),
       //         )
-      //       : const Icon(Icons.auto_awesome, size: 18),
+      //       : Icon(Icons.auto_awesome, size: 18),
       //   label: Text(_isSeedingSamples ? 'Seeding...' : 'Seed Samples'),
       // ),
       body: SafeArea(
@@ -153,7 +229,7 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
           children: [
             // ── Header ──────────────────────────────────────────
             Container(
-              color: UniSyncColors.backgroundSecondary,
+              color: _ui(context).backgroundSecondary,
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -163,11 +239,11 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         RichText(
-                          text: const TextSpan(children: [
+                          text: TextSpan(children: [
                             TextSpan(
                               text: 'Explore ',
                               style: TextStyle(
-                                color: UniSyncColors.textPrimary,
+                                color: _ui(context).textPrimary,
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
@@ -176,7 +252,7 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                             TextSpan(
                               text: 'Opportunities',
                               style: TextStyle(
-                                color: UniSyncColors.accent,
+                                color: _ui(context).accent,
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
@@ -184,11 +260,11 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                             ),
                           ]),
                         ),
-                        const SizedBox(height: 3),
-                        const Text(
+                        SizedBox(height: 3),
+                        Text(
                           'Hackathons & Internships at one place',
                           style: TextStyle(
-                            color: UniSyncColors.textMuted,
+                            color: _ui(context).textMuted,
                             fontSize: 11,
                           ),
                         ),
@@ -200,22 +276,22 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: UniSyncColors.surfaceCard,
+                      color: _ui(context).surfaceCard,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: UniSyncColors.border),
+                      border: Border.all(color: _ui(context).border),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<OpportunityType>(
                         value: selectedFilter,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.keyboard_arrow_down_rounded,
-                          color: UniSyncColors.accent,
+                          color: _ui(context).accent,
                           size: 18,
                         ),
-                        dropdownColor: UniSyncColors.backgroundSecondary,
+                        dropdownColor: _ui(context).backgroundSecondary,
                         borderRadius: BorderRadius.circular(8),
-                        style: const TextStyle(
-                          color: UniSyncColors.textPrimary,
+                        style: TextStyle(
+                          color: _ui(context).textPrimary,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -226,8 +302,8 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                               value == OpportunityType.internship
                                   ? 'Internships'
                                   : 'Hackathons',
-                              style: const TextStyle(
-                                color: UniSyncColors.textPrimary,
+                              style: TextStyle(
+                                color: _ui(context).textPrimary,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 13,
                               ),
@@ -251,11 +327,11 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
               ),
             ),
 
-            Container(height: 0.8, color: UniSyncColors.divider),
+            Container(height: 0.8, color: _ui(context).divider),
 
             // ── Search bar ───────────────────────────────────────
             Container(
-              color: UniSyncColors.backgroundSecondary,
+              color: _ui(context).backgroundSecondary,
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
               child: TextField(
                 controller: _searchController,
@@ -268,84 +344,84 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                     },
                   );
                 },
-                style: const TextStyle(
-                  color: UniSyncColors.textPrimary,
+                style: TextStyle(
+                  color: _ui(context).textPrimary,
                   fontSize: 13,
                 ),
-                cursorColor: UniSyncColors.accent,
+                cursorColor: _ui(context).accent,
                 decoration: InputDecoration(
                   hintText: 'Search opportunities...',
-                  hintStyle: const TextStyle(
-                    color: UniSyncColors.textMuted,
+                  hintStyle: TextStyle(
+                    color: _ui(context).textMuted,
                     fontSize: 13,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: UniSyncColors.textMuted,
+                    color: _ui(context).textMuted,
                     size: 18,
                   ),
                   filled: true,
-                  fillColor: UniSyncColors.surfaceCard,
+                  fillColor: _ui(context).surfaceCard,
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 11),
                   border: OutlineInputBorder(
-                    borderSide: const BorderSide(color: UniSyncColors.border),
+                    borderSide: BorderSide(color: _ui(context).border),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: UniSyncColors.border),
+                    borderSide: BorderSide(color: _ui(context).border),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                        color: UniSyncColors.accent, width: 1.5),
+                    borderSide: BorderSide(
+                        color: _ui(context).accent, width: 1.5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
             ),
 
-            Container(height: 0.8, color: UniSyncColors.divider),
+            Container(height: 0.8, color: _ui(context).divider),
 
             // ── List ─────────────────────────────────────────────
             Expanded(
               child: opportunitiesAsync.when(
-                loading: () => const Center(
+                loading: () => Center(
                   child: SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: UniSyncColors.accent),
+                        strokeWidth: 2, color: _ui(context).accent),
                   ),
                 ),
                 error: (error, stack) => Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline_rounded,
-                          color: UniSyncColors.textMuted, size: 36),
-                      const SizedBox(height: 12),
-                      const Text(
+                      Icon(Icons.error_outline_rounded,
+                          color: _ui(context).textMuted, size: 36),
+                      SizedBox(height: 12),
+                      Text(
                         'Unable to load opportunities.',
                         style: TextStyle(
-                            color: UniSyncColors.textSecondary, fontSize: 13),
+                            color: _ui(context).textSecondary, fontSize: 13),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       NeoPopButton(
-                        color: UniSyncColors.accent,
-                        bottomShadowColor: UniSyncColors.backgroundPrimary,
-                        rightShadowColor: UniSyncColors.backgroundPrimary,
+                        color: _ui(context).accent,
+                        bottomShadowColor: _ui(context).backgroundPrimary,
+                        rightShadowColor: _ui(context).backgroundPrimary,
                         depth: 4,
                         onTapUp: () =>
                             ref.refresh(opportunitiesStreamProvider),
                         onTapDown: () {},
-                        child: const Padding(
+                        child: Padding(
                           padding: EdgeInsets.symmetric(
                               horizontal: 20, vertical: 10),
                           child: Text(
                             'Retry',
                             style: TextStyle(
-                              color: UniSyncColors.backgroundPrimary,
+                              color: _ui(context).backgroundPrimary,
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                             ),
@@ -364,24 +440,24 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                           Container(
                             width: 60,
                             height: 60,
-                            color: UniSyncColors.surfaceCard,
-                            child: const Icon(Icons.search_off_rounded,
-                                color: UniSyncColors.textMuted, size: 26),
+                            color: _ui(context).surfaceCard,
+                            child: Icon(Icons.search_off_rounded,
+                                color: _ui(context).textMuted, size: 26),
                           ),
-                          const SizedBox(height: 16),
-                          const Text(
+                          SizedBox(height: 16),
+                          Text(
                             'No opportunities found',
                             style: TextStyle(
-                              color: UniSyncColors.textPrimary,
+                              color: _ui(context).textPrimary,
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          const Text(
+                          SizedBox(height: 6),
+                          Text(
                             'Try adjusting your filters or search',
                             style: TextStyle(
-                              color: UniSyncColors.textSecondary,
+                              color: _ui(context).textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -393,7 +469,7 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
                   return ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
                     itemCount: opportunities.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 14),
+                    separatorBuilder: (_, __) => SizedBox(height: 14),
                     itemBuilder: (context, index) {
                       final opportunity = opportunities[index];
                       return OpportunityCard(
@@ -410,10 +486,10 @@ class _OpportunitiesScreenState extends ConsumerState<OpportunitiesScreen> {
 
             //  // ── BANNER AD below header ───────────────────────────
             // if (!AdManager.instance.isAdFree) ...[
-            //   const SizedBox(height: 6),
+            //   SizedBox(height: 6),
             //   Center(child: AdManager.instance.buildBannerAd()),
-            //   const SizedBox(height: 6),
-            //   Container(height: 0.8, color: UniSyncColors.divider),
+            //   SizedBox(height: 6),
+            //   Container(height: 0.8, color: _ui(context).divider),
             // ],
           ],
         ),
@@ -444,7 +520,7 @@ class OpportunityCard extends StatelessWidget {
   final VoidCallback onTap;
   final int index;
 
-  const OpportunityCard({
+  OpportunityCard({
     super.key,
     required this.opportunity,
     required this.onTap,
@@ -460,9 +536,9 @@ class OpportunityCard extends StatelessWidget {
         opportunity.deadline.difference(DateTime.now()).inDays <= 3;
 
     return NeoPopButton(
-      color: UniSyncColors.surfaceCard,
-      bottomShadowColor: UniSyncColors.accent,
-      rightShadowColor: UniSyncColors.accent,
+      color: _ui(context).surfaceCard,
+      bottomShadowColor: _ui(context).accent,
+      rightShadowColor: _ui(context).accent,
       depth: 4,
       onTapUp: onTap,
       onTapDown: () {},
@@ -482,9 +558,9 @@ class OpportunityCard extends StatelessWidget {
                   height: 50,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: UniSyncColors.backgroundSecondary,
+                    color: _ui(context).backgroundSecondary,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: UniSyncColors.border),
+                    border: Border.all(color: _ui(context).border),
                   ),
                   child: opportunity.logoUrl != null
                       ? ClipRRect(
@@ -492,21 +568,21 @@ class OpportunityCard extends StatelessWidget {
                           child: Image.network(
                             opportunity.logoUrl!,
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => const Icon(
+                            errorBuilder: (_, __, ___) => Icon(
                               Icons.business_rounded,
-                              color: UniSyncColors.textMuted,
+                              color: _ui(context).textMuted,
                               size: 20,
                             ),
                           ),
                         )
-                      : const Icon(
+                      : Icon(
                           Icons.business_rounded,
-                          color: UniSyncColors.textMuted,
+                          color: _ui(context).textMuted,
                           size: 20,
                         ),
                 ),
 
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
 
                 Expanded(
                   child: Column(
@@ -516,19 +592,19 @@ class OpportunityCard extends StatelessWidget {
                         opportunity.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: UniSyncColors.textPrimary,
+                        style: TextStyle(
+                          color: _ui(context).textPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.3,
                           height: 1.3,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         opportunity.company,
-                        style: const TextStyle(
-                          color: UniSyncColors.textSecondary,
+                        style: TextStyle(
+                          color: _ui(context).textSecondary,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -537,23 +613,23 @@ class OpportunityCard extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
 
                 // Type badge
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
-                    color: UniSyncColors.accent.withValues(alpha: 0.12),
+                    color: _ui(context).accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
-                      color: UniSyncColors.accent.withValues(alpha: 0.35),
+                      color: _ui(context).accent.withValues(alpha: 0.35),
                     ),
                   ),
                   child: Text(
                     isInternship ? 'Intern' : 'Hackathon',
-                    style: const TextStyle(
-                      color: UniSyncColors.accent,
+                    style: TextStyle(
+                      color: _ui(context).accent,
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.3,
@@ -563,9 +639,9 @@ class OpportunityCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 14),
-            Container(height: 0.8, color: UniSyncColors.divider),
-            const SizedBox(height: 12),
+            SizedBox(height: 14),
+            Container(height: 0.8, color: _ui(context).divider),
+            SizedBox(height: 12),
 
             // ── Meta row ─────────────────────────────────────────
             Wrap(
@@ -592,29 +668,29 @@ class OpportunityCard extends StatelessWidget {
                   icon: Icons.schedule_rounded,
                   label: deadlineText,
                   color: isExpired
-                      ? UniSyncColors.error
+                      ? _ui(context).error
                       : isUrgent
-                          ? UniSyncColors.error
-                          : UniSyncColors.accent,
+                          ? _ui(context).error
+                          : _ui(context).accent,
                 ),
               ],
             ),
 
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // ── Description ──────────────────────────────────────
             Text(
               opportunity.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: UniSyncColors.textSecondary,
+              style: TextStyle(
+                color: _ui(context).textSecondary,
                 fontSize: 12,
                 height: 1.5,
               ),
             ),
 
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // ── Skills ───────────────────────────────────────────
             SizedBox(
@@ -622,20 +698,20 @@ class OpportunityCard extends StatelessWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: opportunity.skills.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                separatorBuilder: (_, __) => SizedBox(width: 6),
                 itemBuilder: (context, i) {
                   return Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: UniSyncColors.backgroundSecondary,
+                      color: _ui(context).backgroundSecondary,
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: UniSyncColors.border),
+                      border: Border.all(color: _ui(context).border),
                     ),
                     child: Text(
                       opportunity.skills[i],
-                      style: const TextStyle(
-                        color: UniSyncColors.textSecondary,
+                      style: TextStyle(
+                        color: _ui(context).textSecondary,
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                       ),
@@ -645,25 +721,25 @@ class OpportunityCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 14),
+            SizedBox(height: 14),
 
             // ── CTA ──────────────────────────────────────────────
             Row(
               children: [
-                const Icon(Icons.bar_chart_rounded,
-                    size: 12, color: UniSyncColors.accent),
-                const SizedBox(width: 4),
-                const Text(
+                Icon(Icons.bar_chart_rounded,
+                    size: 12, color: _ui(context).accent),
+                SizedBox(width: 4),
+                Text(
                   'View Details',
                   style: TextStyle(
-                    color: UniSyncColors.accent,
+                    color: _ui(context).accent,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const Spacer(),
-                const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 11, color: UniSyncColors.accent),
+                Spacer(),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 11, color: _ui(context).accent),
               ],
             ),
           ],
@@ -687,27 +763,28 @@ class OpportunityCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _MetaChip extends StatelessWidget {
-  const _MetaChip({
+  _MetaChip({
     required this.icon,
     required this.label,
-    this.color = UniSyncColors.textMuted,
+    this.color,
   });
 
   final IconData icon;
   final String label;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final chipColor = color ?? _ui(context).textMuted;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: color),
-        const SizedBox(width: 4),
+        Icon(icon, size: 12, color: chipColor),
+        SizedBox(width: 4),
         Text(
           label,
           style: TextStyle(
-            color: color,
+            color: chipColor,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
@@ -716,3 +793,4 @@ class _MetaChip extends StatelessWidget {
     );
   }
 }
+

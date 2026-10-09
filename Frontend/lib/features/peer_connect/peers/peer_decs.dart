@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:neopop/neopop.dart';
+import 'package:UniSync/app/theme/app_colors.dart';
 import 'package:UniSync/models/peer_model.dart';
 import 'peer_card.dart';
 
@@ -120,6 +121,13 @@ class _PeerCardDeckState extends State<PeerCardDeck>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final deckSurface = isDark ? AppColors.darkCard : AppColors.lightCardAlt;
+    final deckBg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    final muted = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+    final textPrimary = theme.colorScheme.onSurface;
+
     if (widget.peers.isEmpty) return const _EmptyDeck();
 
     final stackHeight = kCardHeight + (_visibleCount - 1) * _peekShift + 14;
@@ -175,35 +183,37 @@ class _PeerCardDeckState extends State<PeerCardDeck>
       // ── Nav ─────────────────────────────────────────────────
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         NeoPopButton(
-          color:             const Color(0xFF161B22),
-          bottomShadowColor: const Color(0xFF090C12),
-          rightShadowColor:  const Color(0xFF090C12),
+          color:             deckSurface,
+          bottomShadowColor: deckBg,
+          rightShadowColor:  deckBg,
           depth: 5,
           onTapUp:   _goBack,
           onTapDown: () {},
           child: SizedBox(
             width: 50, height: 44,
             child: Center(child: Icon(Icons.arrow_back_rounded,
-                size: 17, color: Colors.white.withOpacity(0.45)))),
+                size: 17, color: muted)),
+        ),
         ),
         const SizedBox(width: 16),
         NeoPopButton(
-          color:             const Color(0xFF161B22),
-          bottomShadowColor: const Color(0xFF090C12),
-          rightShadowColor:  const Color(0xFF090C12),
+          color:             deckSurface,
+          bottomShadowColor: deckBg,
+          rightShadowColor:  deckBg,
           depth: 5,
           onTapUp:   _advance,
           onTapDown: () {},
           child: SizedBox(
             width: 50, height: 44,
             child: Center(child: Icon(Icons.arrow_forward_rounded,
-                size: 17, color: Colors.white.withOpacity(0.45)))),
+                size: 17, color: muted)),
+        ),
         ),
       ]),
 
       const SizedBox(height: 10),
       Text('swipe or tap arrows',
-          style: TextStyle(color: Colors.white,
+          style: TextStyle(color: textPrimary,
               fontSize: 11, letterSpacing: 0.6)),
     ]);
   }
@@ -315,23 +325,31 @@ class _EmptyDeck extends StatelessWidget {
   const _EmptyDeck();
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Container(
-        width: 56, height: 56,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1C2128),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF30363D))),
-        child: const Icon(Icons.people_outline_rounded,
-            color: Color(0xFF3D444D), size: 24)),
-      const SizedBox(height: 16),
-      const Text('No peers found',
-          style: TextStyle(color: Colors.white, fontSize: 15,
-              fontWeight: FontWeight.w600)),
-      const SizedBox(height: 6),
-      Text('Try clearing your filters',
-          style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12)),
-    ]),
-  );
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surface = isDark ? AppColors.darkCardAlt : AppColors.lightCardAlt;
+    final border = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final muted = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+    final textPrimary = theme.colorScheme.onSurface;
+
+    return Center(
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Container(
+          width: 56, height: 56,
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: border)),
+          child: Icon(Icons.people_outline_rounded, color: muted, size: 24)),
+        const SizedBox(height: 16),
+        Text('No peers found',
+            style: TextStyle(color: textPrimary, fontSize: 15,
+                fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        Text('Try clearing your filters',
+            style: TextStyle(color: muted, fontSize: 12)),
+      ]),
+    );
+  }
 }

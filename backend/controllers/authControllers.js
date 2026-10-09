@@ -99,14 +99,12 @@ export const updateUserController = async (req, res) => {
 
 export const updateTenantDetails = async (req, res) => {
   try{
-    const { emailId,accessToken, password, tenantId, institutionCode} = req.body;
+    const { emailId, tenantId, institutionCode } = req.body;
 
   const updatedUser = await User.findOneAndUpdate(
       { emailId },
       {
-        accessToken,
         tenantId,
-        password,
         institutionCode
       },
       { new: true }

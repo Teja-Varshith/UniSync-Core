@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.10.18+2037
+version: 4.01.16+2048
 # version: 2026.1.13+2028
 
 environment:
@@ -33,7 +33,9 @@ dependencies:
     sdk: flutter
   #core
   flutter_riverpod:
-  routemaster:
+  # 1.0.1 doesn't build on Flutter 3.47 (CupertinoPageTransitionsBuilder const
+  # ctor removed); 1.1.x is the compatible line.
+  routemaster: ^1.1.1
 
   firebase_auth: ^5.5.2
   firebase_core: ^3.13.0
@@ -57,6 +59,7 @@ dependencies:
   cached_network_image:
   card_swiper: ^3.0.1
   web_socket_channel: ^3.0.3
+  flutter_inappwebview: ^6.1.5
 
   #features
   google_sign_in: ^6.2.1
@@ -64,14 +67,21 @@ dependencies:
 
   url_launcher: ^6.3.1
 
+  #examsync
+  shared_preferences: ^2.5.6
+  pdfx: ^2.11.0
+  flutter_widget_from_html_core: ^0.17.4
+
   #design
   lottie:
-  icons_flutter: ^0.0.5
   neopop: ^1.0.2
   google_fonts: ^6.1.0
   iconsax:
   awesome_snackbar_content: ^0.1.6
-  in_app_purchase: ^3.2.0
+  # 3.3.0 pulls in_app_purchase_android 0.5.x = Google Play Billing Library 8.0.0
+  # (required by Play from 31 Aug 2026).
+  in_app_purchase: ^3.3.0
+  screen_protector: ^1.5.1
 
   #voice
   flutter_tts:
@@ -134,6 +144,7 @@ flutter:
     - assets/icons/bg.png
     - assets/icons/wave.svg
     - assets/animations/loggg.json
+    - assets/animations/span.json
     - assets/icons/item1.svg
     - assets/svg/
     - assets/icons/
