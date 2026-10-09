@@ -70,7 +70,7 @@ class _PrepPackTabState extends ConsumerState<PrepPackTab> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Your revision lists for ${subject.subjectName}, with model answers and practice mode.',
+          'Your revision lists for ${subject.subjectName}, with model answers and progress tracking.',
           textAlign: TextAlign.center,
           style: EsText.body(size: 13.5, color: EsColors.textMuted),
         ),
@@ -114,7 +114,7 @@ class _PrepPackTabState extends ConsumerState<PrepPackTab> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Curated revision questions for Mid 1, Mid 2 and Sem, with model answers, practice mode and progress tracking.',
+          'Curated revision questions for Mid 1, Mid 2 and Sem, with model answers and progress tracking.',
           textAlign: TextAlign.center,
           style:
               EsText.body(size: 13.5, color: EsColors.textMuted, height: 1.4),

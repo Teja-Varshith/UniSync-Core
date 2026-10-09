@@ -9,7 +9,6 @@ import 'package:UniSync/features/examsync/models/subject.dart';
 import 'package:UniSync/features/examsync/theme/es_theme.dart';
 import 'package:UniSync/features/examsync/view/widgets/es_scope.dart';
 import 'package:UniSync/features/examsync/widgets/es_disclaimer.dart';
-import 'package:UniSync/features/examsync/widgets/es_watermark.dart';
 import 'package:UniSync/features/examsync/widgets/es_widgets.dart';
 
 /// Swatch colours for the numbered tag cards, cycled in order.
@@ -130,9 +129,7 @@ class _PrepPackScreenState extends ConsumerState<PrepPackScreen> {
           onRetry: () => ref.invalidate(examSyncImpQuestionsProvider(code)),
         ),
       ),
-      data: (b) => EsWatermark(
-        child: _content(b, subject.valueOrNull?.customTags ?? const []),
-      ),
+      data: (b) => _content(b, subject.valueOrNull?.customTags ?? const []),
     );
   }
 
@@ -323,15 +320,10 @@ class _TextSizeButton extends ConsumerWidget {
 }
 
 class _ProgressBar extends StatelessWidget {
-  const _ProgressBar({
-    required this.value,
-    this.height = 6,
-    this.color = EsColors.success,
-  });
+  const _ProgressBar({required this.value, this.height = 6});
 
   final double value;
   final double height;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -341,7 +333,7 @@ class _ProgressBar extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: FractionallySizedBox(
         widthFactor: value.clamp(0.0, 1.0),
-        child: Container(color: color),
+        child: Container(color: EsColors.success),
       ),
     );
   }
@@ -528,8 +520,6 @@ class _ListCard extends StatelessWidget {
   }
 }
 
-enum _Mode { read, practice }
-
 class _StudyListView extends ConsumerStatefulWidget {
   const _StudyListView({
     super.key,
@@ -548,7 +538,6 @@ class _StudyListView extends ConsumerStatefulWidget {
 
 class _StudyListViewState extends ConsumerState<_StudyListView> {
   final Set<int> _open = {};
-  _Mode _mode = _Mode.read;
 
   String _key(ImpQuestion q) => questionKey(widget.exam, q);
 
@@ -576,15 +565,6 @@ class _StudyListViewState extends ConsumerState<_StudyListView> {
           const SizedBox(height: 8),
           _ProgressBar(value: qs.isEmpty ? 0 : known / qs.length),
           const SizedBox(height: 14),
-          EsSegmented<_Mode>(
-            segments: const [
-              EsSegment(value: _Mode.read, label: 'Read'),
-              EsSegment(value: _Mode.practice, label: 'Practice'),
-            ],
-            value: _mode,
-            onChanged: (m) => setState(() => _mode = m),
-          ),
-          const SizedBox(height: 14),
         ],
       ),
     );
@@ -596,22 +576,6 @@ class _StudyListViewState extends ConsumerState<_StudyListView> {
           const EsEmptyState(
             title: 'No questions here yet',
             message: 'Try another list.',
-          ),
-        ],
-      );
-    }
-
-    if (_mode == _Mode.practice) {
-      return Column(
-        children: [
-          header,
-          Expanded(
-            child: _PracticeView(
-              courseCode: widget.courseCode,
-              exam: widget.exam,
-              questions: qs,
-              onDone: () => setState(() => _mode = _Mode.read),
-            ),
           ),
         ],
       );
@@ -861,222 +825,7 @@ class _MarkBar extends StatelessWidget {
   }
 }
 
-/// Active-recall mode: one question at a time, answer hidden until the
-/// student has tried it, then a quick self-rating that moves on.
-class _PracticeView extends ConsumerStatefulWidget {
-  const _PracticeView({
-    required this.courseCode,
-    required this.exam,
-    required this.questions,
-    required this.onDone,
-  });
-
-  final String courseCode;
-  final String exam;
-  final List<ImpQuestion> questions;
-  final VoidCallback onDone;
-
-  @override
-  ConsumerState<_PracticeView> createState() => _PracticeViewState();
-}
-
-class _PracticeViewState extends ConsumerState<_PracticeView> {
-  late List<ImpQuestion> _deck = widget.questions;
-  int _index = 0;
-  bool _revealed = false;
-  int _knownThisRound = 0;
-  final List<ImpQuestion> _missed = [];
-
-  void _rate(QuestionMark mark) {
-    final q = _deck[_index];
-    ref
-        .read(studyProgressProvider(widget.courseCode).notifier)
-        .mark(questionKey(widget.exam, q), mark);
-    setState(() {
-      if (mark == QuestionMark.known) {
-        _knownThisRound++;
-      } else {
-        _missed.add(q);
-      }
-      _index++;
-      _revealed = false;
-    });
-  }
-
-  void _restart(List<ImpQuestion> deck) => setState(() {
-        _deck = deck;
-        _index = 0;
-        _revealed = false;
-        _knownThisRound = 0;
-        _missed.clear();
-      });
-
-  @override
-  Widget build(BuildContext context) {
-    if (_index >= _deck.length) return _summary();
-
-    final scale = ref.watch(readingScaleProvider);
-    final q = _deck[_index];
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-      children: [
-        Row(
-          children: [
-            EsEyebrow('Question ${_index + 1} of ${_deck.length}'),
-            const Spacer(),
-            if (!_revealed)
-              GestureDetector(
-                onTap: () => setState(() {
-                  _index++;
-                  _revealed = false;
-                }),
-                child: Text('Skip',
-                    style: EsText.body(
-                        size: 12.5,
-                        weight: FontWeight.w800,
-                        color: EsColors.textSecondary)),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        _ProgressBar(
-          value: _index / _deck.length,
-          height: 4,
-          color: EsColors.premium,
-        ),
-        const SizedBox(height: 14),
-        PlunkBox(
-          color: EsColors.surface,
-          rightColor: EsColors.premiumRight,
-          bottomColor: EsColors.premiumBottom,
-          border: EsColors.border,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                q.question,
-                style: EsText.body(
-                  size: 16 * scale,
-                  weight: FontWeight.w800,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (!_revealed) ...[
-                Text(
-                  'Answer it in your head (or on paper) first, then check.',
-                  style: EsText.body(size: 12.5, color: EsColors.textMuted),
-                ),
-                const SizedBox(height: 14),
-                EsButton(
-                  label: 'Show answer',
-                  icon: Icons.visibility_rounded,
-                  variant: EsButtonVariant.premium,
-                  expand: true,
-                  onPressed: () => setState(() => _revealed = true),
-                ),
-              ] else ...[
-                const Divider(height: 1, color: EsColors.border),
-                const SizedBox(height: 12),
-                const EsEyebrow('Answer', color: EsColors.premium),
-                const SizedBox(height: 8),
-                AnswerHtml(html: q.answerHtml, scale: scale),
-              ],
-            ],
-          ),
-        ),
-        if (_revealed) ...[
-          const SizedBox(height: 16),
-          Text('How did you do?',
-              style: EsText.body(size: 13, weight: FontWeight.w800)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: EsButton(
-                  label: 'Revise again',
-                  icon: Icons.replay_rounded,
-                  variant: EsButtonVariant.secondary,
-                  expand: true,
-                  onPressed: () => _rate(QuestionMark.revise),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: EsButton(
-                  label: 'Got it',
-                  icon: Icons.check_rounded,
-                  variant: EsButtonVariant.success,
-                  expand: true,
-                  onPressed: () => _rate(QuestionMark.known),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _summary() {
-    final rated = _knownThisRound + _missed.length;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-      children: [
-        PlunkBox(
-          color: EsColors.surface,
-          rightColor: EsColors.successRight,
-          bottomColor: EsColors.successBottom,
-          border: EsColors.border,
-          padding: const EdgeInsets.fromLTRB(18, 24, 18, 22),
-          child: Column(
-            children: [
-              const Icon(Icons.emoji_events_rounded,
-                  size: 48, color: EsColors.accent),
-              const SizedBox(height: 10),
-              Text('Round complete', style: EsText.display(size: 24)),
-              const SizedBox(height: 6),
-              Text(
-                rated == 0
-                    ? 'You skipped every question this round.'
-                    : 'You knew $_knownThisRound of $rated. '
-                        '${_missed.isEmpty ? 'Great work!' : 'Go again on the ones you missed.'}',
-                textAlign: TextAlign.center,
-                style: EsText.body(size: 13.5, color: EsColors.textMuted),
-              ),
-              const SizedBox(height: 18),
-              if (_missed.isNotEmpty) ...[
-                EsButton(
-                  label: 'Practise ${_missed.length} missed',
-                  icon: Icons.replay_rounded,
-                  variant: EsButtonVariant.premium,
-                  expand: true,
-                  onPressed: () => _restart(List.of(_missed)),
-                ),
-                const SizedBox(height: 10),
-              ],
-              EsButton(
-                label: 'Start over',
-                variant: EsButtonVariant.secondary,
-                expand: true,
-                onPressed: () => _restart(widget.questions),
-              ),
-              const SizedBox(height: 10),
-              EsButton(
-                label: 'Back to reading',
-                variant: EsButtonVariant.secondary,
-                expand: true,
-                onPressed: widget.onDone,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
+/// Renders TipTap HTML: p, strong, em, u, h1–h3, ul/ol/li, blockquote, img.
 class AnswerHtml extends StatelessWidget {
   const AnswerHtml({super.key, required this.html, this.scale = 1.0});
 
